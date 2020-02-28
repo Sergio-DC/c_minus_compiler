@@ -1,6 +1,7 @@
 import os
 import sys
 #from globalTypes import TokenType
+# from enum import Enum
 
 p = 0 #posicion del puntero en el documento
 #mainFile = os.getcwd() + "/matrix_csv.txt"
@@ -58,9 +59,32 @@ def getToken(archivo):
                 token = '*'
                 return token, p
         elif estado == 18:
-                p = p + 1
-                estado = 2
-                return token, p
+                token += c
+                c = archivo[p+1];
+                if c == '*': # It's a block comment
+                    token += c
+                    estado = 2 # Real state x
+                else:
+                    token = '/' #DIV
+                    p += 1
+                    estado = 0
+                    return token, p
+        elif estado == 19:
+            if c == '*':
+                token += c
+                estado = 3 # Real State x
+            else:
+                estado = 3 #Real state 19
+        elif estado == 20:
+            p = p + 1
+            c = archivo[p]
+            if c == '/':
+                token += c
+                p +=1
+                estado = 0
+                return token, p # State 21
+            else:
+                print("No es Comentraio")
         elif estado == 22:# DIV
             estado = 0
             token = '/';
@@ -73,10 +97,14 @@ def getToken(archivo):
                 token += c
         p+=1
 
+# class States(Enum):
+#     s18 = 2
+#     s19 = 4
 
-i = 0 
+
+
 longitud = longitud 
 while p < longitud:
     token, p =getToken(archivo)
     print(token)
-    print("posicion ", p)
+    print("posicion ", p+1)
