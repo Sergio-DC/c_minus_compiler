@@ -46,7 +46,25 @@ def getToken(archivo):
                 p = p + 1
                 estado = 0
                 token = '+'
-                return token, p 
+                return token, p
+        elif estado == 16:
+                p = p + 1
+                estado = 0
+                token = '-'
+                return token, p
+        elif estado == 17:
+                p = p + 1
+                estado = 0
+                token = '*'
+                return token, p
+        elif estado == 18:
+                p = p + 1
+                estado = 2
+                return token, p
+        elif estado == 22:# DIV
+            estado = 0
+            token = '/';
+            return token, p
         elif estado == 50:
             print("Error en: ", p)
             sys.exit()
