@@ -11,7 +11,7 @@ with open("./clean_csv/output/matrix_csv.txt") as f:
 f = open('./input.txt', 'r')
 archivo = f.read() 		# lee todo el archivo a tokenizar
 
-#archivo += '$'                  # agregamos $ para representar EOF
+archivo += '$'                  # agregamos $ para representar EOF
 longitud = len(archivo) 	# longitud del archivo
 estado = 0
 token = ''
@@ -96,12 +96,30 @@ def getToken(archivo):
             estado = 0
             token = '/';
             return token, p
+        elif estado == 23:
+            token += c
+            p += 1
+            c = archivo[p];
+            # go to state 25
+            if c == '=': # '<=' token
+                token += c
+                estado = 0 
+                return token, p
+            else: # go to state 24
+                estado = 0
+                return token, p
+        elif estado == 42:
+            token += c
+            p += 1
+            return token, p
         elif estado == 50:
             print("Error en: ", p)
             sys.exit()
         elif estado != 0:# Si el caracter es distinto del blanco lo concatenamos con el caracter anterior para formar un token
             if c != '\n':
                 token += c
+            elif c == '$':
+                return token, p
         p+=1
 
 # class States(Enum):
@@ -111,7 +129,7 @@ def getToken(archivo):
 
 
 longitud = longitud 
-while p < longitud:
+while p <= longitud and token != '$':
     token, p =getToken(archivo)
     print(token)
     print("posicion ", p+1)
