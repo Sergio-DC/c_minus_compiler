@@ -122,6 +122,15 @@ def getToken(archivo):
             else: # go to state 27
                 estado = 0
                 return token, p
+        elif estado == 29:
+            token +=c
+            c = archivo[p + 1]
+            if c.isalpha():
+                estado = 7 # Go to state 29
+            else:
+                estado = 0
+                p += 1
+                return token, p # token ID, state 30
         elif estado == 42:
             token += c
             p += 1
