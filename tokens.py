@@ -103,6 +103,7 @@ def getToken(archivo):
             # go to state 25
             if c == '=': # '<=' token
                 token += c
+                p += 1
                 estado = 0 
                 return token, p
             else: # go to state 24
