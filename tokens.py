@@ -60,31 +60,38 @@ def getToken(archivo):
                 return token, p
         elif estado == 18:
                 token += c
-                c = archivo[p+1];
+                p += 1
+                c = archivo[p];
                 if c == '*': # It's a block comment
                     token += c
-                    estado = 2 # Real state x
+                    estado = 3 # Real state x
                 else:
                     token = '/' #DIV
-                    p += 1
                     estado = 0
                     return token, p
         elif estado == 19:
             if c == '*':
                 token += c
+                p = p + 1
                 estado = 3 # Real State x
             else:
+                token += c
                 estado = 3 #Real state 19
         elif estado == 20:
-            p = p + 1
+            token += c
+            p += 1
             c = archivo[p]
             if c == '/':
                 token += c
-                p +=1
+                p+=1
                 estado = 0
-                return token, p # State 21
+                return token, p # go to State 21 and return comment
+            elif c == '*':
+                token += c
+                estado = 4 # go to state 20
             else:
-                print("No es Comentraio")
+                token += c
+                estado = 3
         elif estado == 22:# DIV
             estado = 0
             token = '/';
