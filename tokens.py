@@ -131,7 +131,20 @@ def getToken(archivo):
                 estado = 0
                 p += 1
                 return token, p # token ID, state 30
-        elif estado == 42:
+        elif estado == 31:
+            token += c
+            p += 1
+            c = archivo[p];
+            # go to state 33
+            if c == '=': # '==' token
+                token += c
+                p += 1
+                estado = 0 
+                return token, p
+            else: # go to state 32
+                estado = 0
+                return token, p
+        elif estado == 42:#EOF '$'
             token += c
             p += 1
             return token, p
