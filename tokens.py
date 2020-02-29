@@ -109,6 +109,19 @@ def getToken(archivo):
             else: # go to state 24
                 estado = 0
                 return token, p
+        elif estado == 26:
+            token += c
+            p += 1
+            c = archivo[p];
+            # go to state 28
+            if c == '=': # '>=' token
+                token += c
+                p += 1
+                estado = 0 
+                return token, p
+            else: # go to state 27
+                estado = 0
+                return token, p
         elif estado == 42:
             token += c
             p += 1
