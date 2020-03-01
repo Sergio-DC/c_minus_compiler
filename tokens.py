@@ -144,6 +144,20 @@ def getToken(archivo):
             else: # go to state 32
                 estado = 0
                 return token, p
+        elif estado == 34:
+            token += c
+            p += 1
+            c = archivo[p];
+            # go to state 35
+            if c == '=': # '!=' token
+                token += c
+                p += 1
+                estado = 0 
+                return token, p
+            else: # go to state of error
+                estado = 0
+                token = "Error en !"
+                return token, p
         elif estado == 42:#EOF '$'
             token += c
             p += 1
