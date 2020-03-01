@@ -1,18 +1,17 @@
 import os
 import sys
-#from globalTypes import TokenType
-# from enum import Enum
+from globalTypes import TokenType
 
-p = 0 #posicion del puntero en el documento
+posicion = 0 #posicion del puntero en el documento
 #mainFile = os.getcwd() + "/matrix_csv.txt"
 with open("./clean_csv/output/matrix_csv.txt") as f:
     simbolos = next(f).split('_')
     M = [[int(x) for x in line.split()] for line in f]
 f = open('./input.txt', 'r')
-archivo = f.read() 		# lee todo el archivo a tokenizar
+programa = f.read() 		# lee todo el programa a tokenizar
 
-archivo += '$'                  # agregamos $ para representar EOF
-longitud = len(archivo) 	# longitud del archivo
+programa += '$'                  # agregamos $ para representar EOF
+progLong = len(programa) 	# progLong del programa
 estado = 0
 token = ''
 
@@ -24,17 +23,19 @@ for i in range(len(simbolos)):
     for c in simbolos[i]:# recooremos primero digitos, luego alfabeto
         mapa[c]=i+1
 
-def getToken(archivo):
-    global p
+def getToken():
+    global programa
+    global posicion
     global estado
     global token
     global mapa
+    global progLong
 
    
     token = ''
 
-    while p < longitud :
-        c = archivo[p] # Leemos cada caracter del archivo 'ejemplo.txt'     # llega ' ',5
+    while posicion < progLong :
+        c = programa[posicion] # Leemos cada caracter del programa 'ejemplo.txt'     # llega ' ',5
         #debug
         estadoAntiguo = estado
         simboloActual = mapa[c]
@@ -42,50 +43,50 @@ def getToken(archivo):
         estado = M[estado][mapa[c]]# Matriz que representa la funcion de transicion # estado = 0 mapa[c] = 0, estado = 1 mapa[c] = 1
         if estado == 2: # Estado de aceptacion de token
                 estado = 0
-                return token, p
+                return TokenType.NUM.name, token
         elif estado == 15:
-                p = p + 1
+                posicion = posicion + 1
                 estado = 0
-                token = '+'
-                return token, p
+                token +=c
+                return TokenType.PLUS.name, TokenType.PLUS.value
         elif estado == 16:
-                p = p + 1
+                posicion = posicion + 1
                 estado = 0
                 token = '-'
-                return token, p
+                return TokenType.MINUS.name, TokenType.MINUS.value
         elif estado == 17:
-                p = p + 1
+                posicion = posicion + 1
                 estado = 0
                 token = '*'
-                return token, p
+                return TokenType.MULT.name, TokenType.MULT.value
         elif estado == 18:
                 token += c
-                p += 1
-                c = archivo[p];
+                posicion += 1
+                c = programa[posicion];
                 if c == '*': # It's a block comment
                     token += c
                     estado = 3 # Real state x
                 else:
-                    token = '/' #DIV
+                    token += c #DIV
                     estado = 0
-                    return token, p
+                    return TokenType.DIV.name, TokenType.DIV.value
         elif estado == 19:
             if c == '*':
                 token += c
-                p = p + 1
+                posicion = posicion + 1
                 estado = 3 # Real State x
             else:
                 token += c
                 estado = 3 #Real state 19
         elif estado == 20:
             token += c
-            p += 1
-            c = archivo[p]
+            posicion += 1
+            c = programa[posicion]
             if c == '/':
                 token += c
-                p+=1
+                posicion+=1
                 estado = 0
-                return token, p # go to State 21 and return comment
+                return TokenType.COMMENT.name, token # go to State 21 and return comment
             elif c == '*':
                 token += c
                 estado = 4 # go to state 20
@@ -95,122 +96,122 @@ def getToken(archivo):
         elif estado == 22:# DIV
             estado = 0
             token = '/';
-            return token, p
+            return TokenType.DIV.name, TokenType.DIV.value
         elif estado == 23:
             token += c
-            p += 1
-            c = archivo[p];
+            posicion += 1
+            c = programa[posicion];
             # go to state 25
             if c == '=': # '<=' token
                 token += c
-                p += 1
+                posicion += 1
                 estado = 0 
-                return token, p
-            else: # go to state 24
+                return TokenType.LET.name, TokenType.LET.value
+            else: # go to state 24 LT '<'
                 estado = 0
-                return token, p
+                return TokenType.LT.name, TokenType.LT.value
         elif estado == 26:
             token += c
-            p += 1
-            c = archivo[p];
+            posicion += 1
+            c = programa[posicion];
             # go to state 28
             if c == '=': # '>=' token
                 token += c
-                p += 1
+                posicion += 1
                 estado = 0 
-                return token, p
+                return TokenType.GET.name, TokenType.GET.value
             else: # go to state 27
                 estado = 0
-                return token, p
+                return TokenType.GT.name, TokenType.GT.name
         elif estado == 29:
             token +=c
-            c = archivo[p + 1]
+            c = programa[posicion + 1]
             if c.isalpha():
                 estado = 7 # Go to state 29
             else:
                 estado = 0
-                p += 1
-                return token, p # token ID, state 30
+                posicion += 1
+                return TokenType.ID.name, token # token ID, state 30
         elif estado == 31:
             token += c
-            p += 1
-            c = archivo[p];
+            posicion += 1
+            c = programa[posicion];
             # go to state 33
             if c == '=': # '==' token
                 token += c
-                p += 1
+                posicion += 1
                 estado = 0 
-                return token, p
-            else: # go to state 32
+                return TokenType.EQ.name, TokenType.EQ.value
+            else: # go to state 32 "ASSIGN"
                 estado = 0
-                return token, p
+                return TokenType.ASSIGN.name, TokenType.ASSIGN.value
         elif estado == 34:
             token += c
-            p += 1
-            c = archivo[p];
+            posicion += 1
+            c = programa[posicion];
             # go to state 35
             if c == '=': # '!=' token
                 token += c
-                p += 1
+                posicion += 1
                 estado = 0 
-                return token, p
+                return TokenType.NOT_EQ.name, TokenType.NOT_EQ.value
             else: # go to state of error
                 estado = 0
                 token = "Error en !"
-                return token, p
+                return token, posicion
         elif estado == 36: #Token ';'
             token += c
-            p += 1
+            posicion += 1
             estado = 0
-            return token, p
+            return TokenType.SEMI.name, TokenType.SEMI.value
         elif estado == 37: # Token ','
             token += c
-            p += 1
+            posicion += 1
             estado = 0
-            return token, p
+            return TokenType.COMMA.name, TokenType.COMMA.value
         elif estado == 38: # Token '('
             token += c
-            p += 1
+            posicion += 1
             estado = 0
-            return token, p
+            return TokenType.LPAREN.name, TokenType.LPAREN.value
         elif estado == 39: # Token ')'
             token += c
-            p += 1
+            posicion += 1
             estado = 0
-            return token, p
+            return TokenType.RPAREN.name, TokenType.RPAREN.value
         elif estado == 40: # Token '['
             token += c
-            p += 1
+            posicion += 1
             estado = 0
-            return token, p
+            return TokenType.LBRACKET.name, TokenType.LBRACKET.value
         elif estado == 41: # Token ']'
             token += c
-            p += 1
+            posicion += 1
             estado = 0
-            return token, p
+            return TokenType.RBRACKET.name, TokenType.RBRACKET.value
         elif estado == 42: # Token '{'
             token += c
-            p += 1
+            posicion += 1
             estado = 0
-            return token, p
+            return TokenType.LBRACE.name, TokenType.LBRACE.value
         elif estado == 43: # Token '}'
             token += c
-            p += 1
+            posicion += 1
             estado = 0
-            return token, p
+            return TokenType.RBRACE.name, TokenType.RBRACE.value
         elif estado == 44:#EOF '$'
             token += c
-            p += 1
-            return token, p
+            posicion += 1
+            return TokenType.ENDFILE, TokenType.ENDFILE.value
         elif estado == 50:
-            print("Error en: ", p)
+            print("Error en: ", posicion)
             sys.exit()
         elif estado != 0:# Si el caracter es distinto del blanco lo concatenamos con el caracter anterior para formar un token
             if c != '\n':
                 token += c
             elif c == '$':
-                return token, p
-        p+=1
+                return token, posicion
+        posicion+=1
 
 # class States(Enum):
 #     s18 = 2
@@ -218,8 +219,8 @@ def getToken(archivo):
 
 
 
-longitud = longitud 
-while p <= longitud and token != '$':
-    token, p =getToken(archivo)
-    print(token)
-    print("posicion ", p+1)
+progLong = progLong 
+token, tokenString =getToken()
+while token != TokenType.ENDFILE:
+    print("{}   {}".format(token,str(tokenString)))
+    token, tokenString =getToken()    
