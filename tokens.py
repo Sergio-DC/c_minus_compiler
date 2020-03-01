@@ -158,7 +158,47 @@ def getToken(archivo):
                 estado = 0
                 token = "Error en !"
                 return token, p
-        elif estado == 42:#EOF '$'
+        elif estado == 36: #Token ';'
+            token += c
+            p += 1
+            estado = 0
+            return token, p
+        elif estado == 37: # Token ','
+            token += c
+            p += 1
+            estado = 0
+            return token, p
+        elif estado == 38: # Token '('
+            token += c
+            p += 1
+            estado = 0
+            return token, p
+        elif estado == 39: # Token ')'
+            token += c
+            p += 1
+            estado = 0
+            return token, p
+        elif estado == 40: # Token '['
+            token += c
+            p += 1
+            estado = 0
+            return token, p
+        elif estado == 41: # Token ']'
+            token += c
+            p += 1
+            estado = 0
+            return token, p
+        elif estado == 42: # Token '{'
+            token += c
+            p += 1
+            estado = 0
+            return token, p
+        elif estado == 43: # Token '}'
+            token += c
+            p += 1
+            estado = 0
+            return token, p
+        elif estado == 44:#EOF '$'
             token += c
             p += 1
             return token, p
