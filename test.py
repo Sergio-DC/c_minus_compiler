@@ -10,6 +10,6 @@ posicion = 0 # posición del caracter actual del string   
 # función para pasar los valores iniciales de las variables globales  g
 globales(programa, posicion, progLong)
 
-token, tokenString = getToken(False) 
+token, tokenString = getToken(True) 
 while (token != TokenType.ENDFILE):
-    token, tokenString = getToken(False) 
+    token, tokenString = getToken(True) 

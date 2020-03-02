@@ -227,7 +227,26 @@ def getToken(imprime = True):
                 
         if(tokenReconocido):
             estado = 0
+            if TokenType.ID.name == token:
+                token = detectReservedWords(tokenString)
             if imprime:
                 print(token," = ", tokenString)
             return token, tokenString
         posicion+=1
+
+
+def detectReservedWords(tokenAppend):
+    if tokenAppend == TokenType.ELSE.value:
+        return TokenType.ELSE.name
+    elif tokenAppend == TokenType.IF.value:
+        return TokenType.IF.name
+    elif tokenAppend == TokenType.INT.value:
+        return TokenType.INT.name
+    elif tokenAppend == TokenType.RETURN.value:
+        return TokenType.RETURN.name
+    elif tokenAppend == TokenType.VOID.value:
+        return TokenType.VOID.name
+    elif tokenAppend == TokenType.WHILE.value:
+        return TokenType.WHILE.name
+    else:
+        return TokenType.ID.name
