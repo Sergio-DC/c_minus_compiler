@@ -7,6 +7,7 @@ with open("./clean_csv/output/matrix_csv.txt") as f:
 
 estado = 0
 mapa = {}
+lineOfCode = ''
 # Creamos un array(llamado mapa) que clasifica/separa los 'digitos' asignandoles un 0
 # Al alfabeto y underscore
 # e.g mapa = [0,0,0,..., (10)0, 1, 1, 1]
@@ -26,6 +27,7 @@ def getToken(imprime = True):
     global estado, posicion
     tokenAppend = ''
     global mapa
+    global lineOfCode
     
     while posicion <= (progLong + 1) :
         c = programa[posicion] # Leemos cada caracter del programa 'ejemplo.txt'     # llega ' ',5
@@ -219,6 +221,7 @@ def getToken(imprime = True):
             token = TokenType.ENDFILE
             tokenString = TokenType.ENDFILE.value
         elif estado == 50:
+            print("Error en la formación de un entero: ")
             print("Error en: ", posicion)
             sys.exit()
         elif estado != 0:# Si el caracter es distinto del blanco lo concatenamos con el caracter anterior para formar un token
@@ -231,9 +234,15 @@ def getToken(imprime = True):
                 token = detectReservedWords(tokenString)
             if imprime:
                 print(token," = ", tokenString)
+
+            lineOfCode += tokenString
             return token, tokenString
         posicion+=1
-
+        #Append the blank spaces into the lineOfCode
+        if c == ' ':
+            lineOfCode += c
+        elif c == '\n':
+            lineOfCode = ''
 
 def detectReservedWords(tokenAppend):
     if tokenAppend == TokenType.ELSE.value:
