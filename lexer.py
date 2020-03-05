@@ -10,6 +10,7 @@ mapa = {}
 lineOfCode_content = ''
 errorNo = 0
 lineno = 1
+lineLength = 0
 setOfErrorMessages = {}
 # Creamos un array(llamado mapa) que clasifica/separa los 'digitos' asignandoles un 0
 # Al alfabeto y underscore
@@ -33,6 +34,7 @@ def getToken(imprime = True):
     global lineOfCode_content, lineno #No. line of code
     global setOfErrorMessages, errorNo#Error number
     messageError = ''
+    global lineLength
     
     while posicion <= (progLong + 1) :
         c = programa[posicion] # Leemos cada caracter del programa 'ejemplo.txt'     # llega ' ',5
@@ -48,6 +50,7 @@ def getToken(imprime = True):
                 tokenString = tokenAppend
         elif estado == 15:
                 posicion = posicion + 1
+                lineOfCode_content += c
                 tokenAppend +=c
                 tokenReconocido = True
                 token = TokenType.PLUS.name
@@ -134,9 +137,12 @@ def getToken(imprime = True):
                 tokenString = TokenType.GT.name
         elif estado == 29:
             tokenAppend +=c
+            lineOfCode_content += c
             c = programa[posicion + 1]
             if c.isalpha():
                 estado = 7 # Go to state 29
+            elif c.isdigit():
+                estado = 7
             else:
                 posicion += 1
                 tokenReconocido = True
@@ -144,6 +150,7 @@ def getToken(imprime = True):
                 tokenString = tokenAppend 
         elif estado == 31:
             tokenAppend += c
+            lineOfCode_content += c
             posicion += 1
             c = programa[posicion];
             # go to state 33
@@ -227,16 +234,22 @@ def getToken(imprime = True):
             token = TokenType.ENDFILE
             tokenString = TokenType.ENDFILE.value
         elif estado == 50:
-            lineOfCode_content += c
-            posicionError = progLong - posicion;
+            if lineno == 1:
+                posicionError = posicion
+                promptCursor = genBlankSpaces(posicionError)
+            else:
+                posicionError = len(lineOfCode_content)
+                promptCursor = genBlankSpaces(posicionError)
+
+            lineOfCode_content += c            
             while c != '\n':
                 posicion += 1
                 c = programa[posicion]
                 if c == '$':
                     break
-                lineOfCode_content += c;
-            promptCursor = genBlankSpaces(posicionError)
-            messageError = "Línea {}: Error en la formación de un entero: ".format(lineno) + "\n" + lineOfCode_content +  promptCursor
+                lineOfCode_content += c
+            print("Pos Error: ", lineLength)
+            messageError = "Línea {}: Error en la formación de un entero: ".format(lineno) + "\n" + lineOfCode_content + "\n"+ promptCursor
             setOfErrorMessages[errorNo] = messageError
             token = TokenType.ERROR.name
             tokenString = '""'
@@ -257,7 +270,7 @@ def getToken(imprime = True):
             if token == TokenType.ENDFILE:
                 for message in setOfErrorMessages:
                     print(setOfErrorMessages[message])
-            lineOfCode_content += tokenString #Pair of lineno and line content
+            #lineOfCode_content += tokenString #Pair of lineno and line content
 
             return token, tokenString
         posicion+=1
