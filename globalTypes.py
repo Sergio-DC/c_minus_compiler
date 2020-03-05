@@ -30,3 +30,4 @@ class TokenType(Enum):
     SEMI = ';'
     COMMA = ','
     ENDFILE = '$'
+    ERROR = 400

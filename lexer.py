@@ -7,7 +7,10 @@ with open("./clean_csv/output/matrix_csv.txt") as f:
 
 estado = 0
 mapa = {}
-lineOfCode = ''
+lineOfCode_content = ''
+errorNo = 0
+lineno = 1
+setOfErrorMessages = {}
 # Creamos un array(llamado mapa) que clasifica/separa los 'digitos' asignandoles un 0
 # Al alfabeto y underscore
 # e.g mapa = [0,0,0,..., (10)0, 1, 1, 1]
@@ -25,9 +28,11 @@ def globales(prog,pos,long):
 
 def getToken(imprime = True):
     global estado, posicion
-    tokenAppend = ''
+    tokenAppend = '' 
     global mapa
-    global lineOfCode
+    global lineOfCode_content, lineno #No. line of code
+    global setOfErrorMessages, errorNo#Error number
+    messageError = ''
     
     while posicion <= (progLong + 1) :
         c = programa[posicion] # Leemos cada caracter del programa 'ejemplo.txt'     # llega ' ',5
@@ -218,31 +223,51 @@ def getToken(imprime = True):
             tokenAppend += c
             posicion += 1
             tokenReconocido = True
+            lineno += 1
             token = TokenType.ENDFILE
             tokenString = TokenType.ENDFILE.value
         elif estado == 50:
-            print("Error en la formación de un entero: ")
-            print("Error en: ", posicion)
-            sys.exit()
+            lineOfCode_content += c
+            posicionError = progLong - posicion;
+            while c != '\n':
+                posicion += 1
+                c = programa[posicion]
+                if c == '$':
+                    break
+                lineOfCode_content += c;
+            promptCursor = genBlankSpaces(posicionError)
+            messageError = "Línea {}: Error en la formación de un entero: ".format(lineno) + "\n" + lineOfCode_content +  promptCursor
+            setOfErrorMessages[errorNo] = messageError
+            token = TokenType.ERROR.name
+            tokenString = '""'
+            tokenReconocido = True
         elif estado != 0:# Si el caracter es distinto del blanco lo concatenamos con el caracter anterior para formar un token
             if c != '\n':
+                lineOfCode_content += c
                 tokenAppend += c
                 
         if(tokenReconocido):
             estado = 0
             if TokenType.ID.name == token:
                 token = detectReservedWords(tokenString)
+
             if imprime:
                 print(token," = ", tokenString)
 
-            lineOfCode += tokenString
+            if token == TokenType.ENDFILE:
+                for message in setOfErrorMessages:
+                    print(setOfErrorMessages[message])
+            lineOfCode_content += tokenString #Pair of lineno and line content
+
             return token, tokenString
         posicion+=1
-        #Append the blank spaces into the lineOfCode
+        #Append the blank spaces into the lineOfCode_content
         if c == ' ':
-            lineOfCode += c
+            lineOfCode_content += c
         elif c == '\n':
-            lineOfCode = ''
+            lineno += 1
+            #print("{} {}".format(lineno, lineOfCode_content))
+            lineOfCode_content = '' #Clean the line of code to save other more
 
 def detectReservedWords(tokenAppend):
     if tokenAppend == TokenType.ELSE.value:
@@ -259,3 +284,11 @@ def detectReservedWords(tokenAppend):
         return TokenType.WHILE.name
     else:
         return TokenType.ID.name
+
+def genBlankSpaces(spaces):
+    blankSpaces = ''
+    for i in range(spaces):
+        blankSpaces += ' '
+    blankSpaces += "^"
+
+    return blankSpaces
