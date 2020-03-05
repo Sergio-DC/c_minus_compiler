@@ -78,7 +78,7 @@ def getToken(imprime = True):
                     tokenAppend += c #DIV
                     tokenReconocido = True
                     token = TokenType.DIV.name
-                    tokenStringTokenType.DIV.value
+                    tokenString = TokenType.DIV.value
         elif estado == 19:
             if c == '*':
                 tokenAppend += c
@@ -94,6 +94,7 @@ def getToken(imprime = True):
             if c == '/':
                 tokenAppend += c
                 posicion+=1
+                tokenReconocido = True
                 token = TokenType.COMMENT.name
                 tokenString = tokenAppend # go to State 21 and return comment
             elif c == '*':
@@ -233,11 +234,18 @@ def getToken(imprime = True):
             lineno += 1
             token = TokenType.ENDFILE
             tokenString = TokenType.ENDFILE.value
+        elif estado == 4: #Estado de Error 4 ID
+            messageError, posicion = genMessageError(posicion, c, lineOfCode_content, estado)
+            setOfErrorMessages[errorNo] = messageError
+            errorNo += 1
+            token = TokenType.ERROR.name
+            tokenString = '""'
+            tokenReconocido = True
         elif estado == 50:           
-            messageError, posicion = genMessageError(posicion, c, lineOfCode_content)
-            print("Pos Error: ", lineLength)
+            messageError, posicion = genMessageError(posicion, c, lineOfCode_content, estado)
             
             setOfErrorMessages[errorNo] = messageError
+            errorNo += 1
             token = TokenType.ERROR.name
             tokenString = '""'
             tokenReconocido = True
@@ -293,16 +301,19 @@ def genBlankSpaces(spaces):
 
     return blankSpaces
 
-def genMessageError(posicion, c, lineOfCode_content):
+def genMessageError(posicion, c, lineOfCode_content, estado):
     posicionError = len(lineOfCode_content)
     promptCursor = genBlankSpaces(posicionError)
     lineOfCode_content += c
 
-    while c != '\n':
+    while c != '\n' and c != ' ':
         posicion += 1
         c = programa[posicion]
         if c == '$':
             break
         lineOfCode_content += c
     
-    return "Línea {}: Error en la formación de un entero: ".format(lineno) + "\n" + lineOfCode_content + "\n"+ promptCursor, posicion
+    if estado == 50:      
+        return "Línea {}: Error en la formación de un entero: ".format(lineno) + "\n" + lineOfCode_content + promptCursor, posicion
+    elif estado == 4:
+        return "Línea {}: Error en la formación de un identificador: ".format(lineno) + "\n" + lineOfCode_content + "\n" + promptCursor, posicion
