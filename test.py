@@ -12,4 +12,4 @@ globales(programa, posicion, progLong)
 
 token, tokenString = getToken(True) 
 while (token != TokenType.ENDFILE):
-    token, tokenString = getToken(True) 
+    token, tokenString = getToken(True)
