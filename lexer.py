@@ -233,23 +233,10 @@ def getToken(imprime = True):
             lineno += 1
             token = TokenType.ENDFILE
             tokenString = TokenType.ENDFILE.value
-        elif estado == 50:
-            if lineno == 1:
-                posicionError = posicion
-                promptCursor = genBlankSpaces(posicionError)
-            else:
-                posicionError = len(lineOfCode_content)
-                promptCursor = genBlankSpaces(posicionError)
-
-            lineOfCode_content += c            
-            while c != '\n':
-                posicion += 1
-                c = programa[posicion]
-                if c == '$':
-                    break
-                lineOfCode_content += c
+        elif estado == 50:           
+            messageError, posicion = genMessageError(posicion, c, lineOfCode_content)
             print("Pos Error: ", lineLength)
-            messageError = "Línea {}: Error en la formación de un entero: ".format(lineno) + "\n" + lineOfCode_content + "\n"+ promptCursor
+            
             setOfErrorMessages[errorNo] = messageError
             token = TokenType.ERROR.name
             tokenString = '""'
@@ -305,3 +292,17 @@ def genBlankSpaces(spaces):
     blankSpaces += "^"
 
     return blankSpaces
+
+def genMessageError(posicion, c, lineOfCode_content):
+    posicionError = len(lineOfCode_content)
+    promptCursor = genBlankSpaces(posicionError)
+    lineOfCode_content += c
+
+    while c != '\n':
+        posicion += 1
+        c = programa[posicion]
+        if c == '$':
+            break
+        lineOfCode_content += c
+    
+    return "Línea {}: Error en la formación de un entero: ".format(lineno) + "\n" + lineOfCode_content + "\n"+ promptCursor, posicion
