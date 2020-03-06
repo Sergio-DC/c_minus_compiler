@@ -167,6 +167,7 @@ def getToken(imprime = True):
                 tokenString = TokenType.ASSIGN.value
         elif estado == 34:
             tokenAppend += c
+            lineOfCode_content += c
             posicion += 1
             c = programa[posicion];
             # go to state 35
@@ -177,8 +178,13 @@ def getToken(imprime = True):
                 token = TokenType.NOT_EQ.name
                 tokenString = TokenType.NOT_EQ.value
             else: # go to state of error
-                token = "Error en !"
-                return token, posicion
+                estado = 5
+                messageError, posicion = genMessageError(posicion, c, lineOfCode_content, estado)
+                setOfErrorMessages[errorNo] = messageError
+                errorNo += 1
+                token = TokenType.ERROR.name
+                tokenString = '""'
+                tokenReconocido = True
         elif estado == 36: #Token ';'
             tokenAppend += c
             posicion += 1
@@ -259,12 +265,12 @@ def getToken(imprime = True):
             if TokenType.ID.name == token:
                 token = detectReservedWords(tokenString)
 
-            if imprime:
+            if imprime and token != TokenType.ENDFILE:
                 print(token," = ", tokenString)
 
             if token == TokenType.ENDFILE:
                 for message in setOfErrorMessages:
-                    print(setOfErrorMessages[message])
+                    print("\n" + setOfErrorMessages[message])
             #lineOfCode_content += tokenString #Pair of lineno and line content
 
             return token, tokenString
@@ -306,7 +312,7 @@ def genMessageError(posicion, c, lineOfCode_content, estado):
     promptCursor = genBlankSpaces(posicionError)
     lineOfCode_content += c
 
-    while c != '\n' and c != ' ':
+    while c != '\n' and c != ' ' and posicion < progLong:
         posicion += 1
         c = programa[posicion]
         if c == '$':
@@ -314,6 +320,8 @@ def genMessageError(posicion, c, lineOfCode_content, estado):
         lineOfCode_content += c
     
     if estado == 50:      
-        return "Línea {}: Error en la formación de un entero: ".format(lineno) + "\n" + lineOfCode_content + promptCursor, posicion
+        return "Línea {}: Error en la formación de un entero: ".format(lineno) + "\n" + lineOfCode_content + "\n" + promptCursor, posicion
     elif estado == 4:
         return "Línea {}: Error en la formación de un identificador: ".format(lineno) + "\n" + lineOfCode_content + "\n" + promptCursor, posicion
+    elif estado == 5:
+        return "Línea {}: Error en la formación de NOT_EQ: ".format(lineno) + "\n" + lineOfCode_content + "\n" + promptCursor, posicion
