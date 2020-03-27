@@ -6,3 +6,4 @@ jflap
 __pycache__/
 bugs.md
 clean_csv/matrix_csv.csv
+clean_csv/input/

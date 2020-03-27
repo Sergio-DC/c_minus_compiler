@@ -1,10 +1,10 @@
 var readline = require('readline');
 var fs = require('fs');
 
-const writeStream = fs.createWriteStream("./clean_csv/output/matrix_csv.txt",{ encoding: "utf8"});
+const writeStream = fs.createWriteStream("./output/matrix_csv.txt",{ encoding: "utf8"});
 
 var myInterface = readline.createInterface({
-  input: fs.createReadStream('./clean_csv/matrix_csv.csv'),
+  input: fs.createReadStream('./input/matrix_csv.csv'),
   output: writeStream
 });
 
