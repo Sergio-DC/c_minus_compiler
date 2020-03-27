@@ -1,4 +1,4 @@
- 1234567890_+_-_*_/_<_>_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_=_!_;_,_(_)_[_]_{_}_$_._ 
+ 1234567890_+_-_*_/_<_>_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_=_!_;_,_(_)_[_]_{_}_$_%._ 
 0 1 15 16 17 18 23 26 29 31 34 36 37 38 39 40 41 42 43 44 3 0
 1 1 2 2 2 2 2 2 50 2 50 2 2 50 2 50 2 50 50 2 50 2
 18 22 22 22 19 22 22 22 22 22 22 22 22 22 22 22 22 22 22 44 22 22

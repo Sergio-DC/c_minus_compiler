@@ -12,6 +12,7 @@ errorNo = 0
 lineno = 1
 lineLength = 0
 setOfErrorMessages = {}
+special_characters = ['%', '.','1','2','3','4','5','6','7','8','9','0'] #Caracteres especiales que no deberia llevar un identificador
 # Creamos un array(llamado mapa) que clasifica/separa los 'digitos' asignandoles un 0
 # Al alfabeto y underscore
 # e.g mapa = [0,0,0,..., (10)0, 1, 1, 1]
@@ -142,7 +143,7 @@ def getToken(imprime = True):
             c = programa[posicion + 1]
             if c.isalpha():
                 estado = 7 # Go to state 29
-            elif c.isdigit():
+            elif len([x for x in special_characters if x == c]) == 1:
                 estado = 7
             else:
                 posicion += 1
