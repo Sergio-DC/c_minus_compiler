@@ -10,6 +10,7 @@
 # 		comentario in C99 standard
 
 import ply.lex as lex
+from globalTypes import TokenType
 
 no_of_characters_passed = 0
 saved_string = ''
@@ -330,7 +331,7 @@ def test(data, lexer):
                 tok = lexer.token()
                 if not tok:
                         break
-                if tok.type == 'ERROR':
+                if tok.type == TokenType.ERROR.value:
                         print("{}  ''".format(tok.type))
                 else:
                         print("{}  {}".format(tok.type, tok.value))
