@@ -1,5 +1,3 @@
-1
-
 void main(int arg%c) {
   int cm_var8;
   a = 1+3;

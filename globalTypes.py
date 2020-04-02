@@ -33,6 +33,5 @@ class TokenType(Enum):
      ID = "ID"
      NUMBER = "NUMBER"
      SPACES = "SPACES"
-    #ENDFILE = '$'
+     ENDFILE = "$"
      ERROR = "ERROR"
-print(TokenType.ELSE.value)

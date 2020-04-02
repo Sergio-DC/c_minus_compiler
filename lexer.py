@@ -17,6 +17,19 @@ saved_string = ''
 data = ''
 stack_of_error_messages = []
 
+programa = ''
+progLong = 0
+posicion = ''
+
+
+def globales(prog,pos,long):
+    global programa
+    global progLong
+    global posicion
+    programa = prog
+    posicion = pos
+    progLong = long
+
 class ErrorMessage:
         def __init__(self, message, line_of_code_content ,pos_prompt):
                 self.message = message
@@ -62,9 +75,12 @@ tokens = (
 	'NUMBER',
         'SPACES',
         # Tokens de Error
-        'ERROR'
+        'ERROR',
+        'ENDFILE'
 )
 # Regular expressions rules for a simple tokens
+t_ENDFILE = r'\$'
+
 def t_ASSIGN(t):
         r'\='
         global no_of_characters_passed, saved_string
@@ -325,30 +341,40 @@ def genMessageAndPromptError(spaces, lexpos, saved_string):
         
         return saved_string, pos_prompt_error
 
-def test(data, lexer):
-        lexer.input(data)
-        while True:
-                tok = lexer.token()
-                if not tok:
-                        break
-                if tok.type == TokenType.ERROR.value:
-                        print("{}  ''".format(tok.type))
-                else:
-                        print("{}  {}".format(tok.type, tok.value))
-        # Print all the token Errors
-        print("\n")
-        for message_error in stack_of_error_messages:
-                print(message_error.message)
-                print(message_error.line_of_code_content)
-                print(message_error.pos_prompt)
 lexer = lex.lex()
 
-# Test 
-if __name__ == '__main__':
-        f = open('data.c', 'r')
-        data = f.read()
+        #f = open('data.c', 'r')
+        #data = f.read()
         # Build lexer and try on
-        lexer.input(data)
-        test(data, lexer)
+        #lexer.input(data)
+        #test(data, lexer)
 
+vuelta = 0
+def getToken(imprime = True):
+    global lexer
+    global vuelta
 
+    if vuelta == 0:
+        lexer.input(programa)#Solo de ejecutarse 1 vez
+        vuelta += 1
+        
+    tok = lexer.token()
+    if not tok:#Se ha llegado al fin del archivo
+        return TokenType.ENDFILE, '$'
+    if tok.type == TokenType.ERROR.value:#Imprime token ERROR sin Lexema
+        print("{}  ''".format(tok.type))
+        return tok.type, tok.value
+    else:
+        # Se imprimen tokens y lexemas distintos del fin de archivo
+        if tok.type != TokenType.ENDFILE.name:
+            print("{}  {}".format(tok.type, tok.value))
+        else:    
+            # Imprimir Stack de errores si se ha llegado al fin de archivo
+            if tok.type == TokenType.ENDFILE.name:
+                print("\n")
+            for message_error in stack_of_error_messages:
+                print(message_error.message)
+                print(message_error.line_of_code_content)
+                print(message_error.pos_prompt)          
+
+        return tok.type, tok.value
