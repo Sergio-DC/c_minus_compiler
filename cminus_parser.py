@@ -144,7 +144,7 @@ def p_return_stmt_1(p):
 def p_return_stmt_2(p):
 	'return_stmt : RETURN expression SEMICOLON'
 	pass'''
-
+# Impresion Nodo
 def p_expression_1(p):
         'expression : var EQUAL expression'
         if masInfo:
@@ -154,14 +154,14 @@ def p_expression_1(p):
         p[0]= Node("expression_1", [p[1],p[3]], p[2])
         print("Papa '{}'   Hijos '{}' '{}'".
               format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
-#Aqui 5
+
 def p_expression_2(p):
         'expression : simple_expression'
         if masInfo:
-             print("expression_2: ", p[1].leaf)
+             print("expression_2: ", p[1])
         p[0]= p[1]
-        print("Papa '{}'   Hijos '{}' '{}'".
-              format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
+        #print("Papa '{}'   Hijos '{}' '{}'".
+         #     format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
         
 
 def p_var_1(p):
@@ -183,15 +183,17 @@ def p_simple_expression_1(p):
         'simple_expression : additive_expression relop additive_expression'
         if masInfo:
              print('simple_expression_1: ', p[1], p[2], p[3])
-        pass
-#Aqui 4
+        p[0] = Node("simple_expression_1", [p[1], p[3]], p[2].leaf)
+        print("Papa '{}'   Hijos '{}' '{}'".
+              format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
+
 def p_simple_expression_2(p):
         'simple_expression : additive_expression'
         if masInfo:
-             print('simple_expression_2: ', p[1].leaf)
+             print('simple_expression_2: ', p[1])
         p[0] = p[1]
-        print("Papa2 '{}'   Hijos '{}' '{}'".
-              format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
+        #print("Papa2 '{}'   Hijos '{}' '{}'".
+         #     format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
 
 def p_relop(p):
         '''relop : LESS 
@@ -205,8 +207,8 @@ def p_relop(p):
              print('relop: ', p[1])
         else:
              print( p[1])
-        pass
-
+        p[0] = Node("relop", None, p[1])
+# Impresion Nodo
 def p_additive_expression_1(p):
         'additive_expression : additive_expression addop term'
         if masInfo:
@@ -216,10 +218,10 @@ def p_additive_expression_1(p):
               format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
         
 #Aqui 3
-def p_additive_expression_2(p):
+def p_axodditive_expression_2(p):
         'additive_expression : term'
         if masInfo:
-             print('additive_expression_2: ', p[1].leaf)
+             print('additive_expression_2: ', p[1])
         p[0] = p[1]
         pass
 
@@ -228,24 +230,25 @@ def p_addop(p):
                        | MINUS
         '''
         if masInfo:
-             print("addop :): ", p[1])
+             print("addop: ", p[1])
         else:
              print(p[1])
              
         p[0] = Node("addop", None, p[1])
      
-
+## Impresion de Nodo
 def p_term_1(p):
         'term : term mulop factor'
         if masInfo:
-             print("term_1: ", p[1], p[2], p[3])
-        pass
+             print("term_1: ", p[1].leaf, p[2].leaf, p[3].leaf)
+        p[0] = Node("term_1", [p[1], p[3]], p[2].leaf)
+        print("Papa '{}'   Hijos '{}' '{}'".
+              format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
 
-#Aqui 2   
 def p_term_2(p):
         'term : factor'
         if masInfo:
-             print("term_2: ", p[1].leaf)
+             print("term_2: ", p[1])
         p[0] = p[1]
 
 def p_mulop(p):
@@ -256,13 +259,13 @@ def p_mulop(p):
              print("mulop: ", p[1])
         else:
              print(p[1])
-        pass
+        p[0] = Node("TIMES", None, p[1])
 
 def p_factor_1(p):
         'factor : LPAREN expression RPAREN'
         if masInfo:
              print("factor_1: ",  p[1], p[2], p[3])
-        pass
+        p[0] = Node("factor_1", None, p[2].leaf)
 
 def p_factor_2(p):
         'factor : var'
