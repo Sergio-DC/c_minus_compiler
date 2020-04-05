@@ -160,8 +160,8 @@ def p_expression_2(p):
         if masInfo:
              print("expression_2: ", p[1])
         p[0]= p[1]
-        #print("Papa '{}'   Hijos '{}' '{}'".
-         #     format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
+        print("Papa '{}'   Hijos '{}' '{}'".
+               format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
         
 
 def p_var_1(p):
@@ -192,8 +192,8 @@ def p_simple_expression_2(p):
         if masInfo:
              print('simple_expression_2: ', p[1])
         p[0] = p[1]
-        #print("Papa2 '{}'   Hijos '{}' '{}'".
-         #     format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
+        print("Papa2 '{}'   Hijos '{}' '{}'".
+              format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
 
 def p_relop(p):
         '''relop : LESS 
@@ -248,7 +248,7 @@ def p_term_1(p):
 def p_term_2(p):
         'term : factor'
         if masInfo:
-             print("term_2: ", p[1])
+             print("term_2: ", p[1].leaf)
         p[0] = p[1]
 
 def p_mulop(p):
@@ -265,12 +265,13 @@ def p_factor_1(p):
         'factor : LPAREN expression RPAREN'
         if masInfo:
              print("factor_1: ",  p[1], p[2], p[3])
-        p[0] = Node("factor_1", None, p[2].leaf)
+        p[0] = p[2]
 
 def p_factor_2(p):
         'factor : var'
         if masInfo:
              print("factor_2: ",  p[1])
+        p[0] = p[1]
         pass
 
 def p_factor_3(p):
@@ -293,7 +294,7 @@ def p_call(p):
              print("call: ",  p[1], p[2], p[3], p[4])
         else:
              print(p[1], p[2], p[3], p[4])
-        pass
+        p[0] = Node("call", [p[1], p[3]], "call")
 
 def p_args(p):
         '''args : args_list
@@ -309,13 +310,14 @@ def p_args_list_1(p):
              print("args_list_1: ", p[1], p[2], p[3])
         else:
              print( p[1], p[2], p[3])
-        pass
-
+        p[0] = Node("args_list_1",[p[1], p[3]] ,"arguments")
+        print("Papa '{}'   Hijos '{}' '{}'".
+              format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
 def p_args_list_2(p):
         'args_list : expression'
         if masInfo:
              print("args_list_2: ",  p[1])
-        pass
+        p[0] = p[1]
 
 def p_empty(p):
         'empty :'
@@ -334,19 +336,43 @@ def p_error(p):
         else:
              raise Exception('syntax', 'error')
 		
+def imprimeAST(arbol):
+    global endentacion
+    endentacion += 2
+    if arbol != None:
+        imprimeEspacios()
+        '''
+        if arbol.exp == TipoExpresion.OP:
+            print("OP: ", arbol.op)
+        elif arbol.exp == TipoExpresion.CONST:
+            print("CONST: ", arbol.val," ")
+        else:
+            print("ExpNode de tipo desconocido")'''
+        print(arbol.leaf)
+        if(arbol.children != []):
+             imprimeAST(arbol.children[0])
+        if(arbol.children != []):
+             imprimeAST(arbol.children[1])
+    endentacion -= 2
+    
+def imprimeEspacios():
+    print(" "*endentacion, end="")
 
+        
 parser = yacc.yacc()
+endentacion = 0
 
 if __name__ == '__main__':
 
-	if (len(sys.argv) > 1):
-		fin = sys.argv[1]
-	else:
-		fin = 'examples/input.c'
+     if (len(sys.argv) > 1):
+          fin = sys.argv[1]
+     else:
+          fin = 'examples/input.c'
 
-	f = open(fin, 'r')
-	data = f.read()
-	print(data)
-	parser.parse(data, tracking=True)
-	
+     f = open(fin, 'r')
+     data = f.read()
+     print(data)
+     arbol = parser.parse(data, tracking=True)
 
+     imprimeAST(arbol)
+     
