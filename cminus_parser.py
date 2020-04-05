@@ -161,11 +161,8 @@ def p_expression_2(p):
              print("expression_2: ", p[1].leaf)
              for i in range(len(p[1].children)):
                   print("Papa: {} Hijos: {} {}".
-                        format(p[1].leaf, p[1].children[i], p[1].children[i]) )
-        p[0]= p[1]
-        #print("Papa '{}'   Hijos '{}' '{}'".
-         #      format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
-        
+                        format(p[1].leaf, p[1].children[i].leaf, p[1].children[i].leaf) )
+        p[0]= p[1]        
 
 def p_var_1(p):
         'var : ID'
@@ -175,12 +172,13 @@ def p_var_1(p):
              print(p[1])
         p[0]= Node("var_1",None , p[1])
 def p_var_2(p):
-        'var : ID LBRACKET expression RBRACKET'
-        if masInfo:
-             print("var_2: ", p[1], p[2], p[3], p[4])
-        else:
-             print(p[1], p[2], p[3], p[4])
-        p[0]= Node("expression_2", [p[1],p[3]], p[2])
+     'var : ID LBRACKET expression RBRACKET'
+     if masInfo:
+          print("var_2: ", p[1], p[2], p[3], p[4])
+     else:
+          print(p[1], p[2], p[3], p[4])
+     identifier= Node("var_1",None , p[1])
+     p[0]= Node("var_2", [identifier,p[3]], "var_2")
 
 def p_simple_expression_1(p):
         'simple_expression : additive_expression relop additive_expression'
@@ -294,7 +292,7 @@ def p_call(p):
              print("call: ",  p[1], p[2], p[3], p[4])
         else:
              print(p[1], p[2], p[3], p[4])
-        p[0] = Node("call", [p[1], p[3]], "c")
+        p[0] = Node("call", [p[1], p[3]], "call")
 
 def p_args(p):
         '''args : args_list
@@ -354,18 +352,29 @@ def imprimeAST(arbol):
           else:
           print("ExpNode de tipo desconocido")'''
           print(arbol.leaf)
-          if arbol.type == "call":             
+          if arbol.type == "call":
+               #endentacion += 2
+               imprimeEspacios()
+               print(arbol.children[0])
+               for i in range(len(arbol.children[1])):
+                    imprimeEspacios()
+                    print(arbol.children[1][i])
+               print()
+               endentacion -= 2
+               return
+          '''if arbol.type == "type_2":
                endentacion += 2
                imprimeEspacios()
                print(arbol.children[0])
                for i in range(len(arbol.children[1])):
                     imprimeEspacios()
                     print(arbol.children[1][i])
-               return
+               endentacion -= 2
+               return'''
           if(arbol.children != []):
                imprimeAST(arbol.children[0])
                imprimeAST(arbol.children[1])
-     endentacion -= 2
+          endentacion -= 2
     
 def imprimeEspacios():
     print(" "*endentacion, end="")

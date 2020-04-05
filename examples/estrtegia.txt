@@ -29,3 +29,5 @@ x = 98
 foo(2,a,null,z)
 sum(y)
 sum(y,7)
+sum(y,7) + res(a,b) + p(1,null)
+1 + 2 + 3
