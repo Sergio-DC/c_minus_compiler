@@ -152,16 +152,19 @@ def p_expression_1(p):
         else:
              print(p[2])
         p[0]= Node("expression_1", [p[1],p[3]], p[2])
-        print("Papa '{}'   Hijos '{}' '{}'".
+        print("Papaito '{}'   Hijos '{}' '{}'".
               format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
 
 def p_expression_2(p):
         'expression : simple_expression'
         if masInfo:
-             print("expression_2: ", p[1])
+             print("expression_2: ", p[1].leaf)
+             for i in range(len(p[1].children)):
+                  print("Papa: {} Hijos: {} {}".
+                        format(p[1].leaf, p[1].children[i], p[1].children[i]) )
         p[0]= p[1]
-        print("Papa '{}'   Hijos '{}' '{}'".
-               format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
+        #print("Papa '{}'   Hijos '{}' '{}'".
+         #      format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
         
 
 def p_var_1(p):
@@ -190,10 +193,10 @@ def p_simple_expression_1(p):
 def p_simple_expression_2(p):
         'simple_expression : additive_expression'
         if masInfo:
-             print('simple_expression_2: ', p[1])
+             print('simple_expression_2: ', p[1].leaf)
         p[0] = p[1]
-        print("Papa2 '{}'   Hijos '{}' '{}'".
-              format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
+        #print("Papa2 '{}'   Hijos '{}' '{}'".
+         #     format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
 
 def p_relop(p):
         '''relop : LESS 
@@ -218,12 +221,11 @@ def p_additive_expression_1(p):
               format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
         
 #Aqui 3
-def p_axodditive_expression_2(p):
+def p_additive_expression_2(p):
         'additive_expression : term'
         if masInfo:
-             print('additive_expression_2: ', p[1])
+             print('additive_expression_2: ', p[1].leaf)
         p[0] = p[1]
-        pass
 
 def p_addop(p):
         '''addop : PLUS 
@@ -246,10 +248,10 @@ def p_term_1(p):
               format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
 
 def p_term_2(p):
-        'term : factor'
-        if masInfo:
-             print("term_2: ", p[1].leaf)
-        p[0] = p[1]
+     'term : factor'
+     if masInfo:
+          print("term_2: ", p[1].leaf)
+     p[0] = p[1]
 
 def p_mulop(p):
         '''mulop : TIMES
@@ -270,16 +272,14 @@ def p_factor_1(p):
 def p_factor_2(p):
         'factor : var'
         if masInfo:
-             print("factor_2: ",  p[1])
+             print("factor_2: ",  p[1].leaf)
         p[0] = p[1]
-        pass
 
 def p_factor_3(p):
         'factor : call'
         if masInfo:
-             print("factor_3: ",  p[1])
-        pass
-#Aqui 1
+             print("factor_3: ",  p[1], p[1].children[0])
+        p[0] = p[1]
 def p_factor_4(p):
         'factor : NUMBER'
         if masInfo:
@@ -294,7 +294,7 @@ def p_call(p):
              print("call: ",  p[1], p[2], p[3], p[4])
         else:
              print(p[1], p[2], p[3], p[4])
-        p[0] = Node("call", [p[1], p[3]], "call")
+        p[0] = Node("call", [p[1], p[3]], "c")
 
 def p_args(p):
         '''args : args_list
@@ -302,22 +302,27 @@ def p_args(p):
         '''
         if masInfo:
              print("args: ", p[1])
-        pass
+        p[0] = p[1]
 
 def p_args_list_1(p):
-        'args_list : args_list COMMA expression'
-        if masInfo:
-             print("args_list_1: ", p[1], p[2], p[3])
-        else:
-             print( p[1], p[2], p[3])
-        p[0] = Node("args_list_1",[p[1], p[3]] ,"arguments")
-        print("Papa '{}'   Hijos '{}' '{}'".
-              format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
+     'args_list : args_list COMMA expression'
+     if masInfo:
+             print("args_list_1: ", p[1], p[2], p[3].leaf)
+     else:
+          print( p[1], p[2], p[3])
+     aux_list = []
+     aux_list.append(p[3].leaf)
+     arguments = [arg for arg in (p[1] + aux_list)]
+     print("argui: ", arguments)
+     p[0] = arguments
+     #p[0] = Node("args_list_1", [p[1], p[3]],
+     #print("Papa '{}'   Hijos '{}' '{}'".
+     #     format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
 def p_args_list_2(p):
         'args_list : expression'
         if masInfo:
              print("args_list_2: ",  p[1])
-        p[0] = p[1]
+        p[0] = [arg for arg in str(p[1].leaf)]
 
 def p_empty(p):
         'empty :'
@@ -337,28 +342,34 @@ def p_error(p):
              raise Exception('syntax', 'error')
 		
 def imprimeAST(arbol):
-    global endentacion
-    endentacion += 2
-    if arbol != None:
-        imprimeEspacios()
-        '''
-        if arbol.exp == TipoExpresion.OP:
-            print("OP: ", arbol.op)
-        elif arbol.exp == TipoExpresion.CONST:
-            print("CONST: ", arbol.val," ")
-        else:
-            print("ExpNode de tipo desconocido")'''
-        print(arbol.leaf)
-        if(arbol.children != []):
-             imprimeAST(arbol.children[0])
-        if(arbol.children != []):
-             imprimeAST(arbol.children[1])
-    endentacion -= 2
+     global endentacion
+     endentacion += 2
+     if arbol != None:
+          imprimeEspacios()
+          '''
+          if arbol.exp == TipoExpresion.OP:
+          print("OP: ", arbol.op)
+          elif arbol.exp == TipoExpresion.CONST:
+          print("CONST: ", arbol.val," ")
+          else:
+          print("ExpNode de tipo desconocido")'''
+          print(arbol.leaf)
+          if arbol.type == "call":             
+               endentacion += 2
+               imprimeEspacios()
+               print(arbol.children[0])
+               for i in range(len(arbol.children[1])):
+                    imprimeEspacios()
+                    print(arbol.children[1][i])
+               return
+          if(arbol.children != []):
+               imprimeAST(arbol.children[0])
+               imprimeAST(arbol.children[1])
+     endentacion -= 2
     
 def imprimeEspacios():
     print(" "*endentacion, end="")
 
-        
 parser = yacc.yacc()
 endentacion = 0
 
