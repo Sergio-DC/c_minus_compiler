@@ -18,7 +18,7 @@ Interpretacion de la salida por consola:
 
 Inputs Probados:
 
-x = 98
+x = 98--
 1 + 3
 5 * 3
 5 * 3 / 10 + 9
@@ -31,3 +31,7 @@ sum(y)
 sum(y,7)
 sum(y,7) + res(a,b) + p(1,null)
 1 + 2 + 3
+while (x == 5) x = 7;
+while (x == 5);
+while (x == 5)while(a>b); REVISAR
+while (x == 5) return;

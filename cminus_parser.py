@@ -7,7 +7,7 @@ import ply.yacc as yacc
 from cminus_lexer import tokens
 import cminus_lexer
 import sys
-
+start = 'iteration_stmt'
 class Node:
      def __init__(self,type,children=None,leaf=None):
           self.type = type #Puede tener el token
@@ -107,48 +107,65 @@ def p_statement_list_1(p):
 def p_statement_list_2(p):
 	'statement_list : empty'	
 	pass
-
+'''
 def p_statement(p):
-	statement : expression_stmt
-				| compount_stmt
-				| selection_stmt
-				| iteration_stmt
-				| return_stmt
-	
-	pass
+     '''statement : expression_stmt 
+     | iteration_stmt
+     | return_stmt'''	
+     if masInfo:
+          print("statement: ", p[1].leaf)
+     p[0] = p[1]
 
 def p_expression_stmt_1(p):
-	'expression_stmt : expression SEMICOLON'
-	pass
+     'expression_stmt : expression SEMICOLON'
+     if masInfo:
+          print("expression_stmt_1: ", p[1].leaf, p[2])
+     p[0] = p[1]
+ 
 
 def p_expression_stmt_2(p):
-	'expression_stmt : SEMICOLON'
-	pass
+     'expression_stmt : SEMICOLON'
+     if masInfo:
+          print("expression_stmt_2: ", p[1])
+     p[0] = Node("expression_stmt_2",None,p[1])
 
-def p_selection_stmt_1(p):
-	'selection_stmt : IF LPAREN expression RPAREN statement'
-	pass
+#def p_selection_stmt_1(p):
+#	'selection_stmt : IF LPAREN expression RPAREN statement'
+#	pass
 
-def p_selection_stmt_2(p):
-	'selection_stmt : IF LPAREN expression RPAREN statement ELSE statement'
-	pass
+#def p_selection_stmt_2(p):
+#	'selection_stmt : IF LPAREN expression RPAREN statement ELSE statement'
+#	pass 
 
 def p_iteration_stmt(p):
-	'iteration_stmt : WHILE LPAREN expression RPAREN statement'
-	pass
+     'iteration_stmt : WHILE LPAREN expression RPAREN statement'
+     if masInfo:
+          print("iterarion_stmt: ", p[1], p[2], p[3], p[4], p[5].leaf)
+         # for i in range(len(p[3].children)):
+          #     print("Papa: {} Hijos: {}".
+           #          format(p[3].leaf, p[3].children[i].leaf) )
+          #for i in range(len(p[5].children)):
+           #    print("Papa: {} Hijos: {}".
+            #         format(p[5].leaf, p[5].children[i].leaf) )
+
+     p[0] = Node("iteration_stmt", [p[3], p[5]], p[1])
 
 def p_return_stmt_1(p):
-	'return_stmt : RETURN SEMICOLON'
-	pass
+     'return_stmt : RETURN SEMICOLON'
+     if masInfo:
+          print("return_stmt_1: ", p[1], p[2])
+     p[0] = Node("return_stmt_1",None ,p[1])
 
 def p_return_stmt_2(p):
-	'return_stmt : RETURN expression SEMICOLON'
-	pass'''
+     'return_stmt : RETURN expression SEMICOLON'
+     if masInfo:
+          print("return_stmt_2: ", p[1],[p[2]], p[3])
+     p[0] = Node("return_stmt_2",[p[2]],p[1])
 # Impresion Nodo
 def p_expression_1(p):
         'expression : var EQUAL expression'
         if masInfo:
-             print("expression_1: ", p[1].leaf, p[2], p[3])
+             print("expression_1: ", p[1].leaf, p[2], p[3].leaf)
         else:
              print(p[2])
         p[0]= Node("expression_1", [p[1],p[3]], p[2])
@@ -372,8 +389,8 @@ def imprimeAST(arbol):
                endentacion -= 2
                return'''
           if(arbol.children != []):
-               imprimeAST(arbol.children[0])
-               imprimeAST(arbol.children[1])
+               for child in range(len(arbol.children)):
+                    imprimeAST(arbol.children[child])
           endentacion -= 2
     
 def imprimeEspacios():
