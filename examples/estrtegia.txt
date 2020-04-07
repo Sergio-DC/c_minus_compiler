@@ -35,3 +35,6 @@ while (x == 5) x = 7;
 while (x == 5);
 while (x == 5)while(a>b); REVISAR
 while (x == 5) return;
+sum(2,4)/foo(bar,yoyo,pepe)+(1+5)
+(1 + 5) * (9 + 10)
+1 + 5 * 9 + 10

@@ -7,7 +7,9 @@ import ply.yacc as yacc
 from cminus_lexer import tokens
 import cminus_lexer
 import sys
-start = 'iteration_stmt'
+start = 'statement'
+
+list_args = []
 class Node:
      def __init__(self,type,children=None,leaf=None):
           self.type = type #Puede tener el token
@@ -110,6 +112,7 @@ def p_statement_list_2(p):
 '''
 def p_statement(p):
      '''statement : expression_stmt 
+     | selection_stmt
      | iteration_stmt
      | return_stmt'''	
      if masInfo:
@@ -129,14 +132,16 @@ def p_expression_stmt_2(p):
           print("expression_stmt_2: ", p[1])
      p[0] = Node("expression_stmt_2",None,p[1])
 
-#def p_selection_stmt_1(p):
-#	'selection_stmt : IF LPAREN expression RPAREN statement'
-#	pass
-
-#def p_selection_stmt_2(p):
-#	'selection_stmt : IF LPAREN expression RPAREN statement ELSE statement'
-#	pass 
-
+def p_selection_stmt_1(p):
+     'selection_stmt : IF LPAREN expression RPAREN statement'
+     if masInfo:
+          print("selection_stmt_1: ", p[1], p[2], p[3], p[4], p[5])
+     p[0] = Node("selection_stmt_1",[p[3], p[5]] ,p[1])
+def p_selection_stmt_2(p):
+     'selection_stmt : IF LPAREN expression RPAREN statement ELSE statement'
+     if masInfo:
+          print("selection_stmt_2: ", p[1], p[2], p[3], p[4], p[5], p[6], p[7])
+     
 def p_iteration_stmt(p):
      'iteration_stmt : WHILE LPAREN expression RPAREN statement'
      if masInfo:
@@ -175,10 +180,10 @@ def p_expression_1(p):
 def p_expression_2(p):
         'expression : simple_expression'
         if masInfo:
-             print("expression_2: ", p[1].leaf)
-             for i in range(len(p[1].children)):
-                  print("Papa: {} Hijos: {} {}".
-                        format(p[1].leaf, p[1].children[i].leaf, p[1].children[i].leaf) )
+             print("expression_2: ", p[1])
+            # for i in range(len(p[1].children)):
+             #     print("Papa: {} Hijos: {} {}".
+             #          format(p[1].leaf, p[1].children[i].leaf, p[1].children[i].leaf) )
         p[0]= p[1]        
 
 def p_var_1(p):
@@ -208,7 +213,7 @@ def p_simple_expression_1(p):
 def p_simple_expression_2(p):
         'simple_expression : additive_expression'
         if masInfo:
-             print('simple_expression_2: ', p[1].leaf)
+             print('simple_expression_2: ', p[1])
         p[0] = p[1]
         #print("Papa2 '{}'   Hijos '{}' '{}'".
          #     format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
@@ -239,7 +244,7 @@ def p_additive_expression_1(p):
 def p_additive_expression_2(p):
         'additive_expression : term'
         if masInfo:
-             print('additive_expression_2: ', p[1].leaf)
+             print('additive_expression_2: ', p[1])
         p[0] = p[1]
 
 def p_addop(p):
@@ -265,7 +270,7 @@ def p_term_1(p):
 def p_term_2(p):
      'term : factor'
      if masInfo:
-          print("term_2: ", p[1].leaf)
+          print("term_2: ", p[1])
      p[0] = p[1]
 
 def p_mulop(p):
@@ -293,7 +298,7 @@ def p_factor_2(p):
 def p_factor_3(p):
         'factor : call'
         if masInfo:
-             print("factor_3: ",  p[1], p[1].children[0])
+             print("factor_3: ",  p[1])
         p[0] = p[1]
 def p_factor_4(p):
         'factor : NUMBER'
@@ -306,38 +311,39 @@ def p_factor_4(p):
 def p_call(p):
         'call : ID LPAREN args RPAREN'
         if masInfo:
-             print("call: ",  p[1], p[2], p[3], p[4])
-        else:
-             print(p[1], p[2], p[3], p[4])
+             print("call: ",  p[1], p[2], p[3], p[4])             
         p[0] = Node("call", [p[1], p[3]], "call")
 
 def p_args(p):
-        '''args : args_list
-                          | empty
-        '''
-        if masInfo:
-             print("args: ", p[1])
-        p[0] = p[1]
-
+     '''
+     args : args_list 
+     | empty '''
+     new_list_args = []
+     if masInfo:
+          for arg in list_args:
+               if arg != None:
+                    new_list_args.append(arg)
+                    print("argui: ", arg.leaf)
+     p[0] = new_list_args
+   
 def p_args_list_1(p):
      'args_list : args_list COMMA expression'
      if masInfo:
              print("args_list_1: ", p[1], p[2], p[3].leaf)
      else:
           print( p[1], p[2], p[3])
-     aux_list = []
-     aux_list.append(p[3].leaf)
-     arguments = [arg for arg in (p[1] + aux_list)]
-     print("argui: ", arguments)
-     p[0] = arguments
-     #p[0] = Node("args_list_1", [p[1], p[3]],
-     #print("Papa '{}'   Hijos '{}' '{}'".
-     #     format(p[0].leaf, p[0].children[0].leaf, p[0].children[1].leaf) )
+     global list_args
+     list_args.clear()
+     #Pasan directamente a p_args
+     list_args.append(p[1])
+     list_args.append(p[3])
+     
 def p_args_list_2(p):
-        'args_list : expression'
-        if masInfo:
-             print("args_list_2: ",  p[1])
-        p[0] = [arg for arg in str(p[1].leaf)]
+     'args_list : expression'
+     if masInfo:
+          print("args_list_2: ",  p[1].leaf)
+             
+     p[0] = p[1]
 
 def p_empty(p):
         'empty :'
@@ -370,25 +376,15 @@ def imprimeAST(arbol):
           print("ExpNode de tipo desconocido")'''
           print(arbol.leaf)
           if arbol.type == "call":
-               #endentacion += 2
-               imprimeEspacios()
-               print(arbol.children[0])
-               for i in range(len(arbol.children[1])):
-                    imprimeEspacios()
-                    print(arbol.children[1][i])
-               print()
-               endentacion -= 2
-               return
-          '''if arbol.type == "type_2":
                endentacion += 2
                imprimeEspacios()
                print(arbol.children[0])
                for i in range(len(arbol.children[1])):
                     imprimeEspacios()
-                    print(arbol.children[1][i])
+                    print(arbol.children[1][i].leaf)
                endentacion -= 2
-               return'''
-          if(arbol.children != []):
+               print()               
+          elif(arbol.children != []):
                for child in range(len(arbol.children)):
                     imprimeAST(arbol.children[child])
           endentacion -= 2
