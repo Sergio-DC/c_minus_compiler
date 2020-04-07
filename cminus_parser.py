@@ -141,6 +141,7 @@ def p_selection_stmt_2(p):
      'selection_stmt : IF LPAREN expression RPAREN statement ELSE statement'
      if masInfo:
           print("selection_stmt_2: ", p[1], p[2], p[3], p[4], p[5], p[6], p[7])
+     p[0] = Node("selection_stmt_2",[p[3], p[5], p[7]] ,p[1])
      
 def p_iteration_stmt(p):
      'iteration_stmt : WHILE LPAREN expression RPAREN statement'
