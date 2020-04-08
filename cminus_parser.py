@@ -360,6 +360,7 @@ def p_args(p):
                if arg != None:
                     new_list_args.append(arg)
                     print("argui: ", arg.leaf)
+     list_args.clear()
      p[0] = new_list_args
    
 def p_args_list_1(p):
@@ -369,7 +370,6 @@ def p_args_list_1(p):
      else:
           print( p[1], p[2], p[3])
      global list_args
-     list_args.clear()
      #Pasan directamente a p_args
      list_args.append(p[1])
      list_args.append(p[3])
