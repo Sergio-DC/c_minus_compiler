@@ -11,7 +11,7 @@ start = 'statement'
 
 list_args = []
 list_local_declarations = []
-statement_list = []
+list_statement_list = []
 
 class Node:
      def __init__(self,type,children=None,leaf=None):
@@ -113,13 +113,16 @@ def p_compound_stmt(p):
                print("lista-nueva-local-decl: ", item.leaf)
                new_list_local_declarations.append(item)
      list_local_declarations.clear()
-     for item in statement_list:
-          #print("list_new_statement: ", item)
+     for item in list_statement_list:
           if item != None:
-               print("lista-nueva-statement: ", item.leaf)
                new_statement_list.append(item)
-     statement_list.clear()
-     p[0] = Node("compound_stmt", [new_list_local_declarations , new_statement_list], "compound_stmt")
+     list_statement_list.clear()
+     
+     local_declarations = Node("local_declarations", new_list_local_declarations,
+                               "local_declarations")
+     statement_list = Node("statement_list", new_statement_list, "statement_list")
+     p[0] = Node("compound_stmt", [local_declarations , statement_list],
+                 "compound_stmt")
 def p_local_declarations_1(p):
      'local_declarations : local_declarations var_declaration'
      if masInfo:
@@ -136,9 +139,9 @@ def p_statement_list_1(p):
      if masInfo:
           if p[2] != None:
                print("statement_list: ", p[1], p[2].leaf)
-     global statement_list
-     statement_list.append(p[1])
-     statement_list.append(p[2])
+     global list_statement_list
+     list_statement_list.append(p[1])
+     list_statement_list.append(p[2])
      
 def p_statement_list_2(p):
      'statement_list : empty'	
@@ -413,13 +416,10 @@ def imprimeAST(arbol):
                     imprimeEspacios()
                     print(arbol.children[1][i].leaf)
                endentacion -= 2
-               print()
-          elif arbol.type == "compound_stmt":
-               for i in range(len(arbol.children[1])):
-                    imprimeAST(arbol.children[1][i])
           elif arbol.children:
                for child in range(len(arbol.children)):
-                    imprimeAST(arbol.children[child])
+                    if arbol.children[child] != []:
+                         imprimeAST(arbol.children[child])
           endentacion -= 2
     
 def imprimeEspacios():
