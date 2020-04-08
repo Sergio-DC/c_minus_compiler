@@ -39,3 +39,29 @@ sum(2,4)/foo(bar,yoyo,pepe)+(1+5)
 1 + 5 * 9 + 10
 if(x==5)y = 8;
 if(a<=b);
+
+if(x==5) {
+  print(a,b,c);
+  rest(yoyo, bar);
+ } else {
+  sum(x,y,z);
+  div();
+ }
+
+while(x < b)
+  while(true) {
+    x = 5;
+    return 0;
+  }
+
+  while(true) {
+    int x;
+    void y [8];
+    foo(a, b);
+  }
+
+while(x==10){
+   int x;
+   printf(4);
+   x=x-1;
+ }

@@ -7,11 +7,12 @@ import ply.yacc as yacc
 from cminus_lexer import tokens
 import cminus_lexer
 import sys
-start = 'statement'
+start = 'fun_declaration'
 
 list_args = []
 list_local_declarations = []
 list_statement_list = []
+list_param_list = []
 
 class Node:
      def __init__(self,type,children=None,leaf=None):
@@ -67,40 +68,63 @@ def p_type_specifier_2(p):
      'type_specifier : VOID'
      p[0] = Node("type_specifier_2", None, p[1])
 
-'''
 def p_fun_declaration(p):
-	'fun_declaration : type_specifier ID LPAREN params RPAREN compount_stmt'
-	pass
+     'fun_declaration : type_specifier ID LPAREN params RPAREN compound_stmt'
+     if masInfo:
+          print("fun_declaration: ", p[1].leaf, p[2], p[3], p[4], p[5], p[6])
+     p[4] = Node("params",p[4], "params")
+     p[2] = Node("identifier", None, p[2])
+     p[0] = Node("fun_declaration", [p[1],p[2], p[4], p[6]], "fun_declaration")
 
 
 def p_params_1(p):
-	'params : param_list'
-	pass
-
-
+     'params : param_list'
+     if masInfo:
+          print("params_1: ", p[1])
+     new_list_param = []
+     for param in list_param_list:
+          if param != None:
+               print(param.leaf)
+               new_list_param.append(param)
+     list_param_list.clear()
+     
+     p[0] =  new_list_param 
+     
 def p_params_2(p):
-	'params : VOID'
-	pass
+     'params : VOID'
+     p[0] = Node("type-specifier", None, p[1])
 
 def p_param_list_1(p):
-	'param_list : param_list COMMA param'
-	pass
+     'param_list : param_list COMMA param'
+     if masInfo:
+          print("param_list_1: ", p[1], p[2], p[3].leaf)
+     global list_param_list
+     list_param_list.append(p[1])
+     list_param_list.append(p[3])
 
 def p_param_list_2(p):
-	'param_list : param'
-	pass
+     'param_list : param'
+     if masInfo:
+          print("param_list_2: ", p[1].leaf)
+     list_param_list.append(p[1])
 
 def p_param_list_3(p):
-	'param_list : empty'
-	pass
+     'param_list : empty'
+	
 
 def p_param_1(p):
-	'param : type_specifier ID'
-	pass
+     'param : type_specifier ID'
+     if masInfo:
+          print("param_1: ", p[1].leaf, p[2])
+     p[2] = Node("var_1", None, p[2])
+     p[0] = Node("param_1", [p[1], p[2]], "param_1")
 
 def p_param_2(p):
-	'param : type_specifier ID LBRACKET RBRACKET'
-	pass'''
+     'param : type_specifier ID LBRACKET RBRACKET'
+     if masInfo:
+          print("param_2: ", p[1].leaf, p[2], p[3], p[4])
+     var_1 = Node("var_1", p[2], "var_1")
+     p[0] = Node("param_2", [p[1], var_1] ,"param_2")
 
 def p_compound_stmt(p):
      'compound_stmt : LBLOCK local_declarations statement_list RBLOCK'
@@ -381,8 +405,8 @@ def p_args_list_2(p):
      'args_list : expression'
      if masInfo:
           print("args_list_2: ",  p[1].leaf)
-             
-     p[0] = p[1]
+
+     list_args.append(p[1])
 
 def p_empty(p):
         'empty :'
