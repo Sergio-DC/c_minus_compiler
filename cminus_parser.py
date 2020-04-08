@@ -10,6 +10,9 @@ import sys
 start = 'statement'
 
 list_args = []
+list_local_declarations = []
+statement_list = []
+
 class Node:
      def __init__(self,type,children=None,leaf=None):
           self.type = type #Puede tener el token
@@ -37,25 +40,34 @@ def p_declaration_list_2(p):
 
 def p_declaration(p):
 	'  declaration : var_declaration | fun_declaration
-	pass
+	pass'''
 
 def p_var_declaration_1(p):
-	'var_declaration : type_specifier ID SEMICOLON'
-	pass
+     'var_declaration : type_specifier ID SEMICOLON'
+     p[2] = Node("var_1", None, p[2])
+     if masInfo:
+          print("var_declaration_1: ", p[1].leaf, p[2].leaf, p[3])
+     p[0] = Node("var_declaration_1", [p[1], p[2]], "var_declaration_1")
+        
 
 def p_var_declaration_2(p):
-	'var_declaration : type_specifier ID LBRACKET NUMBER RBRACKET SEMICOLON'
-	pass
+     'var_declaration : type_specifier ID LBRACKET NUMBER RBRACKET SEMICOLON'
+     p[2] = Node("var_1", None, p[2])
+     p[4] = Node("num", None, p[4])
+     if masInfo:
+          print("var_declaration_2: ", p[1].leaf, p[2].leaf, p[3], p[4].leaf, p[5], p[6])
+     p[0] = Node("var_declaration_2", [p[1],p[2], p[4]], "var_declaration_2")
+
 
 def p_type_specifier_1(p):
-	'type_specifier : INT'
-	pass
+     'type_specifier : INT'
+     p[0] = Node("type_specifier_1", None, p[1])
 
 def p_type_specifier_2(p):
-	'type_specifier : VOID'
-	pass
+     'type_specifier : VOID'
+     p[0] = Node("type_specifier_2", None, p[1])
 
-
+'''
 def p_fun_declaration(p):
 	'fun_declaration : type_specifier ID LPAREN params RPAREN compount_stmt'
 	pass
@@ -88,35 +100,58 @@ def p_param_1(p):
 
 def p_param_2(p):
 	'param : type_specifier ID LBRACKET RBRACKET'
-	pass
+	pass'''
 
-def p_compount_stmt(p):
-	'compount_stmt : LBLOCK local_declarations statement_list RBLOCK'
-	pass
-
+def p_compound_stmt(p):
+     'compound_stmt : LBLOCK local_declarations statement_list RBLOCK'
+     if masInfo:
+          print("compund_stmt: ", p[1], p[2], p[3], p[4])
+     new_list_local_declarations = []
+     new_statement_list = []
+     for item in list_local_declarations:
+          if item != None:
+               print("lista-nueva-local-decl: ", item.leaf)
+               new_list_local_declarations.append(item)
+     list_local_declarations.clear()
+     for item in statement_list:
+          #print("list_new_statement: ", item)
+          if item != None:
+               print("lista-nueva-statement: ", item.leaf)
+               new_statement_list.append(item)
+     statement_list.clear()
+     p[0] = Node("compound_stmt", [new_list_local_declarations , new_statement_list], "compound_stmt")
 def p_local_declarations_1(p):
-	'local_declarations : local_declarations var_declaration'
-	pass
+     'local_declarations : local_declarations var_declaration'
+     if masInfo:
+          print("local_declarations_1", p[1], p[2].leaf)
+     global list_local_declarations
+     list_local_declarations.append(p[1])
+     list_local_declarations.append(p[2])
 
 def p_local_declarations_2(p):
-	'local_declarations : empty'
-	pass
+     'local_declarations : empty'
 
 def p_statement_list_1(p):
-	'statement_list : statement_list statement'
-	pass
-
+     'statement_list : statement_list statement'
+     if masInfo:
+          if p[2] != None:
+               print("statement_list: ", p[1], p[2].leaf)
+     global statement_list
+     statement_list.append(p[1])
+     statement_list.append(p[2])
+     
 def p_statement_list_2(p):
-	'statement_list : empty'	
-	pass
-'''
+     'statement_list : empty'	
+     pass
+
 def p_statement(p):
      '''statement : expression_stmt 
+     | compound_stmt
      | selection_stmt
      | iteration_stmt
      | return_stmt'''	
      if masInfo:
-          print("statement: ", p[1].leaf)
+          print("statement: ", p[1].children)
      p[0] = p[1]
 
 def p_expression_stmt_1(p):
@@ -200,8 +235,8 @@ def p_var_2(p):
           print("var_2: ", p[1], p[2], p[3], p[4])
      else:
           print(p[1], p[2], p[3], p[4])
-     identifier= Node("var_1",None , p[1])
-     p[0]= Node("var_2", [identifier,p[3]], "var_2")
+     p[1]= Node("var_1",None , p[1])
+     p[0]= Node("var_2", [p[1],p[3]], "var_2")
 
 def p_simple_expression_1(p):
         'simple_expression : additive_expression relop additive_expression'
@@ -368,13 +403,7 @@ def imprimeAST(arbol):
      endentacion += 2
      if arbol != None:
           imprimeEspacios()
-          '''
-          if arbol.exp == TipoExpresion.OP:
-          print("OP: ", arbol.op)
-          elif arbol.exp == TipoExpresion.CONST:
-          print("CONST: ", arbol.val," ")
-          else:
-          print("ExpNode de tipo desconocido")'''
+
           print(arbol.leaf)
           if arbol.type == "call":
                endentacion += 2
@@ -384,8 +413,11 @@ def imprimeAST(arbol):
                     imprimeEspacios()
                     print(arbol.children[1][i].leaf)
                endentacion -= 2
-               print()               
-          elif(arbol.children != []):
+               print()
+          elif arbol.type == "compound_stmt":
+               for i in range(len(arbol.children[1])):
+                    imprimeAST(arbol.children[1][i])
+          elif arbol.children:
                for child in range(len(arbol.children)):
                     imprimeAST(arbol.children[child])
           endentacion -= 2

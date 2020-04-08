@@ -18,7 +18,7 @@ Interpretacion de la salida por consola:
 
 Inputs Probados:
 
-x = 98--
+x = 98;
 1 + 3
 5 * 3
 5 * 3 / 10 + 9
@@ -28,13 +28,14 @@ x = 98--
 (8 + 1) * (9 + 5) / (10+2)
 foo(2,a,null,z)
 sum(y)
-sum(y,7)
 sum(y,7) + res(a,b) + p(1,null)
 1 + 2 + 3
 while (x == 5) x = 7;
 while (x == 5);
-while (x == 5)while(a>b); REVISAR
+while (x == 5)while(a>b);
 while (x == 5) return;
 sum(2,4)/foo(bar,yoyo,pepe)+(1+5)
 (1 + 5) * (9 + 10)
 1 + 5 * 9 + 10
+if(x==5)y = 8;
+if(a<=b);
