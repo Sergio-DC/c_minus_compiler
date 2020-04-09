@@ -7,7 +7,7 @@ import ply.yacc as yacc
 from cminus_lexer import tokens
 import cminus_lexer
 import sys
-start = 'compound_stmt'
+start = 'fun_declaration'
 
 list_args = []
 list_local_declarations = []
@@ -80,6 +80,7 @@ def p_fun_declaration(p):
      'fun_declaration : type_specifier ID LPAREN params RPAREN compound_stmt'
      if masInfo:
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
+     p[1] = Node("type_specifier: ", None, p[1])     
      p[4] = Node("params",p[4], "params")
      p[2] = Node("identifier", None, p[2])
      p[0] = Node("fun_declaration", [p[1],p[2], p[4], p[6]], "fun_declaration")
@@ -125,7 +126,7 @@ def p_param_1(p):
      if masInfo:
           print("param_1: ", p[1], p[2])    
      p[2] = Node("var_1", None, p[2])
-     p[0] = Node("param_1",[p[2]], p[1].leaf)
+     p[0] = Node("param_1",[p[2]], p[1])
 
 def p_param_2(p):
      'param : type_specifier ID LBRACKET RBRACKET'
