@@ -46,11 +46,12 @@ def p_declaration(p):
 
 def p_var_declaration_1(p):
      'var_declaration : type_specifier ID SEMICOLON'
-     p[1] = Node("type_specifier", None, p[1])
+     #p[1] = Node("type_specifier", None, p[1])
+     p[2] = Node("identifier", None, p[2])
      if masInfo:
           print("var_declaration_1: ", p[1], p[2], p[3])
      global var_decl
-     var_decl = Node("var_declaration_1", [p[1]], p[2])
+     var_decl = Node("var_declaration_1", [p[2]], p[1])
      p[0] = var_decl
         
 '''
@@ -134,26 +135,26 @@ def p_param_2(p):
      p[0] = Node("param_2", [p[1], var_1] ,"param_2")
 
 def p_compound_stmt(p):
-     'compound_stmt : LBLOCK local_declarations RBLOCK'
+     'compound_stmt : LBLOCK local_declarations statement_list RBLOCK'
      if masInfo:
           print("compund_stmt: ", p[1], p[2], p[3])
      new_list_local_declarations = []
-     #new_statement_list = []
+     new_statement_list = []
      for item in list_local_declarations:
           if item != None:
                print("for_1: ", item.leaf, item.children)
                new_list_local_declarations.append(item)
      list_local_declarations.clear()
-     #for item in list_statement_list:
-     #     if item != None:
-     #          print("for_2: ", item)
-     #          new_statement_list.append(item.leaf)
-     #list_statement_list.clear()
+     for item in list_statement_list:
+          if item != None:
+               print("for_2: ", item)
+               new_statement_list.append(item)
+     list_statement_list.clear()
      
      #local_declarations = Node("local_declarations", None, new_list_local_declarations)
      #statement_list = Node("statement_list", None, new_statement_list)
-     p[0] = Node("compound_stmt", new_list_local_declarations,
-                 "compound_stmt")
+     p[0] = Node("compound_stmt", [new_list_local_declarations, new_statement_list],
+                 "compound_Stmt")
 def p_local_declarations_1(p):
      'local_declarations : local_declarations var_declaration'
      if masInfo:
@@ -448,12 +449,13 @@ def imprimeAST(arbol):
                     imprimeEspacios()
                     print(arbol.children[1][i].leaf)
                endentacion -= 2
+          elif arbol.type == "compound_stmt":
+               for i in range(len(arbol.children)):
+                    for node in arbol.children[i]:
+                         imprimeAST(node)
           elif arbol.children:
                for child in range(len(arbol.children)):
                     if arbol.children[child] != []:
-                        # print(":) ", var_decl)
-                         #print(":) ", var_decl.leaf)
-                         #print(":) ", var_decl.children)
                          imprimeAST(arbol.children[child])                        
           endentacion -= 2
      else:
