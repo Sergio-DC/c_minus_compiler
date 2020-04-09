@@ -7,12 +7,13 @@ import ply.yacc as yacc
 from cminus_lexer import tokens
 import cminus_lexer
 import sys
-start = 'fun_declaration'
+start = 'compound_stmt'
 
 list_args = []
 list_local_declarations = []
 list_statement_list = []
 list_param_list = []
+var_decl = None
 
 class Node:
      def __init__(self,type,children=None,leaf=None):
@@ -45,33 +46,39 @@ def p_declaration(p):
 
 def p_var_declaration_1(p):
      'var_declaration : type_specifier ID SEMICOLON'
-     p[2] = Node("var_1", None, p[2])
+     p[1] = Node("type_specifier", None, p[1])
      if masInfo:
-          print("var_declaration_1: ", p[1].leaf, p[2].leaf, p[3])
-     p[0] = Node("var_declaration_1", [p[1], p[2]], "var_declaration_1")
+          print("var_declaration_1: ", p[1], p[2], p[3])
+     global var_decl
+     var_decl = Node("var_declaration_1", [p[1]], p[2])
+     p[0] = var_decl
         
-
+'''
 def p_var_declaration_2(p):
      'var_declaration : type_specifier ID LBRACKET NUMBER RBRACKET SEMICOLON'
      p[2] = Node("var_1", None, p[2])
      p[4] = Node("num", None, p[4])
      if masInfo:
           print("var_declaration_2: ", p[1].leaf, p[2].leaf, p[3], p[4].leaf, p[5], p[6])
-     p[0] = Node("var_declaration_2", [p[1],p[2], p[4]], "var_declaration_2")
+     p[0] = Node("var_declaration_2", [p[1],p[2], p[4]], "var_declaration_2") '''
 
 
 def p_type_specifier_1(p):
      'type_specifier : INT'
-     p[0] = Node("type_specifier_1", None, p[1])
+     if masInfo:
+          print("type_specifier_1: ", p[1])
+     p[0] =  p[1]
 
 def p_type_specifier_2(p):
      'type_specifier : VOID'
-     p[0] = Node("type_specifier_2", None, p[1])
+     if masInfo:
+          print("type_specifier_2", p[1])
+     p[0] = p[1]
 
 def p_fun_declaration(p):
      'fun_declaration : type_specifier ID LPAREN params RPAREN compound_stmt'
      if masInfo:
-          print("fun_declaration: ", p[1].leaf, p[2], p[3], p[4], p[5], p[6])
+          print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
      p[4] = Node("params",p[4], "params")
      p[2] = Node("identifier", None, p[2])
      p[0] = Node("fun_declaration", [p[1],p[2], p[4], p[6]], "fun_declaration")
@@ -115,9 +122,9 @@ def p_param_list_3(p):
 def p_param_1(p):
      'param : type_specifier ID'
      if masInfo:
-          print("param_1: ", p[1].leaf, p[2])
+          print("param_1: ", p[1], p[2])    
      p[2] = Node("var_1", None, p[2])
-     p[0] = Node("param_1", [p[1], p[2]], "param_1")
+     p[0] = Node("param_1",[p[2]], p[1].leaf)
 
 def p_param_2(p):
      'param : type_specifier ID LBRACKET RBRACKET'
@@ -127,34 +134,35 @@ def p_param_2(p):
      p[0] = Node("param_2", [p[1], var_1] ,"param_2")
 
 def p_compound_stmt(p):
-     'compound_stmt : LBLOCK local_declarations statement_list RBLOCK'
+     'compound_stmt : LBLOCK local_declarations RBLOCK'
      if masInfo:
-          print("compund_stmt: ", p[1], p[2], p[3], p[4])
+          print("compund_stmt: ", p[1], p[2], p[3])
      new_list_local_declarations = []
-     new_statement_list = []
+     #new_statement_list = []
      for item in list_local_declarations:
           if item != None:
-               print("lista-nueva-local-decl: ", item.leaf)
+               print("for_1: ", item.leaf, item.children)
                new_list_local_declarations.append(item)
      list_local_declarations.clear()
-     for item in list_statement_list:
-          if item != None:
-               new_statement_list.append(item)
-     list_statement_list.clear()
+     #for item in list_statement_list:
+     #     if item != None:
+     #          print("for_2: ", item)
+     #          new_statement_list.append(item.leaf)
+     #list_statement_list.clear()
      
-     local_declarations = Node("local_declarations", new_list_local_declarations,
-                               "local_declarations")
-     statement_list = Node("statement_list", new_statement_list, "statement_list")
-     p[0] = Node("compound_stmt", [local_declarations , statement_list],
+     #local_declarations = Node("local_declarations", None, new_list_local_declarations)
+     #statement_list = Node("statement_list", None, new_statement_list)
+     p[0] = Node("compound_stmt", new_list_local_declarations,
                  "compound_stmt")
 def p_local_declarations_1(p):
      'local_declarations : local_declarations var_declaration'
      if masInfo:
-          print("local_declarations_1", p[1], p[2].leaf)
+          print("local_declarations_1: ", p[1], p[2].leaf, p[2].children)
      global list_local_declarations
      list_local_declarations.append(p[1])
      list_local_declarations.append(p[2])
-
+     #if p[1] != None:
+     #p[0] = Node("local_declarations_1", [p[1]], p[2].leaf)
 def p_local_declarations_2(p):
      'local_declarations : empty'
 
@@ -443,9 +451,13 @@ def imprimeAST(arbol):
           elif arbol.children:
                for child in range(len(arbol.children)):
                     if arbol.children[child] != []:
-                         imprimeAST(arbol.children[child])
+                        # print(":) ", var_decl)
+                         #print(":) ", var_decl.leaf)
+                         #print(":) ", var_decl.children)
+                         imprimeAST(arbol.children[child])                        
           endentacion -= 2
-    
+     else:
+          print("arbol vacio: ")
 def imprimeEspacios():
     print(" "*endentacion, end="")
 
