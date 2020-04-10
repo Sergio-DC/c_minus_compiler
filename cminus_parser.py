@@ -1,19 +1,15 @@
-
-# -*- enconding: utf-8 -*-
-
-# Referencia: http://www.juanjoconti.com.ar/2007/11/02/minilisp-un-ejemplo-de-ply/
-
 import ply.yacc as yacc
 from cminus_lexer import tokens
 import cminus_lexer
 import sys
-start = 'fun_declaration'
+start = 'program'
 
 list_args = []
 list_local_declarations = []
 list_statement_list = []
 list_param_list = []
 var_decl = None
+list_declaration_list = []
 
 class Node:
      def __init__(self,type,children=None,leaf=None):
@@ -26,23 +22,46 @@ class Node:
 
 VERBOSE = 1
 masInfo = True
-'''
+
 def p_program(p):
-	'program : declaration_list'
-	pass
+     'program : declaration_list'
+     new_declaration_list = []
+     if masInfo:
+          print("program: ", p[1])
+     for declaration in list_declaration_list:
+          if declaration != None:
+               print("for_declaration: ", declaration)
+               new_declaration_list.append(declaration)
+     list_declaration_list.clear()
+
+     if new_declaration_list == []:
+          node = Node("program", [p[1]], "program")
+     else:
+          node = Node("program", new_declaration_list, "program")
+     p[0] = node
 
 def p_declaration_list_1(p):
-	'declaration_list : declaration_list declaration'
-	 #p[0] = p[1] + p[2]  
-	pass
-
+     'declaration_list : declaration_list declaration'
+     if masInfo:
+          print("declaration_list_1: ", p[1], p[2])
+     global list_declaration_list
+     list_declaration_list.append(p[1])
+     list_declaration_list.append(p[2])
+     #p[0] = list_declaration_list
 def p_declaration_list_2(p):
-	'declaration_list : declaration'
-	pass
+     'declaration_list : declaration'
+     if masInfo:
+          print("declaration_list_2: ", p[1])
+     p[0] = p[1]
 
 def p_declaration(p):
-	'  declaration : var_declaration | fun_declaration
-	pass'''
+     '''declaration : var_declaration 
+     | fun_declaration'''
+     if masInfo:
+          print("declaration: ", p[1])
+     #declaration_list = []
+     #declaration_list.append(p[1])
+     p[0] = p[1]
 
 def p_var_declaration_1(p):
      'var_declaration : type_specifier ID SEMICOLON'
@@ -54,15 +73,13 @@ def p_var_declaration_1(p):
      var_decl = Node("var_declaration_1", [p[2]], p[1])
      p[0] = var_decl
         
-'''
 def p_var_declaration_2(p):
      'var_declaration : type_specifier ID LBRACKET NUMBER RBRACKET SEMICOLON'
      p[2] = Node("var_1", None, p[2])
      p[4] = Node("num", None, p[4])
      if masInfo:
-          print("var_declaration_2: ", p[1].leaf, p[2].leaf, p[3], p[4].leaf, p[5], p[6])
-     p[0] = Node("var_declaration_2", [p[1],p[2], p[4]], "var_declaration_2") '''
-
+          print("var_declaration_2: ", p[1], p[2], p[3], p[4], p[5], p[6])
+     p[0] = Node("var_declaration_2", [p[2], p[4]], p[1]) 
 
 def p_type_specifier_1(p):
      'type_specifier : INT'
@@ -81,9 +98,9 @@ def p_fun_declaration(p):
      if masInfo:
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
      p[1] = Node("type_specifier: ", None, p[1])     
-     p[4] = Node("params",p[4], "params")
-     p[2] = Node("identifier", None, p[2])
-     p[0] = Node("fun_declaration", [p[1],p[2], p[4], p[6]], "fun_declaration")
+     #p[4] = Node("params",p[4], "params")
+     p[2] = Node("identifier", p[4], p[2])
+     p[0] = Node("fun_declaration", [p[1],p[2], p[6]], "fun_declaration")
 
 
 def p_params_1(p):
@@ -101,7 +118,10 @@ def p_params_1(p):
      
 def p_params_2(p):
      'params : VOID'
-     p[0] = Node("type-specifier", None, p[1])
+     new_list_param = []
+     node = Node("type-specifier", None, p[1])
+     new_list_param.append(node)
+     p[0] = new_list_param
 
 def p_param_list_1(p):
      'param_list : param_list COMMA param'
@@ -385,7 +405,7 @@ def p_call(p):
         'call : ID LPAREN args RPAREN'
         if masInfo:
              print("call: ",  p[1], p[2], p[3], p[4])             
-        p[0] = Node("call", [p[1], p[3]], "call")
+        p[0] = Node("call", p[3], p[1])
 
 def p_args(p):
      '''
@@ -440,17 +460,9 @@ def imprimeAST(arbol):
      endentacion += 2
      if arbol != None:
           imprimeEspacios()
-
           print(arbol.leaf)
-          if arbol.type == "call":
-               endentacion += 2
-               imprimeEspacios()
-               print(arbol.children[0])
-               for i in range(len(arbol.children[1])):
-                    imprimeEspacios()
-                    print(arbol.children[1][i].leaf)
-               endentacion -= 2
-          elif arbol.type == "compound_stmt":
+          
+          if arbol.type == "compound_stmt":
                for i in range(len(arbol.children)):
                     for node in arbol.children[i]:
                          imprimeAST(node)
@@ -459,8 +471,6 @@ def imprimeAST(arbol):
                     if arbol.children[child] != []:
                          imprimeAST(arbol.children[child])                        
           endentacion -= 2
-     else:
-          print("arbol vacio: ")
 def imprimeEspacios():
     print(" "*endentacion, end="")
 
