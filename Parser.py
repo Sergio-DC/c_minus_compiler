@@ -1,5 +1,5 @@
 import ply.yacc as yacc
-from cminus_lexer import tokens
+from lexer import *
 import cminus_lexer
 import sys
 start = 'program'
@@ -446,6 +446,9 @@ def globales(prog, pos, progL):
      progLong = progL
 
 def parser(imprime = True):
+     global programa
+     programa = programa.translate({ord('$'): None})
+     
      parser = yacc.yacc()
      arbol = parser.parse(programa, tracking=True)
      if imprime:
