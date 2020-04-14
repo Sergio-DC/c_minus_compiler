@@ -19,7 +19,11 @@ class Node:
           else:
                self.children = [ ]
           self.leaf = leaf #Tiene el valor del Lexema
-
+class MessageError:
+     def __init__(self, message, line_error_content, promt_pos):
+          self.message = message
+          self.line_error_content = line_error_content
+          self.prompt_pos
 VERBOSE = 1
 masInfo = False
 
@@ -250,10 +254,21 @@ def p_return_stmt_2(p):
      p[0] = Node("return_stmt_2",[p[2]],p[1])
 # Impresion Nodo
 def p_expression_1(p):
-        'expression : var EQUAL expression'
-        if masInfo:
-             print("expression_1: ", p[1].leaf, p[2], p[3].leaf)
-        p[0]= Node("expression_1", [p[1],p[3]], p[2])
+     'expression : var EQUAL expression'
+     if masInfo:
+          print("expression_1: ", p[1].leaf, p[2], p[3].leaf)
+     p[0]= Node("expression_1", [p[1],p[3]], p[2])
+
+def p_expression_1_error(p):
+     'expression : var error expression'
+     global parser
+     str_trace = "{} {}{} {}".format(p[1].leaf,'=', p[2].value, p[3].leaf)
+     str_len = len(str_trace)
+     prompt_pos = str_trace.index(p[2].value)
+     print(str_trace)
+     print((prompt_pos-1) * " ","^")
+     
+     parser.errok()
 
 def p_expression_2(p):
      'expression : simple_expression'
@@ -399,20 +414,27 @@ def p_args_list_2(p):
 def p_empty(p):
         'empty :'
         pass
-
+'''
+def p_error(p):     
+     #print str(dir(p))
+     #print str(dir(cminus_lexer))
+     global parser
+     
+     print("Whoa. You are seriously hosed.")
+ 
+     # Read ahead looking for a terminating ";"
+     while True:
+         tok = parser.token()             # Get the next token
+         print("TOKEN: ", tok)
+         if tok.type == 'SEMICOLON': break
+     parser.errok()'''
+'''
 def p_error(p):
-	#print str(dir(p))
-	#print str(dir(cminus_lexer))
-        if VERBOSE:
-                if p is not None:
-                        print("Syntax error at line {}  Unexpected token  {}"
-                              .format( str(p.lexer.lineno),str(p.value)) )
-                else:
-                        print("Syntax error at line: "
-                              .format( str(cminus_lexer.lexer.lineno)))
-        else:
-             raise Exception('syntax', 'error')
-		
+     if p:
+          print("Syntax error at token", p.value, p.lineno, p.lexpos)
+          # Just discard the token and tell the parser it's okay.
+          parser.errok()'''
+
 def imprimeAST(arbol):
      global endentacion
      endentacion += 2
@@ -432,7 +454,7 @@ def imprimeAST(arbol):
 def imprimeEspacios():
     print(" "*endentacion, end="")
 
-#parser = yacc.yacc()
+parser = None
 endentacion = 0
 
 programa = ''
@@ -447,6 +469,7 @@ def globales(prog, pos, progL):
 
 def parser(imprime = True):
      global programa
+     global parser
      programa = programa.translate({ord('$'): None})
      
      parser = yacc.yacc()
