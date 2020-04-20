@@ -27,6 +27,16 @@ class MessageError:
 VERBOSE = 1
 masInfo = False
 
+def inOrder(arbol, linear_tree):
+     if arbol != None:
+          if arbol.children != []:
+               inOrder(arbol.children[0], linear_tree)
+          #print("Visita: ", arbol.leaf)
+          linear_tree.append(arbol.leaf)
+          if arbol.children != []:
+               inOrder(arbol.children[1], linear_tree)
+     return linear_tree
+                    
 def p_program(p):
      'program : declaration_list'
      new_declaration_list = []
@@ -216,7 +226,24 @@ def p_expression_stmt_1(p):
      if masInfo:
           print("expression_stmt_1: ", p[1].leaf, p[2])
      p[0] = p[1]
- 
+
+def p_expression_stmt_1_error(p):
+     'expression_stmt : expression error'
+     global parser
+     linear_tree = []
+     linear_tree = inOrder(p[1], linear_tree)
+     str_terms = len(linear_tree) * "{} "
+     str_trace = str_terms.format(*[term for term in linear_tree])
+     str_len = len(str_trace)# longitud del string de error
+     aux_list = list(str(linear_tree[len(linear_tree) - 1])) # string de error para el programador
+     last_element = aux_list[-1] # último caracter del string de error
+     prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
+     #prompt_pos = str_trace.index(str(last_element))
+     print(str_trace)
+     print((prompt_pos-1) * " ","^")
+     
+     parser.errok()
+
 
 def p_expression_stmt_2(p):
      'expression_stmt : SEMICOLON'
@@ -317,7 +344,18 @@ def p_additive_expression_1(p):
         if masInfo:
              print('additive_expression_1: ', p[1].leaf, p[2].leaf, p[3].leaf)
         p[0] = Node('additive_expression_1', [p[1], p[3]],p[2].leaf)
-        
+
+# def p_additive_expression_1_error(p):
+#         'additive_expression : additive_expression error addop term'
+#         global parser
+#         str_trace = "{} {}{} {}".format(p[1].leaf, p[2].value, p[3].leaf, p[4].leaf)
+#         str_len = len(str_trace)
+#         prompt_pos = str_trace.index(p[2].value)
+#         print(str_trace)
+#         print((prompt_pos-1) * " ","^")
+     
+#         parser.errok()
+
 def p_additive_expression_2(p):
         'additive_expression : term'
         if masInfo:
@@ -333,13 +371,24 @@ def p_addop(p):
              
         p[0] = Node("addop", None, p[1])
      
-## Impresion de Nodo
 def p_term_1(p):
-        'term : term mulop factor'
-        if masInfo:
-             print("term_1: ", p[1].leaf, p[2].leaf, p[3].leaf)
-        p[0] = Node("term_1", [p[1], p[3]], p[2].leaf)
+     'term : term mulop factor'
+     if masInfo:
+          print("term_1: ", p[1].leaf, p[2].leaf, p[3].leaf)
+     p[0] = Node("term_1", [p[1], p[3]], p[2].leaf)
 
+# def p_term_1_error(p):
+#      'term : term mulop error factor'
+#      global parser
+#      str_trace = "{} {}{} {}".format(p[1].leaf, p[2].leaf, p[3].value, p[4].leaf)
+#      str_len = len(str_trace)
+#      prompt_pos = str_trace.index(p[3].value)
+#      print(str_trace)
+#      print((prompt_pos-1) * " ","^")
+     
+#      parser.errok()
+
+        
 def p_term_2(p):
      'term : factor'
      if masInfo:
@@ -414,26 +463,6 @@ def p_args_list_2(p):
 def p_empty(p):
         'empty :'
         pass
-'''
-def p_error(p):     
-     #print str(dir(p))
-     #print str(dir(cminus_lexer))
-     global parser
-     
-     print("Whoa. You are seriously hosed.")
- 
-     # Read ahead looking for a terminating ";"
-     while True:
-         tok = parser.token()             # Get the next token
-         print("TOKEN: ", tok)
-         if tok.type == 'SEMICOLON': break
-     parser.errok()'''
-'''
-def p_error(p):
-     if p:
-          print("Syntax error at token", p.value, p.lineno, p.lexpos)
-          # Just discard the token and tell the parser it's okay.
-          parser.errok()'''
 
 def imprimeAST(arbol):
      global endentacion
@@ -441,7 +470,7 @@ def imprimeAST(arbol):
      if arbol != None:
           imprimeEspacios()
           print(arbol.leaf)
-          
+
           if arbol.type == "compound_stmt":
                for i in range(len(arbol.children)):
                     for node in arbol.children[i]:
