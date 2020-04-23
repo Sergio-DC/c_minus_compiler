@@ -10,6 +10,9 @@ list_statement_list = []
 list_param_list = []
 var_decl = None
 list_declaration_list = []
+str_trace = ''
+prompt_pos = ''
+token_error = ''
 
 class Node:
      def __init__(self,type,children=None,leaf=None):
@@ -218,32 +221,46 @@ def p_statement(p):
      | iteration_stmt
      | return_stmt'''	
      if masInfo:
-          print("statement: ", p[1].children)
+          print("statement: ", p[1])
+     global parser
      p[0] = p[1]
 
 def p_expression_stmt_1(p):
      'expression_stmt : expression SEMICOLON'
      if masInfo:
-          print("expression_stmt_1: ", p[1].leaf, p[2])
-     p[0] = p[1]
+          print("expression_stmt_1: ", p[1], p[2])
+     if p[1] != None:
+          p[0] = p[1]
+     else:
+          print(str_trace)
+          print((prompt_pos-1) * " ","^")
 
 def p_expression_stmt_1_error(p):
      'expression_stmt : expression error'
-     global parser
-     linear_tree = []
-     linear_tree = inOrder(p[1], linear_tree)
-     str_terms = len(linear_tree) * "{} "
-     str_trace = str_terms.format(*[term for term in linear_tree])
-     str_len = len(str_trace)# longitud del string de error
-     aux_list = list(str(linear_tree[len(linear_tree) - 1])) # string de error para el programador
-     last_element = aux_list[-1] # último caracter del string de error
-     prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
-     #prompt_pos = str_trace.index(str(last_element))
-     print(str_trace)
-     print((prompt_pos-1) * " ","^")
-     
-     parser.errok()
-
+     global parser, str_trace
+     if p[1] != None:
+          linear_tree = []
+          linear_tree = inOrder(p[1], linear_tree)#Recorre el conjunto de instrucciones en el arbol y los devuelve de forma lineal
+          for item in linear_tree:
+               print("item: ", item)
+          str_terms = len(linear_tree) * "{} "
+          str_trace = str_terms.format(*[term for term in linear_tree])# string de error e.g {*+ 7}
+          str_len = len(str_trace)# longitud del string de error
+          aux_list = list(str(linear_tree[len(linear_tree) - 1])) # string de error para el programador
+          last_element = aux_list[-1] # último caracter del string de error
+          prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
+          #prompt_pos = str_trace.index(str(last_element))
+          print("Error con el SEMICOLON 1")
+          print(str_trace)
+          print((prompt_pos) * " ","^")
+          
+          parser.errok()
+     else:
+          print("Error en el SEMICOLON 2")
+          last_element = str_trace[-1]
+          prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
+          print(str_trace)
+          print((prompt_pos-1) * " ","^")
 
 def p_expression_stmt_2(p):
      'expression_stmt : SEMICOLON'
@@ -279,29 +296,42 @@ def p_return_stmt_2(p):
      if masInfo:
           print("return_stmt_2: ", p[1],[p[2]], p[3])
      p[0] = Node("return_stmt_2",[p[2]],p[1])
-# Impresion Nodo
+
 def p_expression_1(p):
      'expression : var EQUAL expression'
+     global parser, str_trace, prompt_pos
      if masInfo:
-          print("expression_1: ", p[1].leaf, p[2], p[3].leaf)
-     p[0]= Node("expression_1", [p[1],p[3]], p[2])
+          print("expression_1: ", p[1], p[2], p[3])
+     if p[3] != None:
+          p[0]= Node("expression_1", [p[1],p[3]], p[2])
+     else: # Configuraciones para preparar el ERROR
+          str_trace_aux = p[1].leaf + " " + p[2] + " "
+          str_trace_aux += str_trace
+          str_trace = str_trace_aux
+          print("Que llevamos ahora: ", str_trace)
+          prompt_pos = str_trace_aux.index(token_error)#Reubicamos el error      
+          p[0] = None
 
 def p_expression_1_error(p):
      'expression : var error expression'
-     global parser
-     str_trace = "{} {}{} {}".format(p[1].leaf,'=', p[2].value, p[3].leaf)
+     global parser, str_trace, prompt_pos, token_error
+     linear_tree = []
+     linear_tree = inOrder(p[3], linear_tree)
+     str_terms = "{} {}{} " # Se agregan 3 más
+     str_terms += len(linear_tree) * "{} "    
+     str_trace = str_terms.format(p[1].leaf, '=', p[2].value ,*[term for term in linear_tree])
      str_len = len(str_trace)
      prompt_pos = str_trace.index(p[2].value)
-     print(str_trace)
-     print((prompt_pos-1) * " ","^")
+     #Error con EQUAL 1
      
      parser.errok()
 
 def p_expression_2(p):
      'expression : simple_expression'
+     global parser, str_trace, prompt_pos, token_error
      if masInfo:
           print("expression_2: ", p[1])
-     p[0]= p[1]        
+     p[0]= p[1]
 
 def p_var_1(p):
         'var : ID'
@@ -340,21 +370,43 @@ def p_relop(p):
      p[0] = Node("relop", None, p[1])
 # Impresion Nodo
 def p_additive_expression_1(p):
-        'additive_expression : additive_expression addop term'
-        if masInfo:
-             print('additive_expression_1: ', p[1].leaf, p[2].leaf, p[3].leaf)
-        p[0] = Node('additive_expression_1', [p[1], p[3]],p[2].leaf)
+     'additive_expression : additive_expression addop term'
+     if masInfo:
+          print('additive_expression_1: ', p[1], p[2].leaf, p[3])
+
+     global parser, str_trace, prompt_pos, token_error
+     if p[1] != None and p[3] != None:          
+          p[0] = Node('additive_expression_1', [p[1], p[3]],p[2].leaf)
+     elif p[1] == None: #Configuración para preparar el error
+          prompt_pos = str_trace.index(token_error)#Reubicamos el error      
+          print("Que llevamos 1.1: ", str_trace)
+     elif p[3] == None:
+          print("Entre por aqui")
+          linear_tree = []
+          linear_tree = inOrder(p[1], linear_tree)
+          for item in linear_tree:
+               print("item: ", item)
+          str_trace_aux = p[1].leaf + " " + p[2].leaf + " " + str_trace
+          str_terms = "{}" # Se agregan 2 más
+          str_terms += len(linear_tree) * "{} " 
+          str_trace = str_terms.format(*[term for term in linear_tree], p[2].leaf)
+          str_trace = str_trace_aux
+          print("token error: ", str_trace)
+          prompt_pos = str_trace_aux.index(token_error)#Reubicamos el error      
+          print("Que llevamos 1.2: ", str_trace_aux)
+             
 
 # def p_additive_expression_1_error(p):
-#         'additive_expression : additive_expression error addop term'
-#         global parser
-#         str_trace = "{} {}{} {}".format(p[1].leaf, p[2].value, p[3].leaf, p[4].leaf)
-#         str_len = len(str_trace)
-#         prompt_pos = str_trace.index(p[2].value)
-#         print(str_trace)
-#         print((prompt_pos-1) * " ","^")
-     
-#         parser.errok()
+#         'additive_expression : additive_expression addop error term'
+#         global parser, str_trace, prompt_pos, token_error
+#         linear_tree = []
+#         linear_tree = inOrder(p[1], linear_tree)
+#         str_terms = len(linear_tree) * "{} "
+#         str_terms += "{}{} {}" #Agregar 3 parametros más para considerar p[2], p[3] y p[4] que son estáticos   
+#         str_trace = str_terms.format(*[term for term in linear_tree], p[2].leaf, p[3].value, p[4].leaf)
+#         token_error = p[3].value
+
+        #parser.errok()
 
 def p_additive_expression_2(p):
         'additive_expression : term'
@@ -373,27 +425,41 @@ def p_addop(p):
      
 def p_term_1(p):
      'term : term mulop factor'
+     global parser, str_trace, prompt_pos, token_error
      if masInfo:
-          print("term_1: ", p[1].leaf, p[2].leaf, p[3].leaf)
-     p[0] = Node("term_1", [p[1], p[3]], p[2].leaf)
-
-# def p_term_1_error(p):
-#      'term : term mulop error factor'
-#      global parser
-#      str_trace = "{} {}{} {}".format(p[1].leaf, p[2].leaf, p[3].value, p[4].leaf)
-#      str_len = len(str_trace)
-#      prompt_pos = str_trace.index(p[3].value)
-#      print(str_trace)
-#      print((prompt_pos-1) * " ","^")
-     
-#      parser.errok()
-
+          print("term_1: ", p[1], p[2].leaf, p[3])
+     if p[1] != None:
+          p[0] = Node("term_1", [p[1], p[3]], p[2].leaf)
+     else: # Hubo un error
+          str_trace += " " + str(p[3].leaf)
+          print("Que tengo ahora 1: ", str_trace) 
+          
+#Se queda
+def p_term_1_error(p):
+     'term : term mulop error factor'
+     global parser, str_trace, prompt_pos, token_error
+     linear_tree = []
+     linear_tree = inOrder(p[1], linear_tree)
+     str_terms = len(linear_tree) * "{} "
+     str_terms += "{}{} {}"
+     # string de error e.g {*+ 7}
+     str_trace = str_terms.format(*[term for term in linear_tree], p[2].leaf, p[3].value, p[4].leaf)
+     token_error = p[3].value
+     prompt_pos = str_trace.index(p[3].value)
+     print("p[4]: ", p[4].leaf)
+     print("Que tengo ahora 2: ", str_trace)
+     #print(str_trace)
+     #print((prompt_pos-1) * " ","^")
+     parser.errok()
         
 def p_term_2(p):
      'term : factor'
      if masInfo:
-          print("term_2: ", p[1])
-     p[0] = p[1]
+          print("term_2: ", p[1].leaf)
+     if p[1] != None:
+          p[0] = p[1]
+     else:
+          p[0] = None
 
 def p_mulop(p):
      '''mulop : TIMES
