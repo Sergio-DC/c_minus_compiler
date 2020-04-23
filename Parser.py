@@ -227,12 +227,14 @@ def p_statement(p):
 
 def p_expression_stmt_1(p):
      'expression_stmt : expression SEMICOLON'
+     global parser, str_trace, prompt_pos, token_error
      if masInfo:
           print("expression_stmt_1: ", p[1], p[2])
      if p[1] != None:
           p[0] = p[1]
      else:
           print(str_trace)
+          prompt_pos = str_trace.index(token_error)#Reubicamos el error
           print((prompt_pos-1) * " ","^")
 
 def p_expression_stmt_1_error(p):
@@ -321,7 +323,7 @@ def p_expression_1_error(p):
      str_terms += len(linear_tree) * "{} "    
      str_trace = str_terms.format(p[1].leaf, '=', p[2].value ,*[term for term in linear_tree])
      str_len = len(str_trace)
-     prompt_pos = str_trace.index(p[2].value)
+     token_error = p[2].value
      #Error con EQUAL 1
      
      parser.errok()
@@ -372,13 +374,14 @@ def p_relop(p):
 def p_additive_expression_1(p):
      'additive_expression : additive_expression addop term'
      if masInfo:
-          print('additive_expression_1: ', p[1], p[2].leaf, p[3])
+          print('additive_expression_1: ', p[1], p[2].leaf, p[3].leaf)
 
      global parser, str_trace, prompt_pos, token_error
      if p[1] != None and p[3] != None:          
           p[0] = Node('additive_expression_1', [p[1], p[3]],p[2].leaf)
      elif p[1] == None: #Configuración para preparar el error
-          prompt_pos = str_trace.index(token_error)#Reubicamos el error      
+          str_trace +=  " " + str(p[2].leaf) + " " + str(p[3].leaf)
+          prompt_pos = str_trace.index(token_error)#Reubicamos el error  
           print("Que llevamos 1.1: ", str_trace)
      elif p[3] == None:
           print("Entre por aqui")
@@ -391,22 +394,20 @@ def p_additive_expression_1(p):
           str_terms += len(linear_tree) * "{} " 
           str_trace = str_terms.format(*[term for term in linear_tree], p[2].leaf)
           str_trace = str_trace_aux
-          print("token error: ", str_trace)
           prompt_pos = str_trace_aux.index(token_error)#Reubicamos el error      
           print("Que llevamos 1.2: ", str_trace_aux)
              
 
-# def p_additive_expression_1_error(p):
-#         'additive_expression : additive_expression addop error term'
-#         global parser, str_trace, prompt_pos, token_error
-#         linear_tree = []
-#         linear_tree = inOrder(p[1], linear_tree)
-#         str_terms = len(linear_tree) * "{} "
-#         str_terms += "{}{} {}" #Agregar 3 parametros más para considerar p[2], p[3] y p[4] que son estáticos   
-#         str_trace = str_terms.format(*[term for term in linear_tree], p[2].leaf, p[3].value, p[4].leaf)
-#         token_error = p[3].value
-
-        #parser.errok()
+def p_additive_expression_1_error(p):
+        'additive_expression : additive_expression addop error term'
+        global parser, str_trace, prompt_pos, token_error
+        linear_tree = []
+        linear_tree = inOrder(p[1], linear_tree)
+        str_terms = len(linear_tree) * "{} "
+        str_terms += "{}{} {}" #Agregar 3 parametros más para considerar p[2], p[3] y p[4] que son estáticos   
+        str_trace = str_terms.format(*[term for term in linear_tree], p[2].leaf, p[3].value, p[4].leaf)
+        token_error = p[3].value
+        parser.errok()
 
 def p_additive_expression_2(p):
         'additive_expression : term'
