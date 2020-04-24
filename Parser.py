@@ -1,6 +1,6 @@
 import ply.yacc as yacc
 from lexer import tokens
-import cminus_lexer
+#from cminus_lexer import tokens
 import sys
 start = 'program'
 

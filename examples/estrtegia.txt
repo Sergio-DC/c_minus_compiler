@@ -1,7 +1,7 @@
 1. crear seccion debug para mostrar mas info sobre el recorrido que
 toma el input
-2. Diseñar una cadena de entrada minima que pase por la menor cantidad de GLC
-3. Indetificar el recorrido generado por la entrada mínima
+2. Diseï¿½ar una cadena de entrada minima que pase por la menor cantidad de GLC
+3. Indetificar el recorrido generado por la entrada mï¿½nima
 4. Crear instancias de nodo dentro de las funciones que fueron tocadas por el paso
 del input minimo
 
@@ -9,7 +9,7 @@ del input minimo
 Nota: El orden de impresion es de manera ascendente,
 
 Primero desciende por el arbol el input hasta llegar a las hojas
-que hacen match para después empezar a imprimir de manera ascendente
+que hacen match para despuï¿½s empezar a imprimir de manera ascendente
 
 Interpretacion de la salida por consola:
 - Hojas del fondo
