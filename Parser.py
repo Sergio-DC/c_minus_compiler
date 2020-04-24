@@ -1,5 +1,5 @@
 import ply.yacc as yacc
-from lexer import *
+from lexer import tokens
 import cminus_lexer
 import sys
 start = 'program'
@@ -13,6 +13,8 @@ list_declaration_list = []
 str_trace = ''
 prompt_pos = ''
 token_error = ''
+line_error = ''
+mensaje = ''
 
 class Node:
      def __init__(self,type,children=None,leaf=None):
@@ -34,7 +36,6 @@ def inOrder(arbol, linear_tree):
      if arbol != None:
           if arbol.children != []:
                inOrder(arbol.children[0], linear_tree)
-          #print("Visita: ", arbol.leaf)
           linear_tree.append(arbol.leaf)
           if arbol.children != []:
                inOrder(arbol.children[1], linear_tree)
@@ -88,6 +89,18 @@ def p_var_declaration_1(p):
      global var_decl
      var_decl = Node("var_declaration_1", [p[2]], p[1])
      p[0] = var_decl
+
+def p_var_declaration_1_error(p):
+     'var_declaration : type_specifier ID'
+     global parser
+     str_trace = "{} {}".format(p[1], p[2])
+     prompt_pos = str_trace.index(p[2])#Reubicamos el error
+     mensaje ="Linea {}: Error en la expresión de declaracion".format(p.lineno(2))
+     print(mensaje)
+     print(str_trace)
+     print((prompt_pos) * " ","^")
+     parser.errok()
+
         
 def p_var_declaration_2(p):
      'var_declaration : type_specifier ID LBRACKET NUMBER RBRACKET SEMICOLON'
@@ -96,6 +109,17 @@ def p_var_declaration_2(p):
      if masInfo:
           print("var_declaration_2: ", p[1], p[2], p[3], p[4], p[5], p[6])
      p[0] = Node("var_declaration_2", [p[2], p[4]], p[1])
+
+def p_var_declaration_2_error(p):
+     'var_declaration : type_specifier ID LBRACKET NUMBER RBRACKET'
+     global parser
+     str_trace = "{} {} {}{}{}".format(p[1], p[2], p[3], p[4], p[5])
+     prompt_pos = str_trace.index(p[5])#Reubicamos el error
+     mensaje ="Linea {}: Error en la expresión falta un ;".format(p.lineno(2))
+     print(mensaje)
+     print(str_trace)
+     print((prompt_pos) * " ","^")
+     parser.errok()
 
 def p_type_specifier_1(p):
      'type_specifier : INT'
@@ -189,6 +213,7 @@ def p_compound_stmt(p):
      #statement_list = Node("statement_list", None, new_statement_list)
      p[0] = Node("compound_stmt", [new_list_local_declarations, new_statement_list],
                  "compound_Stmt")
+
 def p_local_declarations_1(p):
      'local_declarations : local_declarations var_declaration'
      if masInfo:
@@ -227,24 +252,23 @@ def p_statement(p):
 
 def p_expression_stmt_1(p):
      'expression_stmt : expression SEMICOLON'
-     global parser, str_trace, prompt_pos, token_error
+     global parser, str_trace, prompt_pos, token_error, mensaje
      if masInfo:
           print("expression_stmt_1: ", p[1], p[2])
      if p[1] != None:
           p[0] = p[1]
      else:
+          print(mensaje)
           print(str_trace)
           prompt_pos = str_trace.index(token_error)#Reubicamos el error
           print((prompt_pos-1) * " ","^")
 
 def p_expression_stmt_1_error(p):
      'expression_stmt : expression error'
-     global parser, str_trace
+     global parser, str_trace, line_error
      if p[1] != None:
           linear_tree = []
           linear_tree = inOrder(p[1], linear_tree)#Recorre el conjunto de instrucciones en el arbol y los devuelve de forma lineal
-          for item in linear_tree:
-               print("item: ", item)
           str_terms = len(linear_tree) * "{} "
           str_trace = str_terms.format(*[term for term in linear_tree])# string de error e.g {*+ 7}
           str_len = len(str_trace)# longitud del string de error
@@ -252,7 +276,7 @@ def p_expression_stmt_1_error(p):
           last_element = aux_list[-1] # último caracter del string de error
           prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
           #prompt_pos = str_trace.index(str(last_element))
-          print("Error con el SEMICOLON 1")
+          print("Linea {}: Error en la expresión falta un ;".format(p.lineno(2)))
           print(str_trace)
           print((prompt_pos) * " ","^")
           
@@ -293,11 +317,41 @@ def p_return_stmt_1(p):
           print("return_stmt_1: ", p[1], p[2])
      p[0] = Node("return_stmt_1",None ,p[1])
 
+def p_return_stmt_1_error(p):
+     'return_stmt : RETURN'
+     global parser
+     str_trace = "{}".format(p[1])
+     print("Que hay: ", p[1])
+     prompt_pos = len(str_trace) - 1 - str_trace[::-1].index("n") # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
+     mensaje ="Linea {}: Error en la expresión return falta un ;".format(p.lineno(1))
+     print(mensaje)
+     print(str_trace)
+     print((prompt_pos) * " ","^")
+     parser.errok()
+
+
 def p_return_stmt_2(p):
      'return_stmt : RETURN expression SEMICOLON'
      if masInfo:
           print("return_stmt_2: ", p[1],[p[2]], p[3])
      p[0] = Node("return_stmt_2",[p[2]],p[1])
+
+def p_return_stmt_2_error(p):
+     'return_stmt : RETURN expression'
+     global parser, str_trace
+     linear_tree = []
+     linear_tree = inOrder(p[2], linear_tree)
+     str_terms = len(linear_tree) * "{} "
+     str_terms += " {}"
+     str_trace = str_terms.format(p[1], *[term for term in linear_tree])
+     last_element = str_trace[-1]
+     print("Ultimo elemento: ", last_element)
+     prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
+     mensaje ="Linea {}: Error en la expresión return falta un ;".format(p.lineno(1))
+     print(mensaje)
+     print(str_trace)
+     print((prompt_pos) * " ","^")
+     parser.errok()
 
 def p_expression_1(p):
      'expression : var EQUAL expression'
@@ -310,13 +364,12 @@ def p_expression_1(p):
           str_trace_aux = p[1].leaf + " " + p[2] + " "
           str_trace_aux += str_trace
           str_trace = str_trace_aux
-          print("Que llevamos ahora: ", str_trace)
           prompt_pos = str_trace_aux.index(token_error)#Reubicamos el error      
           p[0] = None
 
 def p_expression_1_error(p):
      'expression : var error expression'
-     global parser, str_trace, prompt_pos, token_error
+     global parser, str_trace, prompt_pos, token_error, mensaje
      linear_tree = []
      linear_tree = inOrder(p[3], linear_tree)
      str_terms = "{} {}{} " # Se agregan 3 más
@@ -324,8 +377,7 @@ def p_expression_1_error(p):
      str_trace = str_terms.format(p[1].leaf, '=', p[2].value ,*[term for term in linear_tree])
      str_len = len(str_trace)
      token_error = p[2].value
-     #Error con EQUAL 1
-     
+     mensaje = "Linea {}: error en la expresion de asignacion:".format(p.lineno(2))     
      parser.errok()
 
 def p_expression_2(p):
@@ -374,7 +426,7 @@ def p_relop(p):
 def p_additive_expression_1(p):
      'additive_expression : additive_expression addop term'
      if masInfo:
-          print('additive_expression_1: ', p[1], p[2].leaf, p[3].leaf)
+          print('additive_expression_1: ', p[1], p[2].leaf, p[3])
 
      global parser, str_trace, prompt_pos, token_error
      if p[1] != None and p[3] != None:          
@@ -400,13 +452,14 @@ def p_additive_expression_1(p):
 
 def p_additive_expression_1_error(p):
         'additive_expression : additive_expression addop error term'
-        global parser, str_trace, prompt_pos, token_error
+        global parser, str_trace, prompt_pos, token_error, mensaje
         linear_tree = []
         linear_tree = inOrder(p[1], linear_tree)
         str_terms = len(linear_tree) * "{} "
         str_terms += "{}{} {}" #Agregar 3 parametros más para considerar p[2], p[3] y p[4] que son estáticos   
         str_trace = str_terms.format(*[term for term in linear_tree], p[2].leaf, p[3].value, p[4].leaf)
         token_error = p[3].value
+        mensaje = "Linea {}: Error en la expresion de adicion: ".format(p.lineno(3))
         parser.errok()
 
 def p_additive_expression_2(p):
@@ -438,7 +491,7 @@ def p_term_1(p):
 #Se queda
 def p_term_1_error(p):
      'term : term mulop error factor'
-     global parser, str_trace, prompt_pos, token_error
+     global parser, str_trace, prompt_pos, token_error, mensaje
      linear_tree = []
      linear_tree = inOrder(p[1], linear_tree)
      str_terms = len(linear_tree) * "{} "
@@ -447,16 +500,13 @@ def p_term_1_error(p):
      str_trace = str_terms.format(*[term for term in linear_tree], p[2].leaf, p[3].value, p[4].leaf)
      token_error = p[3].value
      prompt_pos = str_trace.index(p[3].value)
-     print("p[4]: ", p[4].leaf)
-     print("Que tengo ahora 2: ", str_trace)
-     #print(str_trace)
-     #print((prompt_pos-1) * " ","^")
+     mensaje = "Linea {}: Error en la expresion de mult/div: ".format(p.lineno(3))
      parser.errok()
         
 def p_term_2(p):
      'term : factor'
      if masInfo:
-          print("term_2: ", p[1].leaf)
+          print("term_2: ", p[1])
      if p[1] != None:
           p[0] = p[1]
      else:
@@ -504,10 +554,9 @@ def p_args(p):
      args : args_list 
      | empty '''
      new_list_args = []
-     if masInfo:
-          for arg in list_args:
-               if arg != None:
-                    new_list_args.append(arg)
+     for arg in list_args:
+          if arg != None:
+               new_list_args.append(arg)
      list_args.clear()
      p[0] = new_list_args
    
@@ -569,7 +618,7 @@ def parser(imprime = True):
      programa = programa.translate({ord('$'): None})
      
      parser = yacc.yacc()
-     arbol = parser.parse(programa, tracking=True)
+     arbol = parser.parse(programa)
      if imprime:
           imprimeAST(arbol)
      return arbol
