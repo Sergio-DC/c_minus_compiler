@@ -1,7 +1,7 @@
 from globalTypes import *
 from Parser import *
 
-f = open('examples/input.c', 'r')
+f = open('examples/sample.c-', 'r')
 programa = f.read()
 progLong = len(programa)
 programa = programa + '$'
