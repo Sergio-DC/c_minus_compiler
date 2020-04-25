@@ -282,7 +282,6 @@ def p_expression_stmt_1_error(p):
           
           parser.errok()
      else:
-          print("Error en el SEMICOLON 2")
           last_element = str_trace[-1]
           prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
           print(str_trace)
@@ -321,7 +320,6 @@ def p_return_stmt_1_error(p):
      'return_stmt : RETURN'
      global parser
      str_trace = "{}".format(p[1])
-     print("Que hay: ", p[1])
      prompt_pos = len(str_trace) - 1 - str_trace[::-1].index("n") # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
      mensaje ="Linea {}: Error en la expresión return falta un ;".format(p.lineno(1))
      print(mensaje)
@@ -345,7 +343,6 @@ def p_return_stmt_2_error(p):
      str_terms += " {}"
      str_trace = str_terms.format(p[1], *[term for term in linear_tree])
      last_element = str_trace[-1]
-     print("Ultimo elemento: ", last_element)
      prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
      mensaje ="Linea {}: Error en la expresión return falta un ;".format(p.lineno(1))
      print(mensaje)
@@ -434,20 +431,15 @@ def p_additive_expression_1(p):
      elif p[1] == None: #Configuración para preparar el error
           str_trace +=  " " + str(p[2].leaf) + " " + str(p[3].leaf)
           prompt_pos = str_trace.index(token_error)#Reubicamos el error  
-          print("Que llevamos 1.1: ", str_trace)
      elif p[3] == None:
-          print("Entre por aqui")
           linear_tree = []
           linear_tree = inOrder(p[1], linear_tree)
-          for item in linear_tree:
-               print("item: ", item)
           str_trace_aux = p[1].leaf + " " + p[2].leaf + " " + str_trace
           str_terms = "{}" # Se agregan 2 más
           str_terms += len(linear_tree) * "{} " 
           str_trace = str_terms.format(*[term for term in linear_tree], p[2].leaf)
           str_trace = str_trace_aux
           prompt_pos = str_trace_aux.index(token_error)#Reubicamos el error      
-          print("Que llevamos 1.2: ", str_trace_aux)
              
 
 def p_additive_expression_1_error(p):
@@ -485,8 +477,7 @@ def p_term_1(p):
      if p[1] != None:
           p[0] = Node("term_1", [p[1], p[3]], p[2].leaf)
      else: # Hubo un error
-          str_trace += " " + str(p[3].leaf)
-          print("Que tengo ahora 1: ", str_trace) 
+          str_trace += " " + str(p[3].leaf) 
           
 #Se queda
 def p_term_1_error(p):
