@@ -83,7 +83,7 @@ def p_var_declaration_1(p):
      if masInfo:
           print("var_declaration_1: ", p[1], p[2], p[3])
      global var_decl
-     var_decl = Node("var_declaration_1", [p[2]], p[1])
+     var_decl = Node("variable", [p[2]], p[1])
      p[0] = var_decl
 
 def p_var_declaration_1_error(p):
@@ -347,7 +347,7 @@ def p_expression_1(p):
      if masInfo:
           print("expression_1: ", p[1], p[2], p[3])
      if p[3] != None:
-          p[0]= Node("expression_1", [p[1],p[3]], p[2])
+          p[0]= Node("variable", [p[1],p[3]], p[2])
      else: # Configuraciones para preparar el ERROR
           str_trace_aux = p[1].leaf + " " + p[2] + " "
           str_trace_aux += str_trace
