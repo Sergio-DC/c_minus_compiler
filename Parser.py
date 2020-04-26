@@ -1,6 +1,5 @@
 import ply.yacc as yacc
 from lexer import tokens
-#from cminus_lexer import tokens
 import sys
 start = 'program'
 
@@ -30,7 +29,7 @@ class MessageError:
           self.line_error_content = line_error_content
           self.prompt_pos
 VERBOSE = 1
-masInfo = False
+masInfo = True
 
 def inOrder(arbol, linear_tree):
      if arbol != None:
@@ -64,7 +63,7 @@ def p_declaration_list_1(p):
      global list_declaration_list
      list_declaration_list.append(p[1])
      list_declaration_list.append(p[2])
-     #p[0] = list_declaration_list
+
 def p_declaration_list_2(p):
      'declaration_list : declaration'
      if masInfo:
@@ -76,13 +75,10 @@ def p_declaration(p):
      | fun_declaration'''
      if masInfo:
           print("declaration: ", p[1])
-     #declaration_list = []
-     #declaration_list.append(p[1])
      p[0] = p[1]
 
 def p_var_declaration_1(p):
      'var_declaration : type_specifier ID SEMICOLON'
-     #p[1] = Node("type_specifier", None, p[1])
      p[2] = Node("identifier", None, p[2])
      if masInfo:
           print("var_declaration_1: ", p[1], p[2], p[3])
@@ -137,8 +133,7 @@ def p_fun_declaration(p):
      'fun_declaration : type_specifier ID LPAREN params RPAREN compound_stmt'
      if masInfo:
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
-     p[1] = Node("type_specifier: ", None, p[1])     
-     #p[4] = Node("params",p[4], "params")
+     p[1] = Node("type_specifier: ", None, p[1])
      p[2] = Node("identifier", p[4], p[2])
      p[0] = Node("fun_declaration", [p[1],p[2], p[6]], "fun_declaration")
 
@@ -209,8 +204,6 @@ def p_compound_stmt(p):
                new_statement_list.append(item)
      list_statement_list.clear()
      
-     #local_declarations = Node("local_declarations", None, new_list_local_declarations)
-     #statement_list = Node("statement_list", None, new_statement_list)
      p[0] = Node("compound_stmt", [new_list_local_declarations, new_statement_list],
                  "compound_Stmt")
 
@@ -221,8 +214,7 @@ def p_local_declarations_1(p):
      global list_local_declarations
      list_local_declarations.append(p[1])
      list_local_declarations.append(p[2])
-     #if p[1] != None:
-     #p[0] = Node("local_declarations_1", [p[1]], p[2].leaf)
+
 def p_local_declarations_2(p):
      'local_declarations : empty'
 
@@ -275,7 +267,6 @@ def p_expression_stmt_1_error(p):
           aux_list = list(str(linear_tree[len(linear_tree) - 1])) # string de error para el programador
           last_element = aux_list[-1] # último caracter del string de error
           prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
-          #prompt_pos = str_trace.index(str(last_element))
           print("Linea {}: Error en la expresión falta un ;".format(p.lineno(2)))
           print(str_trace)
           print((prompt_pos) * " ","^")
@@ -419,7 +410,7 @@ def p_relop(p):
      if masInfo:
           print('relop: ', p[1])
      p[0] = Node("relop", None, p[1])
-# Impresion Nodo
+
 def p_additive_expression_1(p):
      'additive_expression : additive_expression addop term'
      if masInfo:
