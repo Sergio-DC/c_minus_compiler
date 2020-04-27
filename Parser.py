@@ -135,7 +135,7 @@ def p_fun_declaration(p):
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
      p[1] = Node("type_specifier: ", None, p[1])
      p[2] = Node("identifier", p[4], p[2])
-     p[0] = Node("fun_declaration", [p[1],p[2], p[6]], "fun_declaration")
+     p[0] = Node("funcion", [p[1],p[2], p[6]], "fun_declaration")
 
 
 def p_params_1(p):
