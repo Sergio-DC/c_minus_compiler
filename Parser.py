@@ -133,7 +133,7 @@ def p_fun_declaration(p):
      'fun_declaration : type_specifier ID LPAREN params RPAREN compound_stmt'
      if masInfo:
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
-     p[2] = Node("identifier", p[4], p[2])
+     p[2] = Node("params", p[4], p[2])
      p[0] = Node("funcion", [p[2], p[6]], p[1])
 
 

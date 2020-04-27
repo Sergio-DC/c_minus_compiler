@@ -1,40 +1,47 @@
 import math
 
 stack_TS = [] # Stack de tabla de simbolos
-#tabla_simbolos = []
-
 
 def tabla(tree, imprime = True):
     tabla_temp = []
-    
+    declaracion_global = None
+
     for declaracion_global in tree.children:#Acceder al array de variables y funciones globales
-        fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
         if declaracion_global.type == 'variable': # Variables globales
-            # fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
+            fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
             tabla_temp = operacionesVariable(declaracion_global, tabla_temp, 'global', fila)
         if declaracion_global.type == 'funcion': # Funciones Globales
-            # fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
-            fila['tipo'] = declaracion_global.leaf
-            fila['nombre'] = declaracion_global.children[0].leaf
-            fila['rol'] = 'funcion'
-            fila['scope'] = 'global'
-            scope = declaracion_global.children[0].leaf
+            fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': '', 'params':[]}
+            # Devuelve el scope para los params y vars que tiene su cuerpo
+            fila, scope = insertarFuncion(fila, declaracion_global)
             tabla_temp.append(fila)
-            # recorrido del nodo FUNCION
-            recorrido_compound(declaracion_global.children[1], scope)
+
+            nueva_tabla = []
+            #recorrido del los params de la funcion
+            nueva_tabla = recorrido_params(declaracion_global.children[0], scope, nueva_tabla)
+            valores = []
+            for registro in nueva_tabla:              
+                valores.append(registro['tipo'])
+            actualizar_TS('funcion', fila['nombre'], tabla_temp, valores) if nueva_tabla else print("No hacer Nada")       
+            # recorrido del cuerpo de la funcion
+            nueva_tabla = recorrido_compound(declaracion_global.children[1], scope, nueva_tabla)
             
     stack_TS.append(tabla_temp)     
-
-    #crearTabla(tree, 'global', None)
-    #print("stack_TS: ", stack_TS)
     
     for tabla_simbolos in stack_TS:
         for item in tabla_simbolos:
             print("Tabla: {}".format(item['scope']), item)
 
+def recorrido_params(arbol, scope, nueva_tabla):
+    if arbol.type == "params":
+        for node in arbol.children:
+            fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
+            operacionesVariable(node, nueva_tabla, scope, fila)
+    return nueva_tabla
+                 
 
-def recorrido_compound(arbol, scope):
-    nueva_tabla = []
+def recorrido_compound(arbol, scope, nueva_tabla):
+    #nueva_tabla = []
     for i in range(len(arbol.children)):
         for node in arbol.children[i]:
             if node.type == 'variable':
@@ -42,46 +49,44 @@ def recorrido_compound(arbol, scope):
                 operacionesVariable(node, nueva_tabla, scope, fila)
     stack_TS.append(nueva_tabla)
 
-# def crearTabla(arbol, scope, tabla_temp):
-#     global stack_TS
-#     if arbol != None:
-#             tabla_temp = []
-#         if global_declaracion.type == 'funcion':
-#             fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
-#             fila['tipo'] = global_declaracion.children[0].leaf
-#             fila['nombre'] = global_declaracion.children[1].leaf
-#             fila['rol'] = 'funcion'
-#             fila['scope'] = 'global'
-#             scope = global_declaracion.children[1].leaf
-#             ##########################################3
-#             new_scope_table = []
-#             new_scope_table = operacionesVariable(global_declaracion, new_scope_table, scope, fila)
-#             #########################################################33
-#             tabla_temp.append(fila)
-#             if tabla_temp != []: # Esto evita que se agregunen tablas vacias al stack
-#                 stack_TS.append(tabla_temp)
-#         elif arbol.children:
-#             for child in range(len(arbol.children)):
-#                 if arbol.children[child] != []:
-#                     crearTabla(arbol.children[child], scope, tabla_temp)
-#         # if arbol.type == "compound_stmt":
-#         #         for i in range(len(arbol.children)):
-#         #             for node in arbol.children[i]:
-#         #                 if node.type == 'variable':
-#         #                     fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
-#         #                     operacionesVariable(node, tabla_temp, scope, fila)
-                            
-#                 #stack_TS.append(tabla_temp)
+    return nueva_tabla
 
-#Buscar en la tabla de simbolos, Devuelve un objeto/registro que contiene los atrubutos del simbolo
+#Buscar en la tabla de simbolos, Devuelve un objeto/registro que contiene los atributos del simbolo
 def buscar_ST(rol, nombre, tabla_simbolos):
+    """
+    Parameters:
+
+    rol : (str) este puede ser 'variable'|'funcion'|'arreglo'
+
+    nombre : (str) este lo da el programador a 'variable'|'funcion'|'arreglo'
+
+    tabla_simbolos : (list) TS que sera actualizada
+
+    Returns:
+    registro : (dict) un simbolo con sus metadatos, en caso contrario None
+    """
     for i in range(len(tabla_simbolos)):
         if tabla_simbolos[i]['rol'] == rol and tabla_simbolos[i]['nombre'] == nombre:
-            #print("i_ ", tabla_simbolos[i]['nombre'])
             registro = tabla_simbolos[i]
             # tabla_simbolos[i]['valor'] = valor
             return registro
     return None
+
+def actualizar_TS(rol, nombre, tabla_simbolos, valores):
+    """
+    Parameters:
+
+    rol : (str) este puede ser 'variable'|'funcion'|'arreglo'
+
+    nombre : (str) este lo da el programador a 'variable'|'funcion'|'arreglo'
+
+    tabla_simbolos : (list) TS que sera actualizada
+
+    valores : (list) con los que sera actualizada la TS
+    """
+    registro = buscar_ST(rol, nombre, tabla_simbolos)
+    for valor in valores: # Se actualiza el campo de 'params' de la funcion
+        registro['params'].append(valor)
 
 def preOrder(arbol, resultado):
     if arbol != None:
@@ -126,7 +131,7 @@ def operacion(op, valIzq, valDer):
 def operacionesVariable(node, tabla_temp, scope, fila):
     # Busqueda del simbolo en la tabla del SCOPE actual, si ya existe en la TS se actualiza el valor 
     # sino se verifica la existencia en la tabla de SCOPE global
-    registro =buscar_ST('variable', node.children[0].leaf, tabla_temp)#param derecha, NOMBRE variable
+    registro = buscar_ST('variable', node.children[0].leaf, tabla_temp)#param derecha, NOMBRE variable
     if registro != None: # Actualizamos simbolo
         if len(node.children) == 2:#Si la variable se usa para asignacion, obtenemos el valor guardado en la variable
             if registro['valor'] != '':
@@ -144,14 +149,12 @@ def operacionesVariable(node, tabla_temp, scope, fila):
         tabla_temp.append(fila)# Agregar registros/objetos a la Tabla de Simbolos
     return tabla_temp
 
-    # if arbol.type == 'funcion':
-        #     tabla_temp = []
-        #     fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
-        #     fila['tipo'] = arbol.children[0].leaf
-        #     fila['nombre'] = arbol.children[1].leaf
-        #     fila['rol'] = 'funcion'
-        #     fila['scope'] = arbol.children[1].leaf
-        #     scope = arbol.children[1].leaf
-        #     tabla_temp.append(fila)
-        #     print("pase por aqui")
-        #     stack_TS.append(tabla_temp)
+#Se inserta Funcion a la tabla de Simbolos
+def insertarFuncion(fila, declaracion_global):
+    fila['tipo'] = declaracion_global.leaf
+    fila['nombre'] = declaracion_global.children[0].leaf
+    fila['rol'] = 'funcion'
+    fila['scope'] = 'global'
+    scope = declaracion_global.children[0].leaf
+
+    return fila, scope
