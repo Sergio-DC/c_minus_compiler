@@ -29,7 +29,7 @@ class MessageError:
           self.line_error_content = line_error_content
           self.prompt_pos
 VERBOSE = 1
-masInfo = True
+masInfo = False
 
 def inOrder(arbol, linear_tree):
      if arbol != None:
@@ -51,9 +51,9 @@ def p_program(p):
      list_declaration_list.clear()
 
      if new_declaration_list == []:
-          node = Node("program", [p[1]], "program")
+          node = Node("global", [p[1]], "program")
      else:
-          node = Node("program", new_declaration_list, "program")
+          node = Node("global", new_declaration_list, "program")
      p[0] = node
 
 def p_declaration_list_1(p):
@@ -133,9 +133,8 @@ def p_fun_declaration(p):
      'fun_declaration : type_specifier ID LPAREN params RPAREN compound_stmt'
      if masInfo:
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
-     p[1] = Node("type_specifier: ", None, p[1])
      p[2] = Node("identifier", p[4], p[2])
-     p[0] = Node("funcion", [p[1],p[2], p[6]], "fun_declaration")
+     p[0] = Node("funcion", [p[2], p[6]], p[1])
 
 
 def p_params_1(p):
