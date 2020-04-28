@@ -13,7 +13,7 @@ def tabla(tree, imprime = True):
         if declaracion_global.type == 'funcion': # Funciones Globales
             fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': '', 'params':[]}
             # Devuelve el scope para los params y vars que tiene su cuerpo
-            fila, scope = insertarRegistro(fila, declaracion_global, 'global', tabla_temp)
+            fila, scope = insertarRegistro(fila, declaracion_global, 'global', 'funcion',tabla_temp)
 
             nueva_tabla = []
             #recorrido del los params de la funcion
@@ -67,7 +67,6 @@ def buscar_ST(rol, nombre, tabla_simbolos):
     for i in range(len(tabla_simbolos)):
         if tabla_simbolos[i]['rol'] == rol and tabla_simbolos[i]['nombre'] == nombre:
             registro = tabla_simbolos[i]
-            # tabla_simbolos[i]['valor'] = valor
             return registro
     return None
 
@@ -95,9 +94,7 @@ def preOrder(arbol, resultado):
             hijoLeft = preOrder(arbol.children[0], resultado)
         if arbol.children != []:
             hijoDer = preOrder(arbol.children[1], resultado)
-        #print('HijoLeft: {}  HijoDer: {}'.format(hijoLeft, hijoDer))
         resultado = operacion(arbol.leaf, hijoLeft, hijoDer)
-        #print('resultado = ', resultado)
     return resultado
 
 # Recibe un ast de expresiones aritmeticas y devuelve el resultado del calculo
@@ -130,7 +127,8 @@ def operacion(op, valIzq, valDer):
 def manejoVariables(node, tabla_temp, scope, fila):
     # Busqueda del simbolo en la tabla del SCOPE actual, si ya existe en la TS se actualiza el valor 
     # sino se verifica la existencia en la tabla de SCOPE global
-    registro = buscar_ST('variable', node.children[0].leaf, tabla_temp)#param derecha, NOMBRE variable
+    nombre = node.children[0].leaf
+    registro = buscar_ST('variable', nombre, tabla_temp)#param derecha, NOMBRE variable
     if registro != None: # Actualizamos simbolo
         if len(node.children) == 2:#Si la variable se usa para asignacion, obtenemos el valor guardado en la variable
             if registro['valor'] != '':
@@ -139,14 +137,14 @@ def manejoVariables(node, tabla_temp, scope, fila):
             resultado = calculoAritmeticoArbol(node.children[1])#Calculo del string de la derecha de la variable
             registro['valor'] = resultado
     else: # Se agrega un nuevo registro a la tabls
-        insertarRegistro(fila, node, scope, tabla_temp)                   
+        insertarRegistro(fila, node, scope, 'variable',tabla_temp)                   
     return tabla_temp
 
 #Se inserta Funcion a la tabla de Simbolos
-def insertarRegistro(fila, declaracion_global, scope, tabla_temp):
+def insertarRegistro(fila, declaracion_global, scope, rol,  tabla_temp):
     fila['tipo'] = declaracion_global.leaf
     fila['nombre'] = declaracion_global.children[0].leaf
-    fila['rol'] = 'funcion'
+    fila['rol'] = rol
     fila['scope'] = scope
     scope = declaracion_global.children[0].leaf
     tabla_temp.append(fila)
