@@ -9,12 +9,11 @@ def tabla(tree, imprime = True):
     for declaracion_global in tree.children:#Acceder al array de variables y funciones globales
         if declaracion_global.type == 'variable': # Variables globales
             fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
-            tabla_temp = operacionesVariable(declaracion_global, tabla_temp, 'global', fila)
+            tabla_temp = manejoVariables(declaracion_global, tabla_temp, 'global', fila)
         if declaracion_global.type == 'funcion': # Funciones Globales
             fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': '', 'params':[]}
             # Devuelve el scope para los params y vars que tiene su cuerpo
-            fila, scope = insertarFuncion(fila, declaracion_global)
-            tabla_temp.append(fila)
+            fila, scope = insertarRegistro(fila, declaracion_global, 'global', tabla_temp)
 
             nueva_tabla = []
             #recorrido del los params de la funcion
@@ -36,7 +35,7 @@ def recorrido_params(arbol, scope, nueva_tabla):
     if arbol.type == "params":
         for node in arbol.children:
             fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
-            operacionesVariable(node, nueva_tabla, scope, fila)
+            manejoVariables(node, nueva_tabla, scope, fila)
     return nueva_tabla
                  
 
@@ -46,7 +45,7 @@ def recorrido_compound(arbol, scope, nueva_tabla):
         for node in arbol.children[i]:
             if node.type == 'variable':
                 fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
-                operacionesVariable(node, nueva_tabla, scope, fila)
+                manejoVariables(node, nueva_tabla, scope, fila)
     stack_TS.append(nueva_tabla)
 
     return nueva_tabla
@@ -128,7 +127,7 @@ def operacion(op, valIzq, valDer):
 
     return resultado
 
-def operacionesVariable(node, tabla_temp, scope, fila):
+def manejoVariables(node, tabla_temp, scope, fila):
     # Busqueda del simbolo en la tabla del SCOPE actual, si ya existe en la TS se actualiza el valor 
     # sino se verifica la existencia en la tabla de SCOPE global
     registro = buscar_ST('variable', node.children[0].leaf, tabla_temp)#param derecha, NOMBRE variable
@@ -139,22 +138,17 @@ def operacionesVariable(node, tabla_temp, scope, fila):
 
             resultado = calculoAritmeticoArbol(node.children[1])#Calculo del string de la derecha de la variable
             registro['valor'] = resultado
-    else: # Se crea y agrega un nuevo registro a la tabla
-        #Busqueda en la tabla de SCOPE global
-
-        fila['tipo'] = node.leaf
-        fila['rol'] = 'variable'
-        fila['nombre'] = node.children[0].leaf
-        fila['scope'] = scope                            
-        tabla_temp.append(fila)# Agregar registros/objetos a la Tabla de Simbolos
+    else: # Se agrega un nuevo registro a la tabls
+        insertarRegistro(fila, node, scope, tabla_temp)                   
     return tabla_temp
 
 #Se inserta Funcion a la tabla de Simbolos
-def insertarFuncion(fila, declaracion_global):
+def insertarRegistro(fila, declaracion_global, scope, tabla_temp):
     fila['tipo'] = declaracion_global.leaf
     fila['nombre'] = declaracion_global.children[0].leaf
     fila['rol'] = 'funcion'
-    fila['scope'] = 'global'
+    fila['scope'] = scope
     scope = declaracion_global.children[0].leaf
+    tabla_temp.append(fila)
 
     return fila, scope
