@@ -84,8 +84,7 @@ def p_var_declaration_1(p):
      if masInfo:
           print("var_declaration_1: ", p[1], p[2], p[3])
      global var_decl
-     print("Imprime lineno declaaracion: ", p.lineno(2))
-     var_decl = Node("variable", [p[2]], p[1], p.lineno(1))
+     var_decl = Node("declaracion-var", [p[2]], p[1], p.lineno(2))
      p[0] = var_decl
 
 def p_var_declaration_1_error(p):
@@ -106,7 +105,7 @@ def p_var_declaration_2(p):
      p[4] = Node("num", None, p[4])
      if masInfo:
           print("var_declaration_2: ", p[1], p[2], p[3], p[4], p[5], p[6])
-     p[0] = Node("var_declaration_2", [p[2], p[4]], p[1])
+     p[0] = Node("declaracion-array", [p[2], p[4]], p[1])
 
 def p_var_declaration_2_error(p):
      'var_declaration : type_specifier ID LBRACKET NUMBER RBRACKET'
