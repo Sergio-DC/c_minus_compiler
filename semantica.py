@@ -9,12 +9,11 @@ def tabla(tree, imprime = True):
     for declaracion_global in tree.children:#Acceder al array de variables y funciones globales
         if declaracion_global.type == 'variable': # Variables globales
             fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
-            tabla_temp = manejoVariables(declaracion_global, tabla_temp, 'global', fila)
+            tabla_temp = insertar_actualizar_variables(declaracion_global, tabla_temp, 'global', fila)
         if declaracion_global.type == 'funcion': # Funciones Globales
             fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': '', 'params':[]}
-            # Devuelve el scope para los params y vars que tiene su cuerpo
+            # Devuelve el scope que usaran las variable interiores del cuerpo
             fila, scope = insertarRegistro(fila, declaracion_global, 'global', 'funcion',tabla_temp)
-
             nueva_tabla = []
             #recorrido del los params de la funcion
             nueva_tabla = recorrido_params(declaracion_global.children[0], scope, nueva_tabla)
@@ -35,7 +34,7 @@ def recorrido_params(arbol, scope, nueva_tabla):
     if arbol.type == "params":
         for node in arbol.children:
             fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
-            manejoVariables(node, nueva_tabla, scope, fila)
+            insertar_actualizar_variables(node, nueva_tabla, scope, fila)
     return nueva_tabla
                  
 
@@ -45,7 +44,7 @@ def recorrido_compound(arbol, scope, nueva_tabla):
         for node in arbol.children[i]:
             if node.type == 'variable':
                 fila = {'nombre': '', 'tipo': '', 'valor':'', 'rol' : '', 'scope': ''}
-                manejoVariables(node, nueva_tabla, scope, fila)
+                insertar_actualizar_variables(node, nueva_tabla, scope, fila)
     stack_TS.append(nueva_tabla)
 
     return nueva_tabla
@@ -124,7 +123,7 @@ def operacion(op, valIzq, valDer):
 
     return resultado
 
-def manejoVariables(node, tabla_temp, scope, fila):
+def insertar_actualizar_variables(node, tabla_temp, scope, fila):
     # Busqueda del simbolo en la tabla del SCOPE actual, si ya existe en la TS se actualiza el valor 
     # sino se verifica la existencia en la tabla de SCOPE global
     nombre = node.children[0].leaf
@@ -136,7 +135,7 @@ def manejoVariables(node, tabla_temp, scope, fila):
 
             resultado = calculoAritmeticoArbol(node.children[1])#Calculo del string de la derecha de la variable
             registro['valor'] = resultado
-    else: # Se agrega un nuevo registro a la tabls
+    else: # Se agrega un nuevo registro a la tabla
         insertarRegistro(fila, node, scope, 'variable',tabla_temp)                   
     return tabla_temp
 

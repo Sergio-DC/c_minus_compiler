@@ -16,13 +16,14 @@ line_error = ''
 mensaje = ''
 
 class Node:
-     def __init__(self,type,children=None,leaf=None):
+     def __init__(self,type,children=None,leaf=None, lineno = None):
           self.type = type #Puede tener el token
           if children:
                self.children = children
           else:
                self.children = [ ]
           self.leaf = leaf #Tiene el valor del Lexema
+          self.lineno = lineno
 class MessageError:
      def __init__(self, message, line_error_content, promt_pos):
           self.message = message
@@ -83,7 +84,8 @@ def p_var_declaration_1(p):
      if masInfo:
           print("var_declaration_1: ", p[1], p[2], p[3])
      global var_decl
-     var_decl = Node("variable", [p[2]], p[1])
+     print("Imprime lineno declaaracion: ", p.lineno(2))
+     var_decl = Node("variable", [p[2]], p[1], p.lineno(1))
      p[0] = var_decl
 
 def p_var_declaration_1_error(p):
@@ -134,7 +136,7 @@ def p_fun_declaration(p):
      if masInfo:
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
      p[2] = Node("params", p[4], p[2])
-     p[0] = Node("funcion", [p[2], p[6]], p[1])
+     p[0] = Node("funcion", [p[2], p[6]], p[1], p.lineno(1))
 
 
 def p_params_1(p):
@@ -346,7 +348,7 @@ def p_expression_1(p):
      if masInfo:
           print("expression_1: ", p[1], p[2], p[3])
      if p[3] != None:
-          p[0]= Node("variable", [p[1],p[3]], p[2])
+          p[0]= Node("variable", [p[1],p[3]], p[2], p.lineno)
      else: # Configuraciones para preparar el ERROR
           str_trace_aux = p[1].leaf + " " + p[2] + " "
           str_trace_aux += str_trace
