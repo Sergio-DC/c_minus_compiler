@@ -181,7 +181,7 @@ def p_param_1(p):
      if masInfo:
           print("param_1: ", p[1], p[2])    
      p[2] = Node("var_1", None, p[2])
-     p[0] = Node("param_1",[p[2]], p[1])
+     p[0] = Node(NodeType.PARAM_1,[p[2]], p[1], p.lineno(1))
 
 def p_param_2(p):
      'param : type_specifier ID LBRACKET RBRACKET'
@@ -324,7 +324,7 @@ def p_return_stmt_2(p):
      'return_stmt : RETURN expression SEMICOLON'
      if masInfo:
           print("return_stmt_2: ", p[1],[p[2]], p[3])
-     p[0] = Node("return_stmt_2",[p[2]],p[1])
+     p[0] = Node(NodeType.RETURN_STMT_2,[p[2]],p[1], lineno=p.lineno(1))
 
 def p_return_stmt_2_error(p):
      'return_stmt : RETURN expression'

@@ -40,7 +40,8 @@ class NodeType(Enum):
     VAR_DECLARATION_1 = 0
     VAR_DECLARATION_2 = 1
     FUN_DECLARATION = 2
-    PARAMS = 3
-    EXPRESSION_1 = 4
-    RETURN_STMT_2 = 5
+    PARAM_1 = 3
+    PARAMS = 4
+    EXPRESSION_1 = 5
+    RETURN_STMT_2 = 6
 
