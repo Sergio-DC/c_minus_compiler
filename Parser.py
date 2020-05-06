@@ -1,6 +1,7 @@
 import ply.yacc as yacc
 from lexer import tokens
 import sys
+from globalTypes import *
 start = 'program'
 
 list_args = []
@@ -52,9 +53,9 @@ def p_program(p):
      list_declaration_list.clear()
 
      if new_declaration_list == []:
-          node = Node("global", [p[1]], "program")
+          node = Node("global_1", [p[1]], "program")
      else:
-          node = Node("global", new_declaration_list, "program")
+          node = Node("global_2", new_declaration_list, "program")
      p[0] = node
 
 def p_declaration_list_1(p):
@@ -84,7 +85,7 @@ def p_var_declaration_1(p):
      if masInfo:
           print("var_declaration_1: ", p[1], p[2], p[3])
      global var_decl
-     var_decl = Node("declaracion-var", [p[2]], p[1], p.lineno(2))
+     var_decl = Node(NodeType.VAR_DECLARATION_1, [p[2]], p[1], p.lineno(2))
      p[0] = var_decl
 
 def p_var_declaration_1_error(p):
@@ -105,7 +106,7 @@ def p_var_declaration_2(p):
      p[4] = Node("num", None, p[4])
      if masInfo:
           print("var_declaration_2: ", p[1], p[2], p[3], p[4], p[5], p[6])
-     p[0] = Node("declaracion-array", [p[2], p[4]], p[1])
+     p[0] = Node(NodeType.VAR_DECLARATION_2, [p[2], p[4]], p[1])
 
 def p_var_declaration_2_error(p):
      'var_declaration : type_specifier ID LBRACKET NUMBER RBRACKET'
@@ -134,8 +135,8 @@ def p_fun_declaration(p):
      'fun_declaration : type_specifier ID LPAREN params RPAREN compound_stmt'
      if masInfo:
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
-     p[2] = Node("params", p[4], p[2])
-     p[0] = Node("funcion", [p[2], p[6]], p[1], p.lineno(1))
+     p[2] = Node(NodeType.PARAMS, p[4], p[2])
+     p[0] = Node(NodeType.FUN_DECLARATION, [p[2], p[6]], p[1], p.lineno(2))
 
 
 def p_params_1(p):
@@ -347,7 +348,7 @@ def p_expression_1(p):
      if masInfo:
           print("expression_1: ", p[1], p[2], p[3])
      if p[3] != None:
-          p[0]= Node("variable", [p[1],p[3]], p[2], p.lineno)
+          p[0]= Node(NodeType.EXPRESSION_1, [p[1],p[3]], p[2], p.lineno(2))
      else: # Configuraciones para preparar el ERROR
           str_trace_aux = p[1].leaf + " " + p[2] + " "
           str_trace_aux += str_trace
