@@ -232,16 +232,6 @@ def checkNode(t):
                     print("Error: incompatible types: unexpected return value")
             elif return_stmt == None and t.leaf == 'int':
                 print("error: missing return statement")
-    elif t.type == NodeType.EXPRESSION_1:
-        #Buscamos en el scope actual la declaracion de la variable
-        tabla_simbolos = stack_TS[0]
-        for registro in tabla_simbolos:
-            registro_aux = obtenerMetadatos_de_registro(t, NodeType.VAR_DECLARATION_1)
-            if registro['nombre'] == registro_aux['nombre'] and registro['type'] == NodeType.VAR_DECLARATION_1:
-                #Quitamos de la tabla de simbolos los registros repetidos y nos quedamos con uno
-                eliminarRegistro(tabla_simbolos, registro['nombre'], NodeType.EXPRESSION_1)
-            else:
-                print("La variable no ha sido declarada")
 
 def nombreRepetido(val_name, tabla_simbolos):
     registros = []
