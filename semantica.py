@@ -11,7 +11,7 @@ def tabla(tree, imprime = True):
     tabla_temp = []
     declaracion_global = None
 
-    for declaracion_global in tree.children:#Acceder al array de variables y funciones globales
+    for declaracion_global in tree.children:# Acceder al array de variables y funciones globales
         if declaracion_global.type == NodeType.VAR_DECLARATION_1: # Variables globales
             fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
             #tabla_temp = insertar_actualizar_registros(declaracion_global, tabla_temp, 'global', fila, 'declaracion-var')
@@ -68,9 +68,9 @@ def recorrido_compound(arbol, scope, nueva_tabla):
                     print("Error: No se ha declarado la variable :(")
                 else: # La variable si ha sido declarada
                     if not isinstance(var_asignacion['valor'], int): #Significa que la asignacion no es numero sino una expresion
-                        resultado = calculoAritmeticoArbol(node.children[1])#Calculo del string de la derecha de la variable
-                        var_declaracion['valor'] = resultado
-                    else:
+                        resultado = calculoAritmeticoArbol(node.children[1], nueva_tabla)#Calculo del string de la derecha de la variable
+                        var_declaracion['valor'] = resultado # Se asigna el calculo a la variable
+                    else: # En este caso la asignacion es un simple numero(sin expresiones aritmeticas)
                         var_declaracion['valor'] = var_asignacion['valor']
                     
             elif node.type == NodeType.RETURN_STMT_2:
@@ -104,32 +104,33 @@ def actualizar_TS(type, val_name, tabla_simbolos, valores):
     for valor in valores: # Se actualiza el campo de 'params' de la funcion
         registro['params'].append(valor)
 
-def preOrder(arbol, resultado):
+def preOrder(arbol, resultado, tabla_simbolos):
     if arbol != None:
         if str(arbol.leaf) not in '+-*/':
             return arbol.leaf
         if arbol.children != []:
-            hijoLeft = preOrder(arbol.children[0], resultado)
+            hijoLeft = preOrder(arbol.children[0], resultado, tabla_simbolos)
         if arbol.children != []:
-            hijoDer = preOrder(arbol.children[1], resultado)
-        resultado = operacion(arbol.leaf, hijoLeft, hijoDer)
+            hijoDer = preOrder(arbol.children[1], resultado, tabla_simbolos)
+        resultado = operacion(arbol.leaf, hijoLeft, hijoDer, tabla_simbolos)
     return resultado
 
 # Recibe un ast de expresiones aritmeticas y devuelve el resultado del calculo
-def calculoAritmeticoArbol(arbol):
+#La TS la ocupamos cuando la expresion esta compuesta por literales, en este caso recurrimos a la TS para localizar el valors
+def calculoAritmeticoArbol(arbol, tabla_simbolos):
     resultado = 0;    
-    resultado = preOrder(arbol, resultado)
+    resultado = preOrder(arbol, resultado , tabla_simbolos)
     return resultado
 
 
-def operacion(op, valIzq, valDer):
+def operacion(op, valIzq, valDer, tabla_simbolos):
     resultado = None
-    # if not isinstance(valIzq, int):
-    #     registro = obtener_registro(NodeType.EXPRESSION_1, valIzq)
-    #     valIzq = registro['valor']#Reasignamos un valor de tipo INT
-    # if not isinstance(valDer, int):
-    #     registro = obtener_registro(NodeType.EXPRESSION_1. valDer)
-    #     valDer = registro['valor']#Reasignamos un valor de tipo INT
+    if not isinstance(valIzq, int):
+        registro = obtener_registro(NodeType.VAR_DECLARATION_1, valIzq, tabla_simbolos)
+        valIzq = registro['valor']#Reasignamos un valor de tipo INT
+    if not isinstance(valDer, int):
+        registro = obtener_registro(NodeType.VAR_DECLARATION_1, valDer, tabla_simbolos)
+        valDer = registro['valor']#Reasignamos un valor de tipo INT
     
     if op == '+':
         resultado = int(valIzq) + int(valDer)
