@@ -1,11 +1,11 @@
 void suma(){
-    int y;
     int z;
-    x = 10;
-    y = 22;
-    z = 3;
-}
+    int x;
+    int z;
 
+    x = 12;
+
+}   
 /*
 Se verifica que solamente se pueda declarar una variable con un unico nombre en el contexto global
 Se verifica que solamente se pueden declarar variables de tipo INT

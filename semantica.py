@@ -55,6 +55,14 @@ def recorrido_compound(arbol, scope, nueva_tabla):
         for node in arbol.children[i]:
             if node.type == NodeType.VAR_DECLARATION_1:
                 fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '','lineno' : ''}
+                registro = obtenerMetadatos_de_registro(node, NodeType.VAR_DECLARATION_1)
+                val_name = registro['nombre']
+                registro = obtener_registro(NodeType.VAR_DECLARATION_1, val_name, nueva_tabla)
+                if registro != None: # Se manda un error: indicando que la variable ya ha sido declarada
+                    print("Error: La variable ya ha sido declarada")
+                else: # Se agrega un nuevo registro a la tabla
+                    insertarRegistro(fila, node, scope, NodeType.VAR_DECLARATION_1,nueva_tabla)
+
                 insertar_actualizar_registros(node, nueva_tabla, scope, fila, NodeType.VAR_DECLARATION_1)
             elif node.type == NodeType.VAR_DECLARATION_2:
                 fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension': '', 'lineno' : ''}
