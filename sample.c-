@@ -1,0 +1,21 @@
+void suma(){
+    int x;
+    int y;
+    int z;
+
+    x = 23;
+    y = 12;
+
+    x = x - y;
+    y = x + 6;
+    z = 32;
+    z = 1 + y;
+}
+
+/*
+Se verifica que solamente se pueda declarar una variable con un unico nombre en el contexto global
+Se verifica que solamente se pueden declarar variables de tipo INT
+error: missing return statement
+incompatible types: unexpected return value
+Error: variable z is already defined
+error: variable y is already defined in method suma*/
