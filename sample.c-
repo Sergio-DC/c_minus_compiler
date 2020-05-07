@@ -1,8 +1,11 @@
-
-void suma(int x, int y, int z){
-
+int x;
+void suma(){
+  int x;
+  int y;
 
 }   
+
+
 /*
 Se verifica que solamente se pueda declarar una variable con un unico nombre en el contexto global
 Se verifica que solamente se pueden declarar variables de tipo INT

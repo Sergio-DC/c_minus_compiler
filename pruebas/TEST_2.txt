@@ -1,0 +1,8 @@
+void suma(){
+    int y;
+    int z;
+    
+    x = 10;
+    y = 22;
+    z = 3;
+}

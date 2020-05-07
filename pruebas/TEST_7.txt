@@ -1,0 +1,6 @@
+int w;
+void suma(){
+  int x;
+  int y;
+
+} 
