@@ -42,7 +42,7 @@ def recorrido_params(arbol, scope, nueva_tabla):
         for node in arbol.children: # Iteramos sobre un array de params e.g abstraccion->[int x, int y] realidad -> [int--*x, int--*y]
             fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
             #En este punto le damos formato al nodo analizado(PARAM), el formato será: TUPLA_TS
-            registro = formatearNodo(node, NodeType.PARAM_1)
+            registro = formatearNodo(node, NodeType.PARAM_1, scope)
             val_name = registro['nombre']
             #registro = getTupla(NodeType.PARAM_1, val_name, nueva_tabla)
             #if registro != None and type != NodeType.PARAM_1: # Actualizamos simbolo

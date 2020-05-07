@@ -1,7 +1,8 @@
 Esta carpeta contiene una serie de pruebas en el lenguaje C-, para verificar
 la calidad de los siguientes puntos del Analizador Semántico:
 
-TEST_1: Resolucion de calculo entre numeros y literales
+TEST_0: Resolucion de calculo entre numeros y literales con una variable
+TEST_1: Resolucion de calculo entre numeros y literales con varias Variables
 TEST_2: Se detecta error cuando una variable no ha sido declarada
 TEST_3: Se detecta error cuando una variable se ha declarado 2 veces localmente 
 TEST_4: Los parametros de una funcion se guardan en la TS y en el campo de 'params' de la funcion declarada (Solamente el tipo)

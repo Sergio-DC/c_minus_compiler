@@ -1,0 +1,10 @@
+int suma() {
+    int x;
+    x = 3;
+    x = x + 2;
+    x = x + 18;
+    x = 100 - x;
+    x = x * 2;
+    x = x + 5 - x;
+    //Output: x = 5
+}
