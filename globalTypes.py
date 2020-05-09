@@ -40,8 +40,9 @@ class NodeType(Enum):
     VAR_DECLARATION_1 = 0
     VAR_DECLARATION_2 = 1
     FUN_DECLARATION = 2
-    PARAM_1 = 3
-    PARAMS = 4
-    EXPRESSION_1 = 5
-    RETURN_STMT_2 = 6
+    PARAM_1 = 3 # Representa la estructura de un parametro aislado e.g int x
+    PARAMS_1 = 4 # Representa la lista de parametros, ver doc de C- para más info
+    PARAMS_2 = 5 # Representa un parametro vacio
+    EXPRESSION_1 = 6
+    RETURN_STMT_2 = 7
 

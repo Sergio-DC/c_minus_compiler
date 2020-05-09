@@ -135,7 +135,7 @@ def p_fun_declaration(p):
      'fun_declaration : type_specifier ID LPAREN params RPAREN compound_stmt'
      if masInfo:
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
-     p[2] = Node(NodeType.PARAMS, p[4], p[2])
+     p[2] = Node(NodeType.PARAMS_1, p[4], p[2])
      p[0] = Node(NodeType.FUN_DECLARATION, [p[2], p[6]], p[1], p.lineno(2))
 
 
@@ -154,7 +154,7 @@ def p_params_1(p):
 def p_params_2(p):
      'params : VOID'
      new_list_param = []
-     node = Node("type-specifier", None, p[1])
+     node = Node(NodeType.PARAMS_2, None, p[1])
      new_list_param.append(node)
      p[0] = new_list_param
 

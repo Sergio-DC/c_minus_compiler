@@ -28,8 +28,10 @@ def tabla(tree, imprime = True):
             #recorrido del los params de la funcion
             nombre_funcion = declaracion_global.children[0].leaf # Se guarda el nombre de la funcion, para buscar sus parametros en la siguiente funcion
             tabla_local = recorrido_params(declaracion_global.children[0], nombre_funcion, tabla_local)#Los params de la funcion son guardados en la TS
+            print("Tabla Local: ", tabla_local)
             ## Se agregan solamente los tipos de datos que tiene los parametros de una función al campo 'params' de la tupla de la misma funcion
-            for registro in tabla_local:              
+            for registro in tabla_local:
+                print("Que hay aqui: {}  {}".format(registro['type'], registro['tipo_dato']))            
                 if registro['type'] == NodeType.PARAM_1: 
                     tupla_fun_decl['params'].append(registro['tipo_dato'])                          
             # recorrido del cuerpo de la funcion
@@ -38,7 +40,7 @@ def tabla(tree, imprime = True):
     stack_TS.append(tabla_global)     
 
 def recorrido_params(arbol, scope, nueva_tabla):
-    if arbol.type == NodeType.PARAMS:#En este punto estamos sobre una declaracion de funcion e.g void suma(int x, int y)
+    if arbol.type == NodeType.PARAMS_1:#En este punto estamos sobre una declaracion de funcion e.g void suma(int x, int y)
         for node in arbol.children: # Iteramos sobre un array de params e.g abstraccion->[int x, int y] realidad -> [int--*x, int--*y]
             fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
             #En este punto le damos formato al nodo analizado(PARAM), el formato será: TUPLA_TS
@@ -48,7 +50,9 @@ def recorrido_params(arbol, scope, nueva_tabla):
             #if registro != None and type != NodeType.PARAM_1: # Actualizamos simbolo
             #    actualizarRegistro(node, registro, nueva_tabla)
             #else: # Se agrega un nuevo registro a la tabla
-            insertarRegistro(fila, node, scope, NodeType.PARAM_1,nueva_tabla)                   
+
+            #if registro['tipo_dato'] != 'void':
+            insertarRegistro(fila, node, scope, NodeType.PARAM_1,nueva_tabla)
     return nueva_tabla
                  
 
@@ -216,10 +220,13 @@ def checkNode(t):
 
             #Obtener params a nivel local
             param_list_names = []
+            # print("Pase")
             for registro in tabla_simbolos:
-                if registro['type'] == 'params':
+                print("registro[type]: ", registro['type'])
+                if registro['type'] == NodeType.PARAM_1:
+                    print("Pase :)")
                     param_list_names.append(registro['nombre'])
-                    if 'void' == registro['tipo_dato'] and registro['nombre'] != 'void': # Error para foo(void x)
+                    if registro['tipo_dato'] == 'void' and registro['nombre'] != '' : # Error para foo(void x)
                         print("Error:Un param es igual a void x")
             if len(param_list_names) != len(set(param_list_names)): # Devuelve true si hay nombres repetidos
                 print("error: variable y is already defined in method suma")

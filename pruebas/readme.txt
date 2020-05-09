@@ -12,6 +12,8 @@ TEST_7: Combinacion del TEST_5 Y TEST_6
 TEST_8: Se permite declarar una variable con el mismo nombre siempre y cuando esten en distintos ámbitos, una globalmente y otra localmente
 TEST_9: Si el tipo de retorno de una funcion es int y no devuelve nada se arroja error
 TEST_10: Si el tipo de retorno es void y se devuelve un valor INT, se arroja error
+TEST_11: Si se quiere declarar una funcion sin parametros, la seccion de parametros debera tener void :(
+TEST_12: No se permite declarar parametros en las funciones con esta estructura: void foo(void x)
 
 Probando:
 TEST_8-Suspender
