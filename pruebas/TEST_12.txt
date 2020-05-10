@@ -2,6 +2,11 @@ void foo(void x) {
 
 }
 
+void suma(void y, int x){
+
+
+}
+
 void foo(void x, void y) {
 
 }

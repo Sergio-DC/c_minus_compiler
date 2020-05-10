@@ -196,12 +196,11 @@ def typeCheck(tree):
 scope = 'global'
 def imprimeAST_1(arbol, table, stack_TS):
     global scope
+    #print("Ora: ", arbol.type)
     if arbol.type == NodeType.VAR_DECLARATION_1:
             fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
             nombre_variable = arbol.children[0].leaf
-            print("nom: ", nombre_variable)
-            #Buscar en TS si la variable fue declarada
-            tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
+            tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
             if tupla == None:
                 insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
             else:
@@ -216,8 +215,7 @@ def imprimeAST_1(arbol, table, stack_TS):
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
         valor = arbol.children[1].leaf
-        #Buscar en TS si la variable fue declarada
-        tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
+        tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS si la variable fue declarada
         if tupla != None:                
             tupla['valor'] = valor #Actualizamos la variable
         else:
@@ -229,14 +227,27 @@ def imprimeAST_1(arbol, table, stack_TS):
         tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
         if tupla == None:
             msgError("Variable no declarada") #Arrojamos Error
+    elif arbol.type == NodeType.PARAMS_1:
+        try:
+            lista_params = arbol.children[0]
+            #print("lista_params: ", lista_params)
+        except IndexError:
+            print("Syntax Error: Is missing void")
+            exit()
     elif arbol.type == NodeType.PARAM_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
-        print("Entre: ", arbol.leaf)
-        registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_1,table)# Se agregan los parametros a la tabla local
-        #Agregar tipos de datos a la declaracion de la funcion
-        table_bottom = stack_TS[0] #Obtener referencia de la tabla del fondo (Contexto Global)
-        tupla = getTupla(NodeType.FUN_DECLARATION, scope, stack_TS[0])#Obtenemos a refencia a la funcio que contiene los PARAMSS
-        tupla['params'].append(arbol.leaf)#Actualizamos el campo de PARAM de la declaracion de funcion
+        tipo_dato = arbol.leaf
+        nombre_variable = arbol.children[0].leaf
+        print("Nom Var: ", nombre_variable)
+        if tipo_dato == 'void':
+            msgError("Tipo de dato Invalido")# No pueden exitir params con tipo de dato void, se arroja Error
+            exit()
+        else:
+            registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_1,table)# Se agregan los parametros a la tabla local
+            #Agregar tipos de datos a la declaracion de la funcion
+            table_bottom = stack_TS[0] #Obtener referencia de la tabla del fondo (Contexto Global)
+            tupla = getTupla(NodeType.FUN_DECLARATION, scope, stack_TS[0])#Obtenemos a refencia a la funcion que contiene los PARAMS
+            tupla['params'].append(arbol.leaf)#Actualizamos el campo de PARAM de la declaracion de funcion
 
     if arbol != None:
         
