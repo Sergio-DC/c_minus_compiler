@@ -44,5 +44,6 @@ class NodeType(Enum):
     PARAMS_1 = 4 # Representa la lista de parametros, ver doc de C- para más info
     PARAMS_2 = 5 # Representa un parametro vacio
     EXPRESSION_1 = 6
-    RETURN_STMT_2 = 7
-
+    EXPRESSION_2 = 7
+    RETURN_STMT_2 = 8
+    VAR_1  = 9

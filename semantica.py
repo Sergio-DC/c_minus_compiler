@@ -7,6 +7,7 @@
 from globalTypes import *
 
 stack_TS = [] # Stack de tabla de simbolos
+tabla_global_1 = []
 
 def tabla(tree, imprime = True):
     tabla_global = []
@@ -191,6 +192,48 @@ def insertarRegistro(fila, node, scope, type,  tabla_temp):
 def typeCheck(tree):
     imprimeAST(tree, checkNode)
 
+def imprimeAST_1(arbol, scope):
+    global tabla_global_1
+    if arbol != None:
+        if arbol.type == NodeType.VAR_DECLARATION_1:
+            fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
+            insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  tabla_global_1)
+        elif arbol.type == NodeType.FUN_DECLARATION:
+            tupla_fun_decl = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'lineno' : ''}
+            tupla_fun_decl = insertarRegistro(tupla_fun_decl, arbol, scope, NodeType.FUN_DECLARATION, tabla_global_1)
+            scope = scope + 1
+        elif arbol.type == NodeType.EXPRESSION_1:
+            fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
+            nombre_variable = arbol.children[0].leaf
+            valor = arbol.children[1].leaf
+            #Buscar en TS si la variable fue declarada
+            tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_global_1)
+            if tupla != None:                
+                tupla['valor'] = valor #Actualizamos la variable
+            else:
+                msgError("Variable no declarada") #Arrojamos Error
+        elif arbol.type == NodeType.RETURN_STMT_2:
+            fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
+            nombre_variable = arbol.children[0].leaf
+            #Buscar en TS si la variable fue declarada
+            tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_global_1)
+            if tupla == None:
+                msgError("Variable no declarada") #Arrojamos Error
+
+        if arbol.type == "compound_stmt":
+            for i in range(len(arbol.children)):
+                for node in arbol.children[i]:
+                        imprimeAST_1(node, scope)
+        elif arbol.children:
+            for child in range(len(arbol.children),):
+                if arbol.children[child] != []:
+                        imprimeAST_1(arbol.children[child], scope)
+
+def getArray():
+    global tabla_global_1
+    return tabla_global_1
+
+
 def imprimeAST(arbol, checkNode):
     if arbol != None:
         if arbol.type == "compound_stmt":
@@ -347,3 +390,6 @@ def mostrarTabla():
     #     for item in tabla_simbolos:
     #         print("Tabla: {}".format(item['scope']), item)
     print('\n'.join('{}: {}'.format(*k) for k in enumerate(stack_TS)))
+
+def msgError(mensaje):
+    print("Error: ", mensaje)

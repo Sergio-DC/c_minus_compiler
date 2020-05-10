@@ -380,7 +380,7 @@ def p_var_1(p):
         'var : ID'
         if masInfo:
              print("var_1: ", p[1])
-        p[0]= Node("var_1",None , p[1])
+        p[0]= Node(NodeType.VAR_1,None , p[1])
 def p_var_2(p):
      'var : ID LBRACKET expression RBRACKET'
      if masInfo:
@@ -392,7 +392,7 @@ def p_simple_expression_1(p):
      'simple_expression : additive_expression relop additive_expression'
      if masInfo:
           print('simple_expression_1: ', p[1], p[2], p[3])
-     p[0] = Node("simple_expression_1", [p[1], p[3]], p[2].leaf)
+     p[0] = Node(NodeType.EXPRESSION_2, [p[1], p[3]], p[2].leaf)
 
 def p_simple_expression_2(p):
         'simple_expression : additive_expression'
