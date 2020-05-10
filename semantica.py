@@ -196,10 +196,16 @@ def typeCheck(tree):
 scope = 'global'
 def imprimeAST_1(arbol, table, stack_TS):
     global scope
-
     if arbol.type == NodeType.VAR_DECLARATION_1:
             fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
-            insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
+            nombre_variable = arbol.children[0].leaf
+            print("nom: ", nombre_variable)
+            #Buscar en TS si la variable fue declarada
+            tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
+            if tupla == None:
+                insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
+            else:
+                msgError("Variable Repetida")
     elif arbol.type == NodeType.FUN_DECLARATION:
         tupla_fun_decl = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'lineno' : ''}
         tupla_fun_decl = insertarRegistro(tupla_fun_decl, arbol, scope, NodeType.FUN_DECLARATION, table)
@@ -207,7 +213,7 @@ def imprimeAST_1(arbol, table, stack_TS):
         stack_TS.append(table)
         table = []
     elif arbol.type == NodeType.EXPRESSION_1:
-        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
         valor = arbol.children[1].leaf
         #Buscar en TS si la variable fue declarada
@@ -217,13 +223,20 @@ def imprimeAST_1(arbol, table, stack_TS):
         else:
             msgError("Variable no declarada") #Arrojamos Error
     elif arbol.type == NodeType.RETURN_STMT_2:
-        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
         #Buscar en TS si la variable fue declarada
         tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
         if tupla == None:
-                msgError("Variable no declarada") #Arrojamos Error
-
+            msgError("Variable no declarada") #Arrojamos Error
+    elif arbol.type == NodeType.PARAM_1:
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
+        print("Entre: ", arbol.leaf)
+        registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_1,table)# Se agregan los parametros a la tabla local
+        #Agregar tipos de datos a la declaracion de la funcion
+        table_bottom = stack_TS[0] #Obtener referencia de la tabla del fondo (Contexto Global)
+        tupla = getTupla(NodeType.FUN_DECLARATION, scope, stack_TS[0])#Obtenemos a refencia a la funcio que contiene los PARAMSS
+        tupla['params'].append(arbol.leaf)#Actualizamos el campo de PARAM de la declaracion de funcion
 
     if arbol != None:
         
@@ -239,38 +252,6 @@ def imprimeAST_1(arbol, table, stack_TS):
                     imprimeAST_1(arbol.children[child], table, stack_TS)
     return stack_TS
 
-def getArray():
-    global stack_TS
-    return stack_TS
-
-
-def encapsular(arbol, scope, table, stack_TS):
-    if arbol.type == NodeType.VAR_DECLARATION_1:
-            fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
-            insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
-    elif arbol.type == NodeType.FUN_DECLARATION:
-        tupla_fun_decl = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'lineno' : ''}
-        tupla_fun_decl = insertarRegistro(tupla_fun_decl, arbol, scope, NodeType.FUN_DECLARATION, table)
-        scope = tupla_fun_decl['nombre']
-        stack_TS.append(table)
-        table = []
-    elif arbol.type == NodeType.EXPRESSION_1:
-        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
-        nombre_variable = arbol.children[0].leaf
-        valor = arbol.children[1].leaf
-        #Buscar en TS si la variable fue declarada
-        tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
-        if tupla != None:                
-            tupla['valor'] = valor #Actualizamos la variable
-        else:
-            msgError("Variable no declarada") #Arrojamos Error
-    elif arbol.type == NodeType.RETURN_STMT_2:
-        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
-        nombre_variable = arbol.children[0].leaf
-        #Buscar en TS si la variable fue declarada
-        tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
-        if tupla == None:
-                msgError("Variable no declarada") #Arrojamos Error
 def imprimeAST(arbol, checkNode):
     if arbol != None:
         if arbol.type == "compound_stmt":
