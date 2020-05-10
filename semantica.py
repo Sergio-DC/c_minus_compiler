@@ -192,8 +192,10 @@ def insertarRegistro(fila, node, scope, type,  tabla_temp):
 def typeCheck(tree):
     imprimeAST(tree, checkNode)
 
-def imprimeAST_1(arbol, scope):
-    global tabla_global_1
+
+scope = 'global'
+def imprimeAST_1(arbol):
+    global tabla_global_1, scope
     if arbol != None:
         if arbol.type == NodeType.VAR_DECLARATION_1:
             fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
@@ -201,7 +203,8 @@ def imprimeAST_1(arbol, scope):
         elif arbol.type == NodeType.FUN_DECLARATION:
             tupla_fun_decl = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'lineno' : ''}
             tupla_fun_decl = insertarRegistro(tupla_fun_decl, arbol, scope, NodeType.FUN_DECLARATION, tabla_global_1)
-            scope = scope + 1
+            scope = tupla_fun_decl['nombre']
+            table = []
         elif arbol.type == NodeType.EXPRESSION_1:
             fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
             nombre_variable = arbol.children[0].leaf
@@ -223,11 +226,12 @@ def imprimeAST_1(arbol, scope):
         if arbol.type == "compound_stmt":
             for i in range(len(arbol.children)):
                 for node in arbol.children[i]:
-                        imprimeAST_1(node, scope)
+                        imprimeAST_1(node)
+            scope = 'global'
         elif arbol.children:
             for child in range(len(arbol.children),):
                 if arbol.children[child] != []:
-                        imprimeAST_1(arbol.children[child], scope)
+                        imprimeAST_1(arbol.children[child])
 
 def getArray():
     global tabla_global_1
