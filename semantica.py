@@ -196,15 +196,26 @@ def typeCheck(tree):
 scope = 'global'
 def imprimeAST_1(arbol, table, stack_TS):
     global scope
-    #print("Ora: ", arbol.type)
+    # print("Ora: ", arbol.type)
     if arbol.type == NodeType.VAR_DECLARATION_1:
-            fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
-            nombre_variable = arbol.children[0].leaf
-            tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
-            if tupla == None:
-                insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
-            else:
-                msgError("Variable Repetida")
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
+        nombre_variable = arbol.children[0].leaf
+        tupla_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
+        tupla_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
+        if tupla_1 == None and tupla_2 == None:
+            insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
+        else:
+            msgError("Variable Repetida")
+    elif arbol.type == NodeType.VAR_DECLARATION_2: # Declaracion de variable de tipo array []
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
+        nombre_variable = arbol.children[0].leaf
+        tamano = arbol.children[1].leaf
+        tupla_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
+        tupla_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
+        if tupla_1 == None and tupla_2 == None:            
+            insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_2, table)
+        else:
+            msgError("Variable Repetida")
     elif arbol.type == NodeType.FUN_DECLARATION:
         tupla_fun_decl = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'lineno' : ''}
         tupla_fun_decl = insertarRegistro(tupla_fun_decl, arbol, scope, NodeType.FUN_DECLARATION, table)

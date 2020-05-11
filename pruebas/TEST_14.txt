@@ -1,0 +1,7 @@
+int x[6];
+int x;
+
+
+void suma(void) {
+    
+}

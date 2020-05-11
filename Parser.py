@@ -106,7 +106,7 @@ def p_var_declaration_2(p):
      p[4] = Node("num", None, p[4])
      if masInfo:
           print("var_declaration_2: ", p[1], p[2], p[3], p[4], p[5], p[6])
-     p[0] = Node(NodeType.VAR_DECLARATION_2, [p[2], p[4]], p[1])
+     p[0] = Node(NodeType.VAR_DECLARATION_2, [p[2], p[4]], p[1], p.lineno(2))
 
 def p_var_declaration_2_error(p):
      'var_declaration : type_specifier ID LBRACKET NUMBER RBRACKET'
@@ -530,7 +530,7 @@ def p_call(p):
         'call : ID LPAREN args RPAREN'
         if masInfo:
              print("call: ",  p[1], p[2], p[3], p[4])             
-        p[0] = Node("call", p[3], p[1])
+        p[0] = Node(NodeType.CALL, p[3], p[1])
 
 def p_args(p):
      '''
