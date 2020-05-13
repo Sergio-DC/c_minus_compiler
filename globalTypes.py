@@ -47,3 +47,4 @@ class NodeType(Enum):
     EXPRESSION_2 = 7
     RETURN_STMT_2 = 8
     VAR_1  = 9
+    CALL = 10

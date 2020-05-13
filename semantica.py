@@ -9,89 +9,6 @@ from globalTypes import *
 #stack_TS = [] # Stack de tabla de simbolos
 tabla_global_1 = []
 
-def tabla(tree, imprime = True):
-    tabla_global = []
-    declaracion_global = None
-
-    for declaracion_global in tree.children:# Acceder al array de variables y funciones globales
-        if declaracion_global.type == NodeType.VAR_DECLARATION_1: # Variables globales
-            fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
-            #tabla_temp = insertar_actualizar_registros(declaracion_global, tabla_temp, 'global', fila, 'declaracion-var')
-            insertarRegistro(fila, declaracion_global, 'global', NodeType.VAR_DECLARATION_1, tabla_global)
-        if declaracion_global.type == NodeType.VAR_DECLARATION_2:
-            fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
-            #tabla_temp = insertar_actualizar_registros(declaracion_global, tabla_temp, 'global', fila, NodeType.VAR_DECLARATION_2)
-        if declaracion_global.type == NodeType.FUN_DECLARATION: # Funciones Globales
-            tupla_fun_decl = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'lineno' : ''}
-            # Se guardan los datos de la funcion
-            tupla_fun_decl = insertarRegistro(tupla_fun_decl, declaracion_global, 'global', NodeType.FUN_DECLARATION, tabla_global)
-            tabla_local = []
-            #recorrido del los params de la funcion
-            nombre_funcion = declaracion_global.children[0].leaf # Se guarda el nombre de la funcion, para buscar sus parametros en la siguiente funcion
-            tabla_local = recorrido_params(declaracion_global.children[0], nombre_funcion, tabla_local)#Los params de la funcion son guardados en la TS
-            print("Tabla Local: ", tabla_local)
-            ## Se agregan solamente los tipos de datos que tiene los parametros de una función al campo 'params' de la tupla de la misma funcion
-            for registro in tabla_local:
-                print("Que hay aqui: {}  {}".format(registro['type'], registro['tipo_dato']))            
-                if registro['type'] == NodeType.PARAM_1: 
-                    tupla_fun_decl['params'].append(registro['tipo_dato'])                          
-            # recorrido del cuerpo de la funcion
-            tabla_local = recorrido_compound(declaracion_global.children[1], nombre_funcion, tabla_local)
-            
-    stack_TS.append(tabla_global)     
-
-def recorrido_params(arbol, scope, nueva_tabla):
-    if arbol.type == NodeType.PARAMS_1:#En este punto estamos sobre una declaracion de funcion e.g void suma(int x, int y)
-        for node in arbol.children: # Iteramos sobre un array de params e.g abstraccion->[int x, int y] realidad -> [int--*x, int--*y]
-            fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
-            #En este punto le damos formato al nodo analizado(PARAM), el formato será: TUPLA_TS
-            registro = formatearNodo(node, NodeType.PARAM_1, scope)
-            val_name = registro['nombre']
-            #registro = getTupla(NodeType.PARAM_1, val_name, nueva_tabla)
-            #if registro != None and type != NodeType.PARAM_1: # Actualizamos simbolo
-            #    actualizarRegistro(node, registro, nueva_tabla)
-            #else: # Se agrega un nuevo registro a la tabla
-
-            #if registro['tipo_dato'] != 'void':
-            insertarRegistro(fila, node, scope, NodeType.PARAM_1,nueva_tabla)
-    return nueva_tabla
-                 
-
-def recorrido_compound(arbol, scope, nueva_tabla):
-    for i in range(len(arbol.children)):
-        for node in arbol.children[i]:
-            if node.type == NodeType.VAR_DECLARATION_1:
-                fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '','lineno' : ''}
-                registro_local = formatearNodo(node, NodeType.VAR_DECLARATION_1, scope)
-                val_name = registro_local['nombre']
-                registro_global = getTupla(NodeType.VAR_DECLARATION_1, val_name, nueva_tabla)
-                if registro_local != None and registro_local['scope'] != scope  : # Se manda un error: indicando que la variable ya ha sido declarada
-                    print("Error: La variable ya ha sido declarada")
-                else: # Se agrega un nuevo registro a la tabla
-                    insertarRegistro(fila, node, scope, NodeType.VAR_DECLARATION_1,nueva_tabla)
-                #insertar_actualizar_registros(node, nueva_tabla, scope, fila, NodeType.VAR_DECLARATION_1)
-            elif node.type == NodeType.VAR_DECLARATION_2:
-                fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension': '', 'lineno' : ''}
-                #insertar_actualizar_registros(node, nueva_tabla, scope, fila, '', NodeType.VAR_DECLARATION_2)
-            elif node.type == NodeType.EXPRESSION_1:
-                fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
-                var_asignacion = formatearNodo(node, NodeType.EXPRESSION_1, scope) #asignacion
-                val_name = var_asignacion['nombre']
-                var_declaracion = getTupla(NodeType.VAR_DECLARATION_1, val_name, nueva_tabla)#Declaracion
-                if var_declaracion == None: # No se declarado una variables
-                    print("Error: No se ha declarado la variable :(")
-                else: # La variable si ha sido declarada
-                    if not isinstance(var_asignacion['valor'], int): #Significa que la asignacion no es numero sino una expresion
-                        resultado = calculoAritmeticoArbol(node.children[1], nueva_tabla)#Calculo del string de la derecha de la variable
-                        var_declaracion['valor'] = resultado # Se asigna el calculo a la variable
-                    else: # En este caso la asignacion es un simple numero(sin expresiones aritmeticas)
-                        var_declaracion['valor'] = var_asignacion['valor']          
-            elif node.type == NodeType.RETURN_STMT_2:
-                fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
-                insertarRegistro(fila, node, scope, NodeType.RETURN_STMT_2,nueva_tabla)
-    stack_TS.append(nueva_tabla)
-    return nueva_tabla
-
 #Buscar en la tabla de simbolos, Devuelve un objeto/registro que contiene los atributos del simbolo
 def getTupla(type, val_name, tabla_simbolos):
     for i in range(len(tabla_simbolos)):
@@ -99,22 +16,6 @@ def getTupla(type, val_name, tabla_simbolos):
             registro = tabla_simbolos[i]
             return registro
     return None
-
-def actualizar_TS(val_type, val_name, tabla_simbolos, valores):
-    """
-    Parameters:
-
-    rol : (str) este puede ser 'variable'|'funcion'|'arreglo'
-
-    nombre : (str) este lo da el programador a 'variable'|'funcion'|'arreglo'
-
-    tabla_simbolos : (list) TS que sera actualizada
-
-    valores : (list) con los que sera actualizada la TS
-    """
-    registro = getTupla(type, val_name, tabla_simbolos)
-    for valor in valores: # Se actualiza el campo de 'params' de la funcion
-        registro['params'].append(valor)
 
 def preOrder(arbol, resultado, tabla_simbolos):
     if arbol != None:
@@ -155,26 +56,6 @@ def operacion(op, valIzq, valDer, tabla_simbolos):
 
     return resultado
 
-def insertar_actualizar_registros(node, tabla_temp, scope, fila, val_type):## Aqui esta el problema de no deteccion de variables repetidas
-    registro = formatearNodo(node, val_type)
-    val_name = registro['nombre']
-    registro = getTupla(val_type, val_name, tabla_temp)
-    if registro != None and type != NodeType.PARAM: # Actualizamos simbolo
-        actualizarRegistro(node, registro, val_type)
-    else: # Se agrega un nuevo registro a la tabla
-        insertarRegistro(fila, node, scope, val_type,tabla_temp)                   
-    return tabla_temp
-
-def actualizarRegistro(node, registro, type):
-    if type == NodeType.PARAM:
-        if len(node.children) == 2:#Si la variable se usa para asignacion, obtenemos el valor guardado en la variable
-            if registro['valor'] != '':
-                valor_aux = registro['valor'] # Valor anterior de Y
-
-            resultado = calculoAritmeticoArbol(node.children[1])#Calculo del string de la derecha de la variable
-            registro['valor'] = resultado
-    #elif type == NodeType.VAR_DECLARATION_1:
-
 #Se inserta Funcion a la tabla de Simbolos
 def insertarRegistro(fila, node, scope, type,  tabla_temp):
     registro = formatearNodo(node, type, scope)
@@ -189,13 +70,10 @@ def insertarRegistro(fila, node, scope, type,  tabla_temp):
 
     return fila
 
-def typeCheck(tree):
-    imprimeAST(tree, checkNode)
-
-
 scope = 'global'
-def imprimeAST_1(arbol, table, stack_TS):
-    global scope
+YaPase = False
+def crearTabla(arbol, table, stack_TS):
+    global scope, YaPase
     # print("Ora: ", arbol.type)
     if arbol.type == NodeType.VAR_DECLARATION_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
@@ -220,8 +98,10 @@ def imprimeAST_1(arbol, table, stack_TS):
         tupla_fun_decl = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'lineno' : ''}
         tupla_fun_decl = insertarRegistro(tupla_fun_decl, arbol, scope, NodeType.FUN_DECLARATION, table)
         scope = tupla_fun_decl['nombre']
-        stack_TS.append(table)
-        table = []
+        if not YaPase:
+            stack_TS.append(table)
+        YaPase = True
+        # table = []
     elif arbol.type == NodeType.EXPRESSION_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
@@ -261,36 +141,43 @@ def imprimeAST_1(arbol, table, stack_TS):
             tupla['params'].append(arbol.leaf)#Actualizamos el campo de PARAM de la declaracion de funcion
 
     if arbol != None:
-        
         if arbol.type == "compound_stmt":
+           
+            table = []
             for i in range(len(arbol.children)):
                 for node in arbol.children[i]:
-                        imprimeAST_1(node, table, stack_TS)
+                    crearTabla(node, table, stack_TS)
             stack_TS.append(table)
             scope = 'global'
         elif arbol.children:
             for child in range(len(arbol.children)):
                 if arbol.children[child] != []:
-                    imprimeAST_1(arbol.children[child], table, stack_TS)
+                    crearTabla(arbol.children[child], table, stack_TS)
     return stack_TS
 
-def imprimeAST(arbol, checkNode):
+index = 0
+def typeCheck(tree, stack, index_):
+    global index 
+    index = index_
+    imprimeAST(tree, checkNode, stack, index)
+
+def imprimeAST(arbol, checkNode, stack, index):
     if arbol != None:
         if arbol.type == "compound_stmt":
             for i in range(len(arbol.children)):
                 for node in arbol.children[i]:
-                        imprimeAST(node, checkNode)
+                    imprimeAST(node, checkNode, stack, index)
+            index = index - 1
         elif arbol.children:
             for child in range(len(arbol.children)):
                 if arbol.children[child] != []:
-                        imprimeAST(arbol.children[child], checkNode)
-            checkNode(arbol)
+                    imprimeAST(arbol.children[child], checkNode, stack, index)
+            checkNode(arbol, stack, index)
 
-def checkNode(t):
-    print("Type: ", t.type)
+def checkNode(t, stack_TS, index):
+    print("Type: {}  Index: {}  Val: {}".format(t.type, index, t.leaf))
     if t.type == NodeType.VAR_DECLARATION_1:# declaracion de variable
             tabla_simbolos = stack_TS[0] #TS Global, CUIDADO: implementar un mecanismo de getion de colas
-            #print("Tipo: {}  id: {}".format(t.leaf, t.children[0].leaf))
             if (t.leaf != 'int'): # la declaracion de una varible debe ser INT
                 typeError(t,"Error: El tipo debe ser INT")
             elif nombreRepetido(t.children[0].leaf, tabla_simbolos) == True: #El nombre de la variable no debe repetirse
@@ -300,39 +187,47 @@ def checkNode(t):
             #Buscamos en la TS un RETURN, si este tiene valor INT y el retorno es VOID arrojamos ERROR
             #Buscamos en la TS un RETURN, si no hay y el retorno es INT arrojamos ERROR
             tabla_simbolos = stack_TS[0]#TS local
-
             #Obtener params a nivel local
-            param_list_names = []
-            # print("Pase")
-            for registro in tabla_simbolos:
-                print("registro[type]: ", registro['type'])
-                if registro['type'] == NodeType.PARAM_1:
-                    print("Pase :)")
-                    param_list_names.append(registro['nombre'])
-                    if registro['tipo_dato'] == 'void' and registro['nombre'] != '' : # Error para foo(void x)
-                        print("Error:Un param es igual a void x")
-            if len(param_list_names) != len(set(param_list_names)): # Devuelve true si hay nombres repetidos
-                print("error: variable y is already defined in method suma")
+            # param_list_names = []
+            # # print("Pase")
+            # for registro in tabla_simbolos:
+            #     if registro['type'] == NodeType.PARAM_1:
+            #         print("Pase :)")
+            #         param_list_names.append(registro['nombre'])
+            #         if registro['tipo_dato'] == 'void' and registro['nombre'] != '' : # Error para foo(void x)
+            #             print("Error:Un param es igual a void x")
+            # if len(param_list_names) != len(set(param_list_names)): # Devuelve true si hay nombres repetidos
+            #     print("error: variable y is already defined in method suma")
 
-            return_stmt = None
-            for registro in tabla_simbolos:
-                if registro['type'] == 'return':# Buscamos un statement de tipo RETURN
-                    return_stmt = registro
-                    break
+            # return_stmt = None
+            # for registro in tabla_simbolos:
+            #     if registro['type'] == 'return':# Buscamos un statement de tipo RETURN
+            #         return_stmt = registro
+            #         break
 
-            if return_stmt != None:
-                if return_stmt['tipo_dato'] != t.leaf:#Se compara el retorno con el retorno de firma
-                    print("Error: incompatible types: unexpected return value")
-            elif return_stmt == None and t.leaf == 'int':
-                print("error: missing return statement")
+            # if return_stmt != None:
+            #     if return_stmt['tipo_dato'] != t.leaf:#Se compara el retorno con el retorno de firma
+            #         print("Error: incompatible types: unexpected return value")
+            # elif return_stmt == None and t.leaf == 'int':
+            #     print("error: missing return statement")
     elif t.type == NodeType.RETURN_STMT_2:
-        print("Stack: ", stack_TS)
+        #print("Stack: ", stack_TS)
         tabla_simbolos = stack_TS[0] #TS Global, CUIDADO: implementar un mecanismo de getion de colas
         
-        if tabla_simbolos[0]['tipo_dato'] != t.leaf:#Se compara el lo que devueleve la fucnion con el retorno de firma
-            print("Error: incompatible types: unexpected return value")
-        elif return_stmt == None and t.leaf == 'int':
-            print("error: missing return statement")
+        
+        return_variable = t.children[0].leaf
+        tupla_return = getTupla(NodeType.VAR_DECLARATION_1, return_variable, tabla_simbolos)
+        print("tupla_retrun: ", tabla_simbolos)
+        #tupla_func = getTupla(NodeType.FUN_DECLARATION, tupla_return['scope'], )
+        
+        #if tupla['tipo_dato'] == 
+        print("que hay: ", return_variable)
+        #if return_value 
+
+        # if tabla_simbolos[0]['tipo_dato'] != t.leaf:#Se compara lo que devueleve la fucnion con el retorno de firma
+        #     print("Error: incompatible types: unexpected return value")
+        # elif return_stmt == None and t.leaf == 'int':
+        #     print("error: missing return statement")
 
 def nombreRepetido(val_name, tabla_simbolos):
     registros = []
@@ -409,27 +304,12 @@ def formatearNodo(node, type, scope):
 
     return {'nombre':val_nombre, 'tipo_dato':val_tipo_dato, 'valor':val_valor, 'type': val_type , 'scope': val_scope, 'dimension': val_dimension, 'lineno' : val_lineno}
 
-def eliminarRegistro(tabla_simbolos, val_nombre, val_type):
-    #Obtener el indice del primer registro encontrado, el primer registro encontrado debe coincidir con los criterios
-    registro = getTupla(val_type, val_nombre, tabla_simbolos)
-    #print("registro eliminado: ", registro)
-    for i in range(len(tabla_simbolos)):
-        if tabla_simbolos[i]['nombre'] == val_nombre and tabla_simbolos[i]['type'] == val_type:
-            del tabla_simbolos[i]
-            break
-
-
-def obtenerValorReciente(tabla_simbolos, val_nombre, val_type):
-    registro = getTupla(val_type, val_nombre, tabla_simbolos)
-
-#def obtenerUltimaLineaCodigo:
-
 def mostrarTabla():
     # print(stack_TS)
     # for tabla_simbolos in stack_TS:
     #     for item in tabla_simbolos:
     #         print("Tabla: {}".format(item['scope']), item)
-    print('\n'.join('{}: {}'.format(*k) for k in enumerate(stack_TS)))
+    print('\n\n'.join('{}: {}'.format(*k) for k in enumerate(stack_TS)))
 
 def msgError(mensaje):
     print("Error: ", mensaje)
