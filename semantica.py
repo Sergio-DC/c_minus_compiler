@@ -258,7 +258,6 @@ def imprimeAST(arbol, checkNode, stack, index):
             index = index_aux
             for i in range(len(arbol.children)):
                 for node in arbol.children[i]:
-                    print("nofr: {} {}".format(node.leaf, node.type))
                     imprimeAST(node, checkNode, stack, index)
         elif arbol.children or arbol.type == NodeType.CALL:
             for child in range(len(arbol.children)):
@@ -301,13 +300,33 @@ def checkNode(t, stack_TS, index):
         preOrder(t, 0, tabla_simbolos_global)
     elif t.type == NodeType.CALL:
         tabla_simbolos_global = stack_TS[0]
+        tabla_simbolos_local = stack_TS[index]
+
         call_name = t.leaf
+        list_params_name_call = [item.leaf for item in t.children] # Lista de parametros del call, solo se tiene el nombre o identificador
+        list_params_tipo_dato_call = []
+        for nombre_param in list_params_name_call:
+            print("Nom param: ", nombre_param)
+            tupla_var = getTupla(NodeType.VAR_DECLARATION_1, nombre_param, tabla_simbolos_local)
+            if tupla_var != None:
+                list_params_tipo_dato_call.append(tupla_var['tipo_dato'])#Se guarda el tipo de dato que tienen los params del call
+            else:
+                msgError("Varible No Declarada :(")
+                exit()
 
         tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, call_name, tabla_simbolos_global)
+        list_params_tipo_dato_decl = tupla_func_decl['params']
+
+        if list_params_tipo_dato_call != list_params_tipo_dato_decl:
+            msgError("Los parametros no coinciden con la declaracion", t.lineno)
+            exit()
 
         if tupla_func_decl == None:
             msgError("Funcion No declarada", t.lineno)
             exit()
+        #else:
+
+        
     #elif t.type == NodeType.PARAM_2:
         
 
