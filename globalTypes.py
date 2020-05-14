@@ -49,3 +49,5 @@ class NodeType(Enum):
     VAR_1  = 9
     CALL = 10
     ADDITIVE_EXPRESSION_1 = 11
+    PARAM_2 = 12
+    TYPE_SPECIFIER = 13

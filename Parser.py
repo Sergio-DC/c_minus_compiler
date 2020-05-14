@@ -31,7 +31,7 @@ class MessageError:
           self.line_error_content = line_error_content
           self.prompt_pos
 VERBOSE = 1
-masInfo = False
+masInfo = True
 
 def inOrder(arbol, linear_tree):
      if arbol != None:
@@ -186,9 +186,9 @@ def p_param_1(p):
 def p_param_2(p):
      'param : type_specifier ID LBRACKET RBRACKET'
      if masInfo:
-          print("param_2: ", p[1].leaf, p[2], p[3], p[4])
-     var_1 = Node("var_1", p[2], "var_1")
-     p[0] = Node("param_2", [p[1], var_1] ,"param_2")
+          print("param_2: ", p[1], p[2], p[3], p[4])
+     p[2] = Node("nulle", None, p[2])
+     p[0] = Node(NodeType.PARAM_2, [p[2]] ,p[1])
 
 def p_compound_stmt(p):
      'compound_stmt : LBLOCK local_declarations statement_list RBLOCK'

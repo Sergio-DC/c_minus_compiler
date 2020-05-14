@@ -54,8 +54,11 @@ def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
     if valDer.type == NodeType.CALL:
         nombre_call_der = valDer.leaf
         tupla_func_der = getTupla(NodeType.FUN_DECLARATION, nombre_call_der, tabla_simbolos)
-        print("tupla_func_der: ", tupla_func_der)
-        tipo_dato_call_der = tupla_func_der['tipo_dato']
+        if tupla_func_der == None:
+            msgError("Funcion no declarada")
+            exit()
+        else:
+            tipo_dato_call_der = tupla_func_der['tipo_dato']
 
 
     if tipo_dato_call_izq != None:
@@ -115,8 +118,9 @@ def insertarRegistro(fila, node, scope, type,  tabla_temp):
 
 scope = 'global'
 YaPase = False
+tabla_params = []
 def crearTabla(arbol, table, stack_TS):
-    global scope, YaPase
+    global scope, YaPase, tabla_params
     # print("Ora: ", arbol.type)
     if arbol.type == NodeType.VAR_DECLARATION_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
@@ -125,8 +129,11 @@ def crearTabla(arbol, table, stack_TS):
         tupla_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
         if tupla_1 == None and tupla_2 == None:
             insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
-        else:
-            msgError("Variable Repetida")
+            if tabla_params != []:
+                for tupla_param in tabla_params[::-1]:
+                    table.insert(0,tupla_param)
+            else:
+                msgError("Variable Repetida")
     elif arbol.type == NodeType.VAR_DECLARATION_2: # Declaracion de variable de tipo array []
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
@@ -135,9 +142,13 @@ def crearTabla(arbol, table, stack_TS):
         tupla_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
         if tupla_1 == None and tupla_2 == None:            
             insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_2, table)
+            if tabla_params != []:
+                for tupla_param in tabla_params[::-1]:
+                    table.insert(0,tupla_param)
         else:
             msgError("Variable Repetida")
     elif arbol.type == NodeType.FUN_DECLARATION:
+        tabla_params.clear()
         tupla_fun_decl = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'return': '', 'lineno' : ''}
         tupla_fun_decl = insertarRegistro(tupla_fun_decl, arbol, scope, NodeType.FUN_DECLARATION, table)
         scope = tupla_fun_decl['nombre']
@@ -179,17 +190,30 @@ def crearTabla(arbol, table, stack_TS):
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         tipo_dato = arbol.leaf
         nombre_variable = arbol.children[0].leaf
-        print("Nom Var: ", nombre_variable)
         if tipo_dato == 'void':
             msgError("Tipo de dato Invalido")# No pueden exitir params con tipo de dato void, se arroja Error
             exit()
         else:
-            registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_1,table)# Se agregan los parametros a la tabla local
+            registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_1,tabla_params)# Se agregan los parametros a la tabla local            
             #Agregar tipos de datos a la declaracion de la funcion
-            table_bottom = stack_TS[0] #Obtener referencia de la tabla del fondo (Contexto Global)
-            tupla = getTupla(NodeType.FUN_DECLARATION, scope, stack_TS[0])#Obtenemos a refencia a la funcion que contiene los PARAMS
+            table_global = stack_TS[0] #Obtener referencia de la tabla del fondo (Contexto Global)
+            tupla = getTupla(NodeType.FUN_DECLARATION, scope, table_global)#Obtenemos a refencia a la funcion que contiene los PARAMS
+            tupla['params'].append(arbol.leaf)#Actualizamos el campo de PARAM de la declaracion de funcion
+    elif arbol.type == NodeType.PARAM_2:
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
+        nombre_variable = arbol.children[0].leaf
+        tipo_dato = arbol.leaf
+        if tipo_dato == 'void':
+            msgError("Tipo de dato Invalido")# No pueden exitir params con tipo de dato void, se arroja Error
+            exit()
+        else:
+            registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_2,tabla_params)# Se agregan los parametros a la tabla local
+            #Agregar tipos de datos a la declaracion de la funcion
+            table_global = stack_TS[0] #Obtener referencia de la tabla del fondo (Contexto Global)
+            tupla = getTupla(NodeType.FUN_DECLARATION, scope, table_global)#Obtenemos a refencia a la funcion que contiene los PARAMS
             tupla['params'].append(arbol.leaf)#Actualizamos el campo de PARAM de la declaracion de funcion
 
+        ##Agregar aqio
     if arbol != None:
         if arbol.type == "compound_stmt":
            
@@ -233,9 +257,10 @@ def checkNode(t, stack_TS, index):
         tabla_simbolos = stack_TS[0] #TS Global, CUIDADO: implementar un mecanismo de getion de colas
         if (t.leaf != 'int'): # la declaracion de una varible debe ser INT
             typeError(t,"Error: El tipo debe ser INT")
+            exit()
         elif nombreRepetido(t.children[0].leaf, tabla_simbolos) == True: #El nombre de la variable no debe repetirse
             typeError(t,"Error: variable {} is already defined".format(t.children[0].leaf))
-            #exit()
+            exit()
     elif t.type == NodeType.FUN_DECLARATION:
         tabla_simbolos_global = stack_TS[0]#TS local
         tabla_simbolos_local = stack_TS[index]
@@ -256,8 +281,9 @@ def checkNode(t, stack_TS, index):
         tabla_simbolos_global = stack_TS[0]#TS local
         tabla_simbolos_local = stack_TS[index]
 
-        print("Hijos: ", t.children[0].leaf)
         preOrder(t, 0, tabla_simbolos_global)
+    #elif t.type == NodeType.PARAM_2:
+        
 
 def nombreRepetido(val_name, tabla_simbolos):
     registros = []
@@ -303,7 +329,7 @@ def formatearNodo(node, type, scope):
         val_scope = ''
         val_dimension = "1"
         val_lineno = node.lineno
-    elif type == NodeType.PARAM_1:
+    elif type == NodeType.PARAM_1 or NodeType.PARAM_2:
         try:
             val_nombre = node.children[0].leaf # Si el param tiene esta forma foo(int x)
         except IndexError:
