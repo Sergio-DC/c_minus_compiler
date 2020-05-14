@@ -63,7 +63,7 @@ def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
 
     if tipo_dato_call_izq != None:
         if tipo_dato_call_izq != 'int':
-            msgError("Error en el tipo de la expresion")
+            msgError("Error en el tipo de la expresion: ")
             exit()
     
     if tipo_dato_call_der != None:
@@ -134,7 +134,7 @@ def crearTabla(arbol, table, stack_TS):
                 for tupla_param in tabla_params[::-1]:
                     table.insert(0,tupla_param)
         else:
-            msgError("Variable Repetida")
+            msgError("Variable Repetida", arbol.lineno)
             exit()
     elif arbol.type == NodeType.VAR_DECLARATION_2: # Declaracion de variable de tipo array []
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
@@ -160,20 +160,24 @@ def crearTabla(arbol, table, stack_TS):
         # table = []
     elif arbol.type == NodeType.EXPRESSION_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
-        nombre_variable = arbol.children[0].leaf
-        valor = arbol.children[1].leaf
+        nombre_variable = arbol.children[0].leaf#Variable a la que se le asigna el valor
+        valor = arbol.children[1].leaf # Valor que sera asignado
+        print("Que hay: ", valor)
         tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS si la variable fue declarada
-        if tupla != None:                
-            tupla['valor'] = valor #Actualizamos la variable
-        else:
-            msgError("Variable no declarada") #Arrojamos Error
+        if tupla != None: #Actualizar si la variable ya existe
+            if isinstance(valor, int):               
+                tupla['valor'] = valor #Actualizamos la variable
+        else:#La variable no ha sido declarada
+            msgError("Variable no declarada", arbol.lineno) #Arrojamos Error
+            exit()
     elif arbol.type == NodeType.RETURN_STMT_2:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
         #Buscar en TS si la variable fue declarada
         tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
         if tupla == None:
-            msgError("Variable no declarada") #Arrojamos Error
+            msgError("Variable no declarada", arbol.lineno) #Arrojamos Error
+            exit()
         else:
             tabla_simbolos_global = stack_TS[0]
             nombre_func = tupla['scope']
@@ -186,14 +190,14 @@ def crearTabla(arbol, table, stack_TS):
             lista_params = arbol.children[0]
             #print("lista_params: ", lista_params)
         except IndexError:
-            print("Syntax Error: Is missing void")
+            msgError("Falta void", arbol.lineno)
             exit()
     elif arbol.type == NodeType.PARAM_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         tipo_dato = arbol.leaf
         nombre_variable = arbol.children[0].leaf
         if tipo_dato == 'void':
-            msgError("Tipo de dato Invalido")# No pueden exitir params con tipo de dato void, se arroja Error
+            msgError("Tipo de dato Invalido", arbol.lineno)# No pueden exitir params con tipo de dato void, se arroja Error
             exit()
         else:
             registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_1,tabla_params)# Se agregan los parametros a la tabla local            
@@ -206,7 +210,7 @@ def crearTabla(arbol, table, stack_TS):
         nombre_variable = arbol.children[0].leaf
         tipo_dato = arbol.leaf
         if tipo_dato == 'void':
-            msgError("Tipo de dato Invalido")# No pueden exitir params con tipo de dato void, se arroja Error
+            msgError("Tipo de dato Invalido", arbol.lineno)# No pueden exitir params con tipo de dato void, se arroja Error
             exit()
         else:
             registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_2,tabla_params)# Se agregan los parametros a la tabla local
@@ -254,20 +258,21 @@ def imprimeAST(arbol, checkNode, stack, index):
             index = index_aux
             for i in range(len(arbol.children)):
                 for node in arbol.children[i]:
+                    print("nofr: {} {}".format(node.leaf, node.type))
                     imprimeAST(node, checkNode, stack, index)
-        elif arbol.children:
+        elif arbol.children or arbol.type == NodeType.CALL:
             for child in range(len(arbol.children)):
                 if arbol.children[child] != []:
                     imprimeAST(arbol.children[child], checkNode, stack, index)
             checkNode(arbol, stack, index)
 
 def checkNode(t, stack_TS, index):
-    print("Type: {}  Index: {}  Val: {}".format(t.type, index, t.children[0].leaf))
+    print("Type: {}  Index: {}".format(t.type, index))
     if t.type == NodeType.VAR_DECLARATION_1:# declaracion de variable
         try:
             tabla_simbolos = stack_TS[0] #TS Global, CUIDADO: implementar un mecanismo de getion de colas
             if (t.leaf != 'int'): # la declaracion de una varible debe ser INT
-                typeError(t,"Error: El tipo debe ser INT")
+                msgError("El tipo debe ser INT", t.lineno)
                 exit()
         except IndexError:
             msgError("La funcion main no ha sido declarada")
@@ -287,18 +292,27 @@ def checkNode(t, stack_TS, index):
             print("incompatible types: unexpected return value")
             exit()
         elif tipo_dato_func != 'void' and tipo_dato_func != tipo_dato_return:
-            msgError("missing return statement")
+            msgError("missing return statement", t.lineno)
             exit()
     elif t.type == NodeType.ADDITIVE_EXPRESSION_1:
         tabla_simbolos_global = stack_TS[0]#TS local
         tabla_simbolos_local = stack_TS[index]
 
         preOrder(t, 0, tabla_simbolos_global)
+    elif t.type == NodeType.CALL:
+        tabla_simbolos_global = stack_TS[0]
+        call_name = t.leaf
+
+        tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, call_name, tabla_simbolos_global)
+
+        if tupla_func_decl == None:
+            msgError("Funcion No declarada", t.lineno)
+            exit()
     #elif t.type == NodeType.PARAM_2:
         
-def typeError(t, message):
-    print("Type error at line", t.lineno, ":",message)
-    Error = True
+
+
+
 #Podriamos mejorar esta funcion para que recupere metadatos de un Nodo o de un Registro (Ts)
 def formatearNodo(node, type, scope):
     if type == NodeType.FUN_DECLARATION:
@@ -367,5 +381,5 @@ def formatearNodo(node, type, scope):
 def mostrarTabla():
     print('\n\n'.join('{}: {}'.format(*k) for k in enumerate(stack_TS)))
 
-def msgError(mensaje):
-    print("Error: ", mensaje)
+def msgError(mensaje, lineno = "x"):
+    print("Linea {}: Error {}".format(lineno, mensaje))

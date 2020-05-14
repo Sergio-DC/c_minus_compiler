@@ -135,7 +135,7 @@ def p_fun_declaration(p):
      'fun_declaration : type_specifier ID LPAREN params RPAREN compound_stmt'
      if masInfo:
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
-     p[2] = Node(NodeType.PARAMS_1, p[4], p[2])
+     p[2] = Node(NodeType.PARAMS_1, p[4], p[2], p.lineno(3))
      p[0] = Node(NodeType.FUN_DECLARATION, [p[2], p[6]], p[1], p.lineno(2))
 
 
@@ -181,14 +181,14 @@ def p_param_1(p):
      if masInfo:
           print("param_1: ", p[1], p[2])    
      p[2] = Node("var_1", None, p[2])
-     p[0] = Node(NodeType.PARAM_1,[p[2]], p[1], p.lineno(1))
+     p[0] = Node(NodeType.PARAM_1,[p[2]], p[1], p.lineno(2))
 
 def p_param_2(p):
      'param : type_specifier ID LBRACKET RBRACKET'
      if masInfo:
           print("param_2: ", p[1], p[2], p[3], p[4])
      p[2] = Node("nulle", None, p[2])
-     p[0] = Node(NodeType.PARAM_2, [p[2]] ,p[1])
+     p[0] = Node(NodeType.PARAM_2, [p[2]] ,p[1], p.lineno(2))
 
 def p_compound_stmt(p):
      'compound_stmt : LBLOCK local_declarations statement_list RBLOCK'
@@ -530,7 +530,7 @@ def p_call(p):
         'call : ID LPAREN args RPAREN'
         if masInfo:
              print("call: ",  p[1], p[2], p[3], p[4])             
-        p[0] = Node(NodeType.CALL, p[3], p[1])
+        p[0] = Node(NodeType.CALL, p[3], p[1], p.lineno(1))
 
 def p_args(p):
      '''
