@@ -392,12 +392,12 @@ def p_simple_expression_1(p):
      'simple_expression : additive_expression relop additive_expression'
      if masInfo:
           print('simple_expression_1: ', p[1], p[2], p[3])
-     p[0] = Node(NodeType.EXPRESSION_2, [p[1], p[3]], p[2].leaf)
+     p[0] = Node("Nada", [p[1], p[3]], p[2].leaf)
 
 def p_simple_expression_2(p):
         'simple_expression : additive_expression'
         if masInfo:
-             print('simple_expression_2: ', p[1])
+             print(NodeType.EXPRESSION_2, p[1])
         p[0] = p[1]
 
 def p_relop(p):
@@ -419,7 +419,7 @@ def p_additive_expression_1(p):
 
      global parser, str_trace, prompt_pos, token_error
      if p[1] != None and p[3] != None:          
-          p[0] = Node('additive_expression_1', [p[1], p[3]],p[2].leaf)
+          p[0] = Node(NodeType.ADDITIVE_EXPRESSION_1, [p[1], p[3]],p[2].leaf)
      elif p[1] == None: #Configuración para preparar el error
           str_trace +=  " " + str(p[2].leaf) + " " + str(p[3].leaf)
           prompt_pos = str_trace.index(token_error)#Reubicamos el error  
@@ -568,7 +568,7 @@ def imprimeAST(arbol):
      endentacion += 2
      if arbol != None:
           imprimeEspacios()
-          print(arbol.leaf)
+          print(arbol.leaf, arbol.type)
 
           if arbol.type == "compound_stmt":
                for i in range(len(arbol.children)):

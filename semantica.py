@@ -17,25 +17,68 @@ def getTupla(type, val_name, tabla_simbolos):
             return registro
     return None
 
-def preOrder(arbol, resultado, tabla_simbolos):
-    if arbol != None:
-        if str(arbol.leaf) not in '+-*/':
-            return arbol.leaf
-        if arbol.children != []:
-            hijoLeft = preOrder(arbol.children[0], resultado, tabla_simbolos)
-        if arbol.children != []:
-            hijoDer = preOrder(arbol.children[1], resultado, tabla_simbolos)
-        resultado = operacion(arbol.leaf, hijoLeft, hijoDer, tabla_simbolos)
-    return resultado
-
 # Recibe un ast de expresiones aritmeticas y devuelve el resultado del calculo
-#La TS la ocupamos cuando la expresion esta compuesta por literales, en este caso recurrimos a la TS para localizar el valors
+#La TS la ocupamos cuando la expresion esta compuesta por literales, en este caso recurrimos a la TS para localizar el valor
 def calculoAritmeticoArbol(arbol, tabla_simbolos):
     resultado = 0;    
     resultado = preOrder(arbol, resultado , tabla_simbolos)
     return resultado
 
+def preOrder(arbol, resultado, tabla_simbolos):
+    if arbol != None:
+        print("arbol type: {}".format(arbol.type, arbol.leaf))
+        if str(arbol.leaf) not in '+-*/':
+            return arbol
+        if arbol.children != []:
+            hijoLeft = preOrder(arbol.children[0], resultado, tabla_simbolos)
+        if arbol.children != []:
+            hijoDer = preOrder(arbol.children[1], resultado, tabla_simbolos)
+        #resultado = operacion(arbol.leaf, hijoLeft, hijoDer, tabla_simbolos)
+        typeCheckArithmetic(arbol.leaf, hijoLeft, hijoDer, tabla_simbolos)
+    return resultado
 
+
+def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
+    resultado = None
+    print("valIzq: ", valIzq)
+    print("valDer: ", valDer)
+
+    tipo_dato_call_izq = None
+    tipo_dato_call_der = None
+
+    if valIzq.type == NodeType.CALL:
+        nombre_call_izq = valIzq.leaf
+        tupla_func_izq = getTupla(NodeType.FUN_DECLARATION, nombre_call_izq, tabla_simbolos)
+        tipo_dato_call_izq = tupla_func_izq['tipo_dato']
+
+    if valDer.type == NodeType.CALL:
+        nombre_call_der = valDer.leaf
+        tupla_func_der = getTupla(NodeType.FUN_DECLARATION, nombre_call_der, tabla_simbolos)
+        print("tupla_func_der: ", tupla_func_der)
+        tipo_dato_call_der = tupla_func_der['tipo_dato']
+
+
+    if tipo_dato_call_izq != None:
+        if tipo_dato_call_izq != 'int':
+            msgError("Error en el tipo de la expresion")
+            exit()
+    
+    if tipo_dato_call_der != None:
+        if tipo_dato_call_der != 'int':
+            msgError("Error en el tipo de la expresion")
+            exit()
+    
+    # if op == '+':
+        
+    #     resultado = int(valIzq) + int(valDer)
+    # if op == '-':
+    #     resultado = int(valIzq) - int(valDer)
+    # if op == '*':
+    #     resultado = int(valIzq) * int(valDer)
+    # if op == '/':
+    #     resultado = int(valIzq) / int(valDer)
+
+    # return resultado
 def operacion(op, valIzq, valDer, tabla_simbolos):
     resultado = None
     if not isinstance(valIzq, int):
@@ -171,6 +214,7 @@ def typeCheck(tree, stack):
 def imprimeAST(arbol, checkNode, stack, index):
     global index_aux
     if arbol != None:
+        
         if arbol.type == "compound_stmt":
             index_aux = index_aux + 1
             index = index_aux
@@ -184,7 +228,6 @@ def imprimeAST(arbol, checkNode, stack, index):
             checkNode(arbol, stack, index)
 
 def checkNode(t, stack_TS, index):
-    global tieneReturnInt
     print("Type: {}  Index: {}  Val: {}".format(t.type, index, t.children[0].leaf))
     if t.type == NodeType.VAR_DECLARATION_1:# declaracion de variable
         tabla_simbolos = stack_TS[0] #TS Global, CUIDADO: implementar un mecanismo de getion de colas
@@ -209,53 +252,12 @@ def checkNode(t, stack_TS, index):
         elif tipo_dato_func != 'void' and tipo_dato_func != tipo_dato_return:
             msgError("missing return statement")
             exit()
+    elif t.type == NodeType.ADDITIVE_EXPRESSION_1:
+        tabla_simbolos_global = stack_TS[0]#TS local
+        tabla_simbolos_local = stack_TS[index]
 
-        #if tipo_dato_func
-        
-        #Obtener params a nivel local
-        # param_list_names = []
-        # # print("Pase")
-        # for registro in tabla_simbolos:
-        #     if registro['type'] == NodeType.PARAM_1:
-        #         print("Pase :)")
-        #         param_list_names.append(registro['nombre'])
-        #         if registro['tipo_dato'] == 'void' and registro['nombre'] != '' : # Error para foo(void x)
-        #             print("Error:Un param es igual a void x")
-        # if len(param_list_names) != len(set(param_list_names)): # Devuelve true si hay nombres repetidos
-        #     print("error: variable y is already defined in method suma")
-
-        # return_stmt = None
-        # for registro in tabla_simbolos:
-        #     if registro['type'] == 'return':# Buscamos un statement de tipo RETURN
-        #         return_stmt = registro
-        #         break
-
-        # if return_stmt != None:
-        #     if return_stmt['tipo_dato'] != t.leaf:#Se compara el retorno con el retorno de firma
-        #         print("Error: incompatible types: unexpected return value")
-        # elif return_stmt == None and t.leaf == 'int':
-        #     print("error: missing return statement")
-    # elif t.type == NodeType.RETURN_STMT_2:
-    #     tabla_simbolos_global = stack_TS[0]
-    #     tabla_simbolos_local = stack_TS[index]
-
-    #     # No se necesita acceder a la TS directamente para obtener el valor de lo que devuelde return
-    #     # El mismo recorrido del arbol nos permitra obtener la variable de retorno a analizar, para que
-    #     # esta se busque en la TS, con esto se sabra si la variable fue declarada o es del tipo correcto
-    #     variable_name = t.children[0].leaf # valor que devuelve la funcion
-    #     tupla_variable = getTupla(NodeType.VAR_DECLARATION_1, variable_name, tabla_simbolos_local)#Buscamos el valor de retorno en la TS
-    #     nombre_func = tupla_variable['scope']
-    #     tupla_fun_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
-        
-    #     #Se compara si el tipo de retorno de la funcion es equivalente al valor que se devuelve
-    #     tipo_dato_func = tupla_fun_decl['tipo_dato']
-    #     tipo_dato_var = tupla_variable['tipo_dato']        
-
-    #     if tipo_dato_func != tipo_dato_var: # Si el tipo de retorno no coincide con el valor devuelto se arroja error
-    #         msgError("incompatible types: unexpected return value")
-    #         exit()        
-
-        #     print("error: missing return statement")
+        print("Hijos: ", t.children[0].leaf)
+        preOrder(t, 0, tabla_simbolos_global)
 
 def nombreRepetido(val_name, tabla_simbolos):
     registros = []
@@ -333,10 +335,6 @@ def formatearNodo(node, type, scope):
     return {'nombre':val_nombre, 'tipo_dato':val_tipo_dato, 'valor':val_valor, 'type': val_type , 'scope': val_scope, 'dimension': val_dimension, 'lineno' : val_lineno}
 
 def mostrarTabla():
-    # print(stack_TS)
-    # for tabla_simbolos in stack_TS:
-    #     for item in tabla_simbolos:
-    #         print("Tabla: {}".format(item['scope']), item)
     print('\n\n'.join('{}: {}'.format(*k) for k in enumerate(stack_TS)))
 
 def msgError(mensaje):
