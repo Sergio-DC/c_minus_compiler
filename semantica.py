@@ -128,12 +128,14 @@ def crearTabla(arbol, table, stack_TS):
         tupla_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
         tupla_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
         if tupla_1 == None and tupla_2 == None:
-            insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
+            tupla_var = insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
+
             if tabla_params != []:
                 for tupla_param in tabla_params[::-1]:
                     table.insert(0,tupla_param)
-            else:
-                msgError("Variable Repetida")
+        else:
+            msgError("Variable Repetida")
+            exit()
     elif arbol.type == NodeType.VAR_DECLARATION_2: # Declaracion de variable de tipo array []
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
@@ -254,13 +256,15 @@ def imprimeAST(arbol, checkNode, stack, index):
 def checkNode(t, stack_TS, index):
     print("Type: {}  Index: {}  Val: {}".format(t.type, index, t.children[0].leaf))
     if t.type == NodeType.VAR_DECLARATION_1:# declaracion de variable
-        tabla_simbolos = stack_TS[0] #TS Global, CUIDADO: implementar un mecanismo de getion de colas
-        if (t.leaf != 'int'): # la declaracion de una varible debe ser INT
-            typeError(t,"Error: El tipo debe ser INT")
+        try:
+            tabla_simbolos = stack_TS[0] #TS Global, CUIDADO: implementar un mecanismo de getion de colas
+            if (t.leaf != 'int'): # la declaracion de una varible debe ser INT
+                typeError(t,"Error: El tipo debe ser INT")
+                exit()
+        except IndexError:
+            msgError("La funcion main no ha sido declarada")
             exit()
-        elif nombreRepetido(t.children[0].leaf, tabla_simbolos) == True: #El nombre de la variable no debe repetirse
-            typeError(t,"Error: variable {} is already defined".format(t.children[0].leaf))
-            exit()
+        
     elif t.type == NodeType.FUN_DECLARATION:
         tabla_simbolos_global = stack_TS[0]#TS local
         tabla_simbolos_local = stack_TS[index]
@@ -284,14 +288,6 @@ def checkNode(t, stack_TS, index):
         preOrder(t, 0, tabla_simbolos_global)
     #elif t.type == NodeType.PARAM_2:
         
-
-def nombreRepetido(val_name, tabla_simbolos):
-    registros = []
-    for item in tabla_simbolos:
-        if item['nombre'] == val_name and item['scope'] != 'global':
-            registros.append(item)
-    return True if len(registros) > 1 else False
-
 def typeError(t, message):
     print("Type error at line", t.lineno, ":",message)
     Error = True

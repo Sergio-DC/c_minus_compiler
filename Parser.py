@@ -31,7 +31,7 @@ class MessageError:
           self.line_error_content = line_error_content
           self.prompt_pos
 VERBOSE = 1
-masInfo = True
+masInfo = False
 
 def inOrder(arbol, linear_tree):
      if arbol != None:
