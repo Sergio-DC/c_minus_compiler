@@ -234,8 +234,16 @@ def crearTabla(arbol, table, stack_TS):
 index = 0
 index_aux = 0
 def typeCheck(tree, stack):
-    global index 
-    imprimeAST(tree, checkNode, stack, index)
+    global index
+    tabla_global = stack[0]
+    tupla_aux_main = tabla_global[len(tabla_global_1) - 1] #Ultima declaracion debe ser MAIN
+    nombre_funcion = tupla_aux_main['nombre']
+
+    if nombre_funcion == "main":
+        imprimeAST(tree, checkNode, stack, index)
+    else:
+         msgError("La funcion main no ha sido declarada/No se encuentra al final de la declaracion")
+         exit()       
 
 def imprimeAST(arbol, checkNode, stack, index):
     global index_aux
