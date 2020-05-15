@@ -26,7 +26,7 @@ def calculoAritmeticoArbol(arbol, tabla_simbolos):
 
 def preOrder(arbol, resultado, tabla_simbolos):
     if arbol != None:
-        print("arbol type: {}".format(arbol.type))
+        #print("arbol type: {}".format(arbol.type))
         if str(arbol.leaf) not in '+-*/':
             return arbol
         if arbol.children != []:
@@ -40,12 +40,12 @@ def preOrder(arbol, resultado, tabla_simbolos):
 
 def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
     resultado = None
-    print("valIzq: ", valIzq)
-    print("valDer: ", valDer)
+    #print("valIzq: ", valIzq)
+    #print("valDer: ", valDer)
 
     tipo_dato_call_izq = None
     tipo_dato_call_der = None
-    print("Entre 1")
+    
     if valIzq.type == NodeType.CALL:
         nombre_call_izq = valIzq.leaf
         tupla_func_izq = getTupla(NodeType.FUN_DECLARATION, nombre_call_izq, tabla_simbolos)
@@ -170,7 +170,7 @@ def crearTabla(arbol, table, stack_TS):
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf#Variable a la que se le asigna el valor
         valor = arbol.children[1].leaf # Valor que sera asignado
-        print("valor: ", valor)
+        #print("valor: ", valor)
         tupla_var = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS si la variable fue declarada
         tupla_param = getTupla(NodeType.PARAM_1, nombre_variable, table)
         if tupla_var != None: #Actualizar si la variable ya existe
@@ -181,8 +181,8 @@ def crearTabla(arbol, table, stack_TS):
                 if valor in '+-*/':
                     preOrder(arbol, None, table) 
                 else:
-                    print("tupla_func_decl: ", tupla_func_decl['tipo_dato'])
-                    print("tupla_var: ", tupla_var['tipo_dato'])
+                    #print("tupla_func_decl: ", tupla_func_decl['tipo_dato'])
+                    #print("tupla_var: ", tupla_var['tipo_dato'])
                     if tupla_func_decl['tipo_dato'] != tupla_var['tipo_dato']:
                         msgError("Tipos de datos Incompatibles", arbol.lineno)
                         #exit()
@@ -192,13 +192,13 @@ def crearTabla(arbol, table, stack_TS):
     elif arbol.type == NodeType.RETURN_STMT_2:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
-        print("nombre_variable: ", nombre_variable)
-        print("table: ", table)
+        #print("nombre_variable: ", nombre_variable)
+        #print("table: ", table)
         #Buscar en TS si la variable fue declarada
         tupla_var_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
         tupla_var_2 = getTupla(NodeType.PARAM_1, nombre_variable, table)
-        print("tupla_var_1: ", tupla_var_1)
-        print("tupla_var_2: ", tupla_var_2)
+        #print("tupla_var_1: ", tupla_var_1)
+        #print("tupla_var_2: ", tupla_var_2)
         if tupla_var_1 == None and tupla_var_2 == None:
             msgError("Variable no declarada 2", arbol.lineno) #Arrojamos Error
             #exit()
@@ -213,7 +213,7 @@ def crearTabla(arbol, table, stack_TS):
             nombre_func = tupla_var_2['scope']
             tipo_dato_var = tupla_var_2['tipo_dato']
             tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
-            print("return: ", tipo_dato_var)
+            #print("return: ", tipo_dato_var)
             tupla_func_decl['return'] = tipo_dato_var
     elif arbol.type == NodeType.PARAMS_1:
         try:
@@ -231,7 +231,7 @@ def crearTabla(arbol, table, stack_TS):
             #exit()
         else:
             registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_1,tabla_params)# Se agregan los parametros a la tabla local            
-            print("tabla_params: ", tabla_params)
+            #print("tabla_params: ", tabla_params)
             #Agregar tipos de datos a la declaracion de la funcion
             table_global = stack_TS[0] #Obtener referencia de la tabla del fondo (Contexto Global)
             tupla = getTupla(NodeType.FUN_DECLARATION, scope, table_global)#Obtenemos a refencia a la funcion que contiene los PARAMS
