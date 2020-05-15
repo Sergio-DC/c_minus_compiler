@@ -145,10 +145,10 @@ def crearTabla(arbol, table, stack_TS):
         tupla_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
         if tupla_1 == None and tupla_2 == None:            
             insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_2, table)
-            if tabla_params != []:
-                for tupla_param in tabla_params[::-1]:
-                    table.insert(0,tupla_param)
-        else:
+        #     if tabla_params != []:
+        #         for tupla_param in tabla_params[::-1]:
+        #             table.insert(0,tupla_param)
+        # else:
             msgError("Variable Repetida", arbol.lineno)
     elif arbol.type == NodeType.FUN_DECLARATION:
         #Precargamos TS con input() y output()
@@ -231,6 +231,7 @@ def crearTabla(arbol, table, stack_TS):
             #exit()
         else:
             registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_1,tabla_params)# Se agregan los parametros a la tabla local            
+            print("tabla_params: ", tabla_params)
             #Agregar tipos de datos a la declaracion de la funcion
             table_global = stack_TS[0] #Obtener referencia de la tabla del fondo (Contexto Global)
             tupla = getTupla(NodeType.FUN_DECLARATION, scope, table_global)#Obtenemos a refencia a la funcion que contiene los PARAMS
@@ -252,7 +253,10 @@ def crearTabla(arbol, table, stack_TS):
         ##Agregar aqio
     if arbol != None:
         if arbol.type == "compound_stmt":
-           
+            if tabla_params != []:
+                for tupla_param in tabla_params[::-1]:
+                    table.insert(0,tupla_param)
+            tabla_params.clear()
             table = []
             for i in range(len(arbol.children)):
                 for node in arbol.children[i]:
