@@ -51,3 +51,4 @@ class NodeType(Enum):
     ADDITIVE_EXPRESSION_1 = 11
     PARAM_2 = 12
     TYPE_SPECIFIER = 13
+    IO = 14

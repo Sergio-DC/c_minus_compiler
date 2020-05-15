@@ -119,8 +119,9 @@ def insertarRegistro(fila, node, scope, type,  tabla_temp):
 scope = 'global'
 YaPase = False
 tabla_params = []
+seHaPregargado = False
 def crearTabla(arbol, table, stack_TS):
-    global scope, YaPase, tabla_params
+    global scope, YaPase, tabla_params, seHaPregargado
     # print("Ora: ", arbol.type)
     if arbol.type == NodeType.VAR_DECLARATION_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
@@ -148,11 +149,18 @@ def crearTabla(arbol, table, stack_TS):
                 for tupla_param in tabla_params[::-1]:
                     table.insert(0,tupla_param)
         else:
-            msgError("Variable Repetida")
+            msgError("Variable Repetida", arbol.lineno)
     elif arbol.type == NodeType.FUN_DECLARATION:
+        #Precargamos TS con input() y output()
+        if not seHaPregargado:
+            fila = {'nombre': 'input', 'tipo_dato': 'int', 'valor': '', 'type' : NodeType.FUN_DECLARATION, 'scope': 'global', 'params':[],'return': '', 'lineno' : ''}
+            table.append(fila)
+            fila = {'nombre': 'output', 'tipo_dato': 'void', 'valor': '', 'type' : NodeType.FUN_DECLARATION, 'scope': 'global', 'params':['int'],'return': '', 'lineno' : ''}
+            table.append(fila)
+            seHaPregargado = True
         tabla_params.clear()
-        tupla_fun_decl = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'return': '', 'lineno' : ''}
-        tupla_fun_decl = insertarRegistro(tupla_fun_decl, arbol, scope, NodeType.FUN_DECLARATION, table)
+        fila = {'nliombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'return': '', 'lineno' : ''}
+        tupla_fun_decl = insertarRegistro(fila, arbol, scope, NodeType.FUN_DECLARATION, table)
         scope = tupla_fun_decl['nombre']
         if not YaPase:
             stack_TS.append(table)
@@ -162,26 +170,37 @@ def crearTabla(arbol, table, stack_TS):
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf#Variable a la que se le asigna el valor
         valor = arbol.children[1].leaf # Valor que sera asignado
-        print("Que hay: ", valor)
         tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS si la variable fue declarada
+        tupla_param = getTupla(NodeType.PARAM_1, nombre_variable, table)
         if tupla != None: #Actualizar si la variable ya existe
             if isinstance(valor, int):               
                 tupla['valor'] = valor #Actualizamos la variable
-        else:#La variable no ha sido declarada
-            msgError("Variable no declarada", arbol.lineno) #Arrojamos Error
+        elif tupla_param == None:
+            msgError("Variable no declarada 1.5", arbol.lineno)
             exit()
     elif arbol.type == NodeType.RETURN_STMT_2:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
+        print("nombre_variable: ", nombre_variable)
+        print("table: ", table)
         #Buscar en TS si la variable fue declarada
-        tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
-        if tupla == None:
-            msgError("Variable no declarada", arbol.lineno) #Arrojamos Error
+        tupla_var_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)
+        tupla_var_2 = getTupla(NodeType.PARAM_1, nombre_variable, table)
+        print("tupla_var_1: ", tupla_var_1)
+        print("tupla_var_2: ", tupla_var_2)
+        if tupla_var_1 == None and tupla_var_2 == None:
+            msgError("Variable no declarada 2", arbol.lineno) #Arrojamos Error
             exit()
-        else:
+        elif tupla_var_1 != None:
             tabla_simbolos_global = stack_TS[0]
-            nombre_func = tupla['scope']
-            tipo_dato_var = tupla['tipo_dato']
+            nombre_func = tupla_var_1['scope']
+            tipo_dato_var = tupla_var_1['tipo_dato']
+            tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
+            tupla_func_decl['return'] = tipo_dato_var
+        elif tupla_var_2 != None:
+            tabla_simbolos_global = stack_TS[0]
+            nombre_func = tupla_var_2['scope']
+            tipo_dato_var = tupla_var_2['tipo_dato']
             tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
             print("return: ", tipo_dato_var)
             tupla_func_decl['return'] = tipo_dato_var
@@ -306,17 +325,21 @@ def checkNode(t, stack_TS, index):
         list_params_name_call = [item.leaf for item in t.children] # Lista de parametros del call, solo se tiene el nombre o identificador
         list_params_tipo_dato_call = []
         for nombre_param in list_params_name_call:
-            print("Nom param: ", nombre_param)
             tupla_var = getTupla(NodeType.VAR_DECLARATION_1, nombre_param, tabla_simbolos_local)
+            tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_param, tabla_simbolos_global)
             if tupla_var != None:
                 list_params_tipo_dato_call.append(tupla_var['tipo_dato'])#Se guarda el tipo de dato que tienen los params del call
-            else:
-                msgError("Varible No Declarada :(")
+            elif tupla_func_decl != None:
+                list_params_tipo_dato_call.append(tupla_func_decl['tipo_dato'])#Se guarda el tipo de dato que tienen los params del call
+            elif tupla_var == None and tupla_func_decl == None:
+                msgError("Variable No Declarada :(", t.lineno)
                 exit()
+            elif tupla_func_decl == None:
+                msgError("Funcion No declarada :(", t.lineno)
+                exit()                
 
         tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, call_name, tabla_simbolos_global)
         list_params_tipo_dato_decl = tupla_func_decl['params']
-
         if list_params_tipo_dato_call != list_params_tipo_dato_decl:
             msgError("Los parametros no coinciden con la declaracion", t.lineno)
             exit()
@@ -337,7 +360,7 @@ def formatearNodo(node, type, scope):
     if type == NodeType.FUN_DECLARATION:
         val_nombre = node.children[0].leaf
         val_tipo_dato = node.leaf
-        val_type = type == NodeType.FUN_DECLARATION
+        val_type = NodeType.FUN_DECLARATION
         val_valor = ''
         val_scope = 'global'
         val_dimension = "1"
@@ -397,8 +420,18 @@ def formatearNodo(node, type, scope):
 
     return {'nombre':val_nombre, 'tipo_dato':val_tipo_dato, 'valor':val_valor, 'type': val_type , 'scope': val_scope, 'dimension': val_dimension, 'lineno' : val_lineno}
 
-def mostrarTabla():
-    print('\n\n'.join('{}: {}'.format(*k) for k in enumerate(stack_TS)))
-
 def msgError(mensaje, lineno = "x"):
     print("Linea {}: Error {}".format(lineno, mensaje))
+
+def semantica(AST, imprime = True):
+    tabla = []
+    stack_TS = []
+    stack = crearTabla(AST, tabla, stack_TS)
+    typeCheck(AST, stack)
+
+    if imprime:
+        print("Variable Name  Tipo_Dato   Scope   Lineno")
+        for ts in stack:
+            for i in range(len(ts)):
+                print(f"{ts[i]['nombre']:15}{ts[i]['tipo_dato']:12}{ts[i]['scope']:10}{ts[i]['lineno']:1}")
+        #print('\n\n'.join('{}: {}'.format(*k) for k in enumerate(stack)))

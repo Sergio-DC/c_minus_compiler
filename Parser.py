@@ -31,7 +31,7 @@ class MessageError:
           self.line_error_content = line_error_content
           self.prompt_pos
 VERBOSE = 1
-masInfo = True
+masInfo = False
 
 def inOrder(arbol, linear_tree):
      if arbol != None:
@@ -530,7 +530,6 @@ def p_call(p):
      'call : ID LPAREN args RPAREN'
      if masInfo:
           print("call: ",  p[1], p[2], p[3], p[4])
-     print("LO QUE ME IMPORTA: ", [item.leaf for item in p[3]])
      p[0] = Node(NodeType.CALL, p[3], p[1], p.lineno(1))
 
 def p_args(p):
@@ -540,10 +539,9 @@ def p_args(p):
      new_list_args = []
      for arg in list_args:
           if arg != None:
-               print("arg: ", arg.leaf)
+               #print("arg: ", arg.leaf)
                new_list_args.append(arg)
      list_args.clear()
-     print("hola: ", [item.leaf for item in new_list_args])
      p[0] = new_list_args
    
 def p_args_list_1(p):
