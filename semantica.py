@@ -26,7 +26,7 @@ def calculoAritmeticoArbol(arbol, tabla_simbolos):
 
 def preOrder(arbol, resultado, tabla_simbolos):
     if arbol != None:
-        print("arbol type: {}".format(arbol.type, arbol.leaf))
+        print("arbol type: {}".format(arbol.type))
         if str(arbol.leaf) not in '+-*/':
             return arbol
         if arbol.children != []:
@@ -45,7 +45,7 @@ def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
 
     tipo_dato_call_izq = None
     tipo_dato_call_der = None
-
+    print("Entre 1")
     if valIzq.type == NodeType.CALL:
         nombre_call_izq = valIzq.leaf
         tupla_func_izq = getTupla(NodeType.FUN_DECLARATION, nombre_call_izq, tabla_simbolos)
@@ -63,12 +63,12 @@ def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
 
     if tipo_dato_call_izq != None:
         if tipo_dato_call_izq != 'int':
-            msgError("Error en el tipo de la expresion: ")
+            msgError("en el tipo de la expresion: ", valIzq.lineno)
             exit()
     
     if tipo_dato_call_der != None:
         if tipo_dato_call_der != 'int':
-            msgError("Error en el tipo de la expresion")
+            msgError("en el tipo de la expresion", valDer.lineno)
             exit()
     
     # if op == '+':
@@ -170,11 +170,24 @@ def crearTabla(arbol, table, stack_TS):
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf#Variable a la que se le asigna el valor
         valor = arbol.children[1].leaf # Valor que sera asignado
-        tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS si la variable fue declarada
+        print("valor: ", valor)
+        tupla_var = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS si la variable fue declarada
         tupla_param = getTupla(NodeType.PARAM_1, nombre_variable, table)
-        if tupla != None: #Actualizar si la variable ya existe
+        if tupla_var != None: #Actualizar si la variable ya existe
             if isinstance(valor, int):               
-                tupla['valor'] = valor #Actualizamos la variable
+                tupla_var['valor'] = valor #Actualizamos la variable
+            else: # En este punto el valor ya no es un numero
+                tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, valor, stack_TS[0])
+                if valor in '+-*/':
+                    print("pase bien")
+                    preOrder(arbol, None, table) 
+                else:
+                    print("pase: ", tupla_func_decl)
+                    print("tupla_func_decl: ", tupla_func_decl['tipo_dato'])
+                    print("tupla_var: ", tupla_var['tipo_dato'])
+                    if tupla_func_decl['tipo_dato'] != tupla_var['tipo_dato']:
+                        msgError("Tipos de datos Incompatibles", arbol.lineno)
+                        exit()
         elif tupla_param == None:
             msgError("Variable no declarada 1.5", arbol.lineno)
             exit()
