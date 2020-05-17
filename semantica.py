@@ -122,21 +122,18 @@ tabla_params = []
 seHaPregargado = False
 def crearTabla(arbol, table, stack_TS):
     global scope, YaPase, tabla_params, seHaPregargado
-    # print("Ora: ", arbol.type)
     if arbol.type == NodeType.VAR_DECLARATION_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
-        tupla_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
-        tupla_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
-        if tupla_1 == None and tupla_2 == None:
-            tupla_var = insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
-
+        tupla_var_decl_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
+        tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
+        if tupla_var_decl_1 == None and tupla_var_decl_2 == None:
+            insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
             if tabla_params != []:
                 for tupla_param in tabla_params[::-1]:
                     table.insert(0,tupla_param)
         else:
             msgError("Variable Repetida", arbol.lineno)
-            exit()
     elif arbol.type == NodeType.VAR_DECLARATION_2: # Declaracion de variable de tipo array []
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
@@ -159,13 +156,19 @@ def crearTabla(arbol, table, stack_TS):
             table.append(fila)
             seHaPregargado = True
         tabla_params.clear()
+
+        nombre_func = arbol.children[0].leaf
         fila = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'return': '', 'lineno' : ''}
-        tupla_fun_decl = insertarRegistro(fila, arbol, scope, NodeType.FUN_DECLARATION, table)
-        scope = tupla_fun_decl['nombre']
+        tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, table)
+
+        if tupla_func_decl == None:        
+            insertarRegistro(fila, arbol, scope, NodeType.FUN_DECLARATION, table)
+        else:
+            msgError("Función Repetida", arbol.lineno)
+        
         if not YaPase:
             stack_TS.append(table)
         YaPase = True
-        # table = []
     elif arbol.type == NodeType.EXPRESSION_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf#Variable a la que se le asigna el valor
@@ -320,6 +323,8 @@ def checkNode(t, stack_TS, index):
         tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
         tipo_dato_func = tupla_func_decl['tipo_dato']
         tipo_dato_return = tupla_func_decl['return']
+        
+        #if tupla_func_decl == 
 
         if tipo_dato_func == 'void' and tipo_dato_return == 'int':
             print("incompatible types: unexpected return value")
