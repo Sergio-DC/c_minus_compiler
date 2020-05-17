@@ -159,7 +159,7 @@ def crearTabla(arbol, table, stack_TS):
             table.append(fila)
             seHaPregargado = True
         tabla_params.clear()
-        fila = {'nliombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'return': '', 'lineno' : ''}
+        fila = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'return': '', 'lineno' : ''}
         tupla_fun_decl = insertarRegistro(fila, arbol, scope, NodeType.FUN_DECLARATION, table)
         scope = tupla_fun_decl['nombre']
         if not YaPase:
@@ -354,17 +354,13 @@ def checkNode(t, stack_TS, index):
                 #exit()                
 
         tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, call_name, tabla_simbolos_global)
-        list_params_tipo_dato_decl = tupla_func_decl['params']
-        if list_params_tipo_dato_call != list_params_tipo_dato_decl:
-            msgError("Los parametros no coinciden con la declaracion", t.lineno)
-            #exit()
-
-        if tupla_func_decl == None:
-            msgError("Funcion No declarada", t.lineno)
-            #exit()
-        #else:
-
         
+        if tupla_func_decl == None: # Si la funcion no ha sido declarada
+            msgError("Funcion No declarada", t.lineno)# Arrojar Error
+        else:
+            list_params_tipo_dato_decl = tupla_func_decl['params']# Se toman los parametros de la declaracion
+            if list_params_tipo_dato_call != list_params_tipo_dato_decl: #Se comparan los parametros de la declaracion con los de la llamada
+                msgError("Los parametros no coinciden con la declaracion", t.lineno)        
     #elif t.type == NodeType.PARAM_2:
         
 
