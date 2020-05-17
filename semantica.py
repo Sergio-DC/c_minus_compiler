@@ -138,14 +138,14 @@ def crearTabla(arbol, table, stack_TS):
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : '', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
         tamano = arbol.children[1].leaf
-        tupla_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
-        tupla_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
-        if tupla_1 == None and tupla_2 == None:            
+        tupla_var_decl_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
+        tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
+        if tupla_var_decl_1 == None and tupla_var_decl_2 == None:            
             insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_2, table)
         #     if tabla_params != []:
         #         for tupla_param in tabla_params[::-1]:
         #             table.insert(0,tupla_param)
-        # else:
+        else:
             msgError("Variable Repetida", arbol.lineno)
     elif arbol.type == NodeType.FUN_DECLARATION:
         #Precargamos TS con input() y output()
@@ -306,16 +306,10 @@ def imprimeAST(arbol, checkNode, stack, index):
 
 def checkNode(t, stack_TS, index):
     #print("Type: {}  Index: {}".format(t.type, index))
-    if t.type == NodeType.VAR_DECLARATION_1:# declaracion de variable
-        try:
+    if t.type == NodeType.VAR_DECLARATION_1 or t.type == NodeType.VAR_DECLARATION_2:# declaracion de variable
             tabla_simbolos = stack_TS[0] #TS Global, CUIDADO: implementar un mecanismo de getion de colas
             if (t.leaf != 'int'): # la declaracion de una varible debe ser INT
-                msgError("El tipo debe ser INT", t.lineno)
-                #exit()
-        except IndexError:
-            msgError("La funcion main no ha sido declarada")
-            #exit()
-        
+                msgError("El tipo debe ser INT", t.lineno)        
     elif t.type == NodeType.FUN_DECLARATION:
         tabla_simbolos_global = stack_TS[0]#TS local
         tabla_simbolos_local = stack_TS[index]
