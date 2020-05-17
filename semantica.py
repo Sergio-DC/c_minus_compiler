@@ -162,7 +162,8 @@ def crearTabla(arbol, table, stack_TS):
         tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, table)
 
         if tupla_func_decl == None:        
-            insertarRegistro(fila, arbol, scope, NodeType.FUN_DECLARATION, table)
+            tupla_func_decl = insertarRegistro(fila, arbol, scope, NodeType.FUN_DECLARATION, table)
+            scope = tupla_func_decl['nombre'] # Esta variable es critica para que las variables declaradas localmente tengan el scope correcto
         else:
             msgError("Función Repetida", arbol.lineno)
         
@@ -174,22 +175,23 @@ def crearTabla(arbol, table, stack_TS):
         nombre_variable = arbol.children[0].leaf#Variable a la que se le asigna el valor
         valor = arbol.children[1].leaf # Valor que sera asignado
         #print("valor: ", valor)
-        tupla_var = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS si la variable fue declarada
-        tupla_param = getTupla(NodeType.PARAM_1, nombre_variable, table)
-        if tupla_var != None: #Actualizar si la variable ya existe
-            if isinstance(valor, int):               
-                tupla_var['valor'] = valor #Actualizamos la variable
-            else: # En este punto el valor ya no es un numero
-                tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, valor, stack_TS[0])
-                if valor in '+-*/':
-                    preOrder(arbol, None, table) 
-                else:
-                    #print("tupla_func_decl: ", tupla_func_decl['tipo_dato'])
-                    #print("tupla_var: ", tupla_var['tipo_dato'])
-                    if tupla_func_decl['tipo_dato'] != tupla_var['tipo_dato']:
-                        msgError("Tipos de datos Incompatibles", arbol.lineno)
-                        #exit()
-        elif tupla_param == None:
+        tupla_var_global = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, stack_TS[0])
+        tupla_var_local = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS local si la variable fue declarada dentro del cuerpo
+        tupla_param = getTupla(NodeType.PARAM_1, nombre_variable, table) #Buscar en la TS local si la variable fue declarada en los parametros
+
+        ######### En espera de ser implementado
+        # if tupla_var_local != None: #Actualizar si la variable ya existe
+        #     if isinstance(valor, int):               
+        #         tupla_var['valor'] = valor #Actualizamos la variable
+        #     else: # En este punto el valor ya no es un numero
+        #         tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, valor, stack_TS[0])
+        #         if valor in '+-*/':
+        #             preOrder(arbol, None, table) 
+        #         else:
+        #             if tupla_func_decl['tipo_dato'] != tupla_var_local['tipo_dato']:
+        #                 msgError("Tipos de datos Incompatibles", arbol.lineno)
+        #                 #exit()
+        if tupla_var_global == None and tupla_var_local == None and tupla_param == None:
             msgError("Variable no declarada 1.5", arbol.lineno)
             #exit()
     elif arbol.type == NodeType.RETURN_STMT_2:
