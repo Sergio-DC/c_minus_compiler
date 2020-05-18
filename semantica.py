@@ -202,9 +202,9 @@ def crearTabla(arbol, table, stack_TS):
         tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si existe declaracion de varible tipo 2
         tupla_param_1 = getTupla(NodeType.PARAM_1, nombre_variable, table)# Buscar en TS si existe declaracion de parametros tipo 1
         tupla_param_2 = getTupla(NodeType.PARAM_2, nombre_variable, table)# Buscar en TS si existe declaracion de parametros tipo 2
-
+        
         tabla_simbolos_global = stack_TS[0]
-        if tupla_var_decl_1 == None and tupla_param_1 == None and tupla_var_decl_2 == None and tupla_param_2:
+        if tupla_var_decl_1 == None and tupla_param_1 == None and tupla_var_decl_2 == None and tupla_param_2 == None:
             msgError("Variable no declarada 2", arbol.lineno) #Arrojamos Error
         elif tupla_var_decl_1 != None: #Se guarda el tipo de retorno en la declaracion de la funcion para variable tipo 1           
             nombre_func = tupla_var_decl_1['scope']
