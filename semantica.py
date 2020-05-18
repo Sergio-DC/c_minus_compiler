@@ -118,33 +118,48 @@ def insertarRegistro(fila, node, scope, type,  tabla_temp):
 
 scope = 'global'
 YaPase = False
-tabla_params = []
+paramsIngresadosLocalmente = False
 seHaPregargado = False
-def crearTabla(arbol, table, stack_TS):
-    global scope, YaPase, tabla_params, seHaPregargado
+def crearTabla(arbol, table, stack_TS, tabla_params):
+    global scope, YaPase, seHaPregargado, paramsIngresadosLocalmente
     if arbol.type == NodeType.VAR_DECLARATION_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
-        tupla_var_decl_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
-        tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
-        if tupla_var_decl_1 == None and tupla_var_decl_2 == None:
-            insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)
-            if tabla_params != []:
-                for tupla_param in tabla_params[::-1]:
-                    table.insert(0,tupla_param)
+
+        #Insertar Parametros de la función en el scope local, solo si 
+        if tabla_params != [] and paramsIngresadosLocalmente == False:
+            for tupla_param in tabla_params[::-1]:
+                table.insert(0,tupla_param)
+            paramsIngresadosLocalmente = True
+
+        #Busqueda en TS
+        tupla_var_decl_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable tipo 1 fue declarada
+        tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable tipo 2 fue declarada
+        tupla_param_1 = getTupla(NodeType.PARAM_1, nombre_variable, table) # Buscar en TS si el param tipo 1 fue declarado
+        tupla_param_2 = getTupla(NodeType.PARAM_2, nombre_variable, table) # Buscar en TS si el param tipo 2 fue declarado
+
+        #Si el nombre de la variable no esta repetido se puede agregar a la TS
+        if tupla_var_decl_1 == None and tupla_var_decl_2 == None and  tupla_param_1 == None and tupla_param_2 == None:
+            insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_1,  table)   
         else:
             msgError("Variable Repetida", arbol.lineno)
     elif arbol.type == NodeType.VAR_DECLARATION_2: # Declaracion de variable de tipo array []
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
+        #Insertar Parametros de la función en el scope local
+        if tabla_params != [] and paramsIngresadosLocalmente == False:
+            for tupla_param in tabla_params[::-1]:
+                table.insert(0,tupla_param)
+            paramsIngresadosLocalmente = True
         tamano = arbol.children[1].leaf
+        #Se busca en la TS el nombre de la variable
         tupla_var_decl_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si la variable fue declarada
         tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si la variable fue declarada
-        if tupla_var_decl_1 == None and tupla_var_decl_2 == None:            
+        tupla_param_1 = getTupla(NodeType.PARAM_1, nombre_variable, table) # Buscar en TS si el param tipo 1 fue declarado
+        tupla_param_2 = getTupla(NodeType.PARAM_2, nombre_variable, table) # Buscar en TS si el param tipo 2 fue declarado
+
+        if tupla_var_decl_1 == None and tupla_var_decl_2 == None and tupla_param_1 == None and tupla_param_2 == None:            
             insertarRegistro(fila, arbol, scope, NodeType.VAR_DECLARATION_2, table)
-        #     if tabla_params != []:
-        #         for tupla_param in tabla_params[::-1]:
-        #             table.insert(0,tupla_param)
         else:
             msgError("Variable Repetida", arbol.lineno)
     elif arbol.type == NodeType.FUN_DECLARATION:
@@ -156,6 +171,7 @@ def crearTabla(arbol, table, stack_TS):
             table.append(fila)
             seHaPregargado = True
         tabla_params.clear()
+        paramsIngresadosLocalmente = False
 
         nombre_func = arbol.children[0].leaf
         fila = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'return': '', 'lineno' : ''}
@@ -241,12 +257,12 @@ def crearTabla(arbol, table, stack_TS):
             msgError("Tipo de dato Invalido", arbol.lineno)# No pueden exitir params con tipo de dato void, se arroja Error
             #exit()
         else:
-            registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_1,tabla_params)# Se agregan los parametros a la tabla local            
+            registro = insertarRegistro(fila, arbol, scope, NodeType.PARAM_1,tabla_params)# Se agregan los parametros a una tabla auxiliar de params    
             #print("tabla_params: ", tabla_params)
             #Agregar tipos de datos a la declaracion de la funcion
             table_global = stack_TS[0] #Obtener referencia de la tabla del fondo (Contexto Global)
-            tupla = getTupla(NodeType.FUN_DECLARATION, scope, table_global)#Obtenemos a refencia a la funcion que contiene los PARAMS
-            tupla['params'].append(arbol.leaf)#Actualizamos el campo de PARAM de la declaracion de funcion
+            tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, scope, table_global)#Obtenemos la refencia a la funcion que contiene los PARAMS
+            tupla_func_decl['params'].append(arbol.leaf)#Actualizamos el campo de PARAM de la declaracion de funcion
     elif arbol.type == NodeType.PARAM_2:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params': '--', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
@@ -264,20 +280,16 @@ def crearTabla(arbol, table, stack_TS):
         ##Agregar aqio
     if arbol != None:
         if arbol.type == "compound_stmt":
-            if tabla_params != []:
-                for tupla_param in tabla_params[::-1]:
-                    table.insert(0,tupla_param)
-            tabla_params.clear()
             table = []
             for i in range(len(arbol.children)):
                 for node in arbol.children[i]:
-                    crearTabla(node, table, stack_TS)
+                    crearTabla(node, table, stack_TS, tabla_params)
             stack_TS.append(table)
             scope = 'global'
         elif arbol.children:
             for child in range(len(arbol.children)):
                 if arbol.children[child] != []:
-                    crearTabla(arbol.children[child], table, stack_TS)
+                    crearTabla(arbol.children[child], table, stack_TS, tabla_params)
     return stack_TS
 
 index = 0
@@ -440,8 +452,9 @@ def msgError(mensaje, lineno = "x"):
 
 def semantica(AST, imprime_short_format = True, imprime_long_format = False):
     tabla = []
+    tabla_params = []
     stack_TS = []
-    stack = crearTabla(AST, tabla, stack_TS)
+    stack = crearTabla(AST, tabla, stack_TS, tabla_params)
     typeCheck(AST, stack)
 
     if imprime_long_format:
