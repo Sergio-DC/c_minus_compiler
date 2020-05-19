@@ -213,6 +213,12 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
     elif arbol.type == NodeType.RETURN_STMT_2:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
+        #Insertar Parametros de la función en el scope local, solo si 
+        if tabla_params != [] and paramsIngresadosLocalmente == False:
+            for tupla_param in tabla_params[::-1]:
+                table.insert(0,tupla_param)
+            paramsIngresadosLocalmente = True
+
         #Buscar en TS si la variable fue declarada
         tupla_var_decl_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si existe declaracion de varible tipo 1
         tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si existe declaracion de varible tipo 2
