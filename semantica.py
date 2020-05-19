@@ -19,14 +19,14 @@ def getTupla(type, val_name, tabla_simbolos):
 
 # Recibe un ast de expresiones aritmeticas y devuelve el resultado del calculo
 #La TS la ocupamos cuando la expresion esta compuesta por literales, en este caso recurrimos a la TS para localizar el valor
-def calculoAritmeticoArbol(arbol, tabla_simbolos):
-    resultado = 0;    
-    resultado = preOrder(arbol, resultado , tabla_simbolos)
-    return resultado
+# def calculoAritmeticoArbol(arbol, tabla_simbolos):
+#     resultado = 0;    
+#     resultado = preOrder(arbol, resultado , tabla_simbolos)
+#     return resultado
 
 def preOrder(arbol, resultado, tabla_simbolos):
     if arbol != None:
-        #print("arbol type: {}".format(arbol.type))
+        # print("arbol leaf: {}  {}".format(arbol.leaf, arbol.children))
         if str(arbol.leaf) not in '+-*/':
             return arbol
         if arbol.children != []:
@@ -34,8 +34,9 @@ def preOrder(arbol, resultado, tabla_simbolos):
         if arbol.children != []:
             hijoDer = preOrder(arbol.children[1], resultado, tabla_simbolos)
         #resultado = operacion(arbol.leaf, hijoLeft, hijoDer, tabla_simbolos)
+        print("L: {}  R: {}". format(hijoLeft, hijoDer))
         typeCheckArithmetic(arbol.leaf, hijoLeft, hijoDer, tabla_simbolos)
-    return resultado
+    #return resultado
 
 
 def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
@@ -45,17 +46,22 @@ def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
 
     tipo_dato_call_izq = None
     tipo_dato_call_der = None
-    
-    if valIzq.type == NodeType.CALL:
-        nombre_call_izq = valIzq.leaf
-        tupla_func_izq = getTupla(NodeType.FUN_DECLARATION, nombre_call_izq, tabla_simbolos)
-        tipo_dato_call_izq = tupla_func_izq['tipo_dato']
+    # ]print("{}  {}   {}".format(op ,valIzq, valDer.leaf))
 
+    try:
+        if valIzq.type == NodeType.CALL:
+            nombre_call_izq = valIzq.leaf
+            tupla_func_izq = getTupla(NodeType.FUN_DECLARATION, nombre_call_izq, tabla_simbolos)
+            tipo_dato_call_izq = tupla_func_izq['tipo_dato']
+    except AttributeError:
+        tipo_dato_call_izq = None
+
+    
     if valDer.type == NodeType.CALL:
         nombre_call_der = valDer.leaf
         tupla_func_der = getTupla(NodeType.FUN_DECLARATION, nombre_call_der, tabla_simbolos)
         if tupla_func_der == None:
-            msgError("Funcion no declarada")
+            msgError("Funcion no declarada A")
             #exit()
         else:
             tipo_dato_call_der = tupla_func_der['tipo_dato']
@@ -63,13 +69,11 @@ def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
 
     if tipo_dato_call_izq != None:
         if tipo_dato_call_izq != 'int':
-            msgError("en el tipo de la expresion: ", valIzq.lineno)
-            #exit()
+            msgError("en el tipo de la expresion: IZQ {}".format(nombre_call_izq), valIzq.lineno)
     
     if tipo_dato_call_der != None:
         if tipo_dato_call_der != 'int':
-            msgError("en el tipo de la expresion", valDer.lineno)
-            #exit()
+            msgError("en el tipo de la expresion DER {}".format(nombre_call_der), valDer.lineno)
     
     # if op == '+':
         
@@ -190,10 +194,12 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf#Variable a la que se le asigna el valor
         valor = arbol.children[1].leaf # Valor que sera asignado
-        #print("valor: ", valor)
-        tupla_var_global = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, stack_TS[0])
-        tupla_var_local = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS local si la variable fue declarada dentro del cuerpo
-        tupla_param = getTupla(NodeType.PARAM_1, nombre_variable, table) #Buscar en la TS local si la variable fue declarada en los parametros
+        tupla_var_decl_1_global = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, stack_TS[0])
+        tupla_var_decl_2_global = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, stack_TS[0])
+        tupla_var_decl_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS local si la variable fue declarada dentro del cuerpo
+        tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table) #Buscar en TS local si la variable fue declarada dentro del cuerpo
+        tupla_param_1 = getTupla(NodeType.PARAM_1, nombre_variable, table) #Buscar en la TS local si un param tipo1 fue declarado
+        tupla_param_2 = getTupla(NodeType.PARAM_2, nombre_variable, table) # Buscar en la TS local si un param tipo 2 fue declarado
 
         ######### En espera de ser implementado
         # if tupla_var_local != None: #Actualizar si la variable ya existe
@@ -207,9 +213,11 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
         #             if tupla_func_decl['tipo_dato'] != tupla_var_local['tipo_dato']:
         #                 msgError("Tipos de datos Incompatibles", arbol.lineno)
         #                 #exit()
-        if tupla_var_global == None and tupla_var_local == None and tupla_param == None:
+        if tupla_var_decl_1_global == None and tupla_var_decl_2_global == None and tupla_var_decl_1 == None and tupla_var_decl_2 == None and tupla_param_1 == None and tupla_param_2 == None:
             msgError("Variable no declarada 1.5", arbol.lineno)
-            #exit()
+        # else:# Evaluar el tipo de la funcion
+        #     valor = 
+
     elif arbol.type == NodeType.RETURN_STMT_2:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
@@ -307,12 +315,12 @@ def typeCheck(tree, stack):
     nombre_funcion = tupla_aux_main['nombre']
 
     if nombre_funcion == "main":
-        imprimeAST(tree, checkNode, stack, index)
+        chequeoTipos(tree, checkNode, stack, index)
     else:
          msgError("La funcion main no ha sido declarada/No se encuentra al final de la declaracion")
          #exit()       
 
-def imprimeAST(arbol, checkNode, stack, index):
+def chequeoTipos(arbol, checkNode, stack, index):
     global index_aux
     if arbol != None:
         
@@ -321,11 +329,11 @@ def imprimeAST(arbol, checkNode, stack, index):
             index = index_aux
             for i in range(len(arbol.children)):
                 for node in arbol.children[i]:
-                    imprimeAST(node, checkNode, stack, index)
+                    chequeoTipos(node, checkNode, stack, index)
         elif arbol.children or arbol.type == NodeType.CALL:
             for child in range(len(arbol.children)):
                 if arbol.children[child] != []:
-                    imprimeAST(arbol.children[child], checkNode, stack, index)
+                    chequeoTipos(arbol.children[child], checkNode, stack, index)
             checkNode(arbol, stack, index)
 
 def checkNode(t, stack_TS, index):
