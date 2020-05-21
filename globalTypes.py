@@ -52,3 +52,4 @@ class NodeType(Enum):
     PARAM_2 = 12
     TYPE_SPECIFIER = 13
     IO = 14
+    NUMBER = 15

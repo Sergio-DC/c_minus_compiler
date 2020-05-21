@@ -34,7 +34,7 @@ def preOrder(arbol, resultado, tabla_simbolos):
         if arbol.children != []:
             hijoDer = preOrder(arbol.children[1], resultado, tabla_simbolos)
         #resultado = operacion(arbol.leaf, hijoLeft, hijoDer, tabla_simbolos)
-        print("L: {}  R: {}". format(hijoLeft, hijoDer))
+        #print("L: {}  R: {}". format(hijoLeft, hijoDer))
         typeCheckArithmetic(arbol.leaf, hijoLeft, hijoDer, tabla_simbolos)
     #return resultado
 
@@ -193,7 +193,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
     elif arbol.type == NodeType.EXPRESSION_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf#Variable a la que se le asigna el valor
-        valor = arbol.children[1].leaf # Valor que sera asignado
+        node_valor = arbol.children[1]# Nodo que tiene Valor que sera asignado/Expresion
+
         tupla_var_decl_1_global = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, stack_TS[0])
         tupla_var_decl_2_global = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, stack_TS[0])
         tupla_var_decl_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table) #Buscar en TS local si la variable fue declarada dentro del cuerpo
@@ -201,23 +202,22 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
         tupla_param_1 = getTupla(NodeType.PARAM_1, nombre_variable, table) #Buscar en la TS local si un param tipo1 fue declarado
         tupla_param_2 = getTupla(NodeType.PARAM_2, nombre_variable, table) # Buscar en la TS local si un param tipo 2 fue declarado
 
-        ######### En espera de ser implementado
-        # if tupla_var_local != None: #Actualizar si la variable ya existe
-        #     if isinstance(valor, int):               
-        #         tupla_var['valor'] = valor #Actualizamos la variable
-        #     else: # En este punto el valor ya no es un numero
-        #         tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, valor, stack_TS[0])
-        #         if valor in '+-*/':
-        #             preOrder(arbol, None, table) 
-        #         else:
-        #             if tupla_func_decl['tipo_dato'] != tupla_var_local['tipo_dato']:
-        #                 msgError("Tipos de datos Incompatibles", arbol.lineno)
-        #                 #exit()
         if tupla_var_decl_1_global == None and tupla_var_decl_2_global == None and tupla_var_decl_1 == None and tupla_var_decl_2 == None and tupla_param_1 == None and tupla_param_2 == None:
             msgError("Variable no declarada 1.5", arbol.lineno)
-        # else:# Evaluar el tipo de la funcion
-        #     valor = 
-
+        else:
+            if(node_valor.type == NodeType.NUMBER): # Si el valor de la derecha es una simple constante, se agrega a la TS
+                if tupla_var_decl_1_global:
+                    tupla_var_decl_1_global['valor'] = node_valor.leaf
+                elif tupla_var_decl_2_global:
+                    print("En construccion")
+                elif tupla_var_decl_1:
+                    tupla_var_decl_1['valor'] = node_valor.leaf
+                elif tupla_var_decl_2:
+                    print("En construccion") 
+                elif tupla_param_1:
+                    print("En construccion")   
+                elif tupla_param_2:
+                    print("En construccion") 
     elif arbol.type == NodeType.RETURN_STMT_2:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
         nombre_variable = arbol.children[0].leaf
@@ -409,7 +409,7 @@ def formatearNodo(node, type, scope):
     elif type == NodeType.VAR_DECLARATION_1:
         val_nombre = node.children[0].leaf
         val_tipo_dato = node.leaf
-        val_valor = ''
+        val_valor = '0'
         val_type = NodeType.VAR_DECLARATION_1
         val_scope = scope
         val_dimension = "1"
@@ -472,11 +472,11 @@ def semantica(AST, imprime_short_format = True, imprime_long_format = False):
     typeCheck(AST, stack)
 
     if imprime_long_format:
-        print("name       dataType  scope       Type                params            lineno")
+        print("name       dataType  scope       Type                params            Valor      lineno")
         for ts in stack:
             for i in range(len(ts)):
                 lista_params = '{}'.format(ts[i]['params']) # List of Params
-                print(f"{ts[i]['nombre']:11}{ts[i]['tipo_dato']:10}{ts[i]['scope']:12}{ts[i]['type'].name:20}{lista_params:17}{ts[i]['lineno']:5}")
+                print(f"{ts[i]['nombre']:11}{ts[i]['tipo_dato']:10}{ts[i]['scope']:12}{ts[i]['type'].name:20}{lista_params:17}{ts[i]['valor']:3}{ts[i]['lineno']:10}")
     elif imprime_short_format:
         print("name       dataType  scope   Lineno")
         for ts in stack:

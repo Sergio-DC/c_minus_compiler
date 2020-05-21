@@ -524,7 +524,7 @@ def p_factor_4(p):
      'factor : NUMBER'
      if masInfo:
           print("factor_4: ",  p[1])
-     p[0] = Node("NUMBER", None, p[1])
+     p[0] = Node(NodeType.NUMBER, None, p[1])
 
 def p_call(p):
      'call : ID LPAREN args RPAREN'
