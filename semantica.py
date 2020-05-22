@@ -6,7 +6,7 @@
 
 from globalTypes import *
 
-#stack_TS = [] # Stack de tabla de simbolos
+stack_TS = [] # Stack de tabla de simbolos
 tabla_global_1 = []
 
 #Buscar en la tabla de simbolos, Devuelve un objeto/registro que contiene los atributos del simbolo
@@ -17,12 +17,13 @@ def getTupla(type, val_name, tabla_simbolos):
             return registro
     return None
 
-# Recibe un ast de expresiones aritmeticas y devuelve el resultado del calculo
-#La TS la ocupamos cuando la expresion esta compuesta por literales, en este caso recurrimos a la TS para localizar el valor
-# def calculoAritmeticoArbol(arbol, tabla_simbolos):
-#     resultado = 0;    
-#     resultado = preOrder(arbol, resultado , tabla_simbolos)
-#     return resultado
+def updateTupla(type, name, clave, nuevo_valor, tabla_simbolos):
+    tupla = getTupla(type, name, tabla_simbolos)
+    if tupla != None:
+        tupla[clave] = nuevo_valor
+        return 0
+    else:
+        return -1
 
 def preOrder(arbol, resultado, tabla_simbolos):
     if arbol != None:
@@ -71,37 +72,6 @@ def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
     if tipo_dato_call_der != None:
         if tipo_dato_call_der != 'int':
             msgError("en el tipo de la expresion DER {}".format(nombre_call_der), valDer.lineno)
-    
-    # if op == '+':
-        
-    #     resultado = int(valIzq) + int(valDer)
-    # if op == '-':
-    #     resultado = int(valIzq) - int(valDer)
-    # if op == '*':
-    #     resultado = int(valIzq) * int(valDer)
-    # if op == '/':
-    #     resultado = int(valIzq) / int(valDer)
-
-    # return resultado
-def operacion(op, valIzq, valDer, tabla_simbolos):
-    resultado = None
-    if not isinstance(valIzq, int):
-        registro = getTupla(NodeType.VAR_DECLARATION_1, valIzq, tabla_simbolos)
-        valIzq = registro['valor']#Reasignamos un valor de tipo INT
-    if not isinstance(valDer, int):
-        registro = getTupla(NodeType.VAR_DECLARATION_1, valDer, tabla_simbolos)
-        valDer = registro['valor']#Reasignamos un valor de tipo INT
-    
-    if op == '+':
-        resultado = int(valIzq) + int(valDer)
-    if op == '-':
-        resultado = int(valIzq) - int(valDer)
-    if op == '*':
-        resultado = int(valIzq) * int(valDer)
-    if op == '/':
-        resultado = int(valIzq) / int(valDer)
-
-    return resultado
 
 #Se inserta Funcion a la tabla de Simbolos
 def insertarRegistro(fila, node, scope, type,  tabla_temp):
@@ -462,12 +432,15 @@ def msgError(mensaje, lineno = "x"):
     print("Linea {}: Error {}".format(lineno, mensaje))
 
 def semantica(AST, imprime_short_format = True, imprime_long_format = False):
+    global stack_TS
     tabla = []
     tabla_params = []
-    stack_TS = []
+ 
     stack = crearTabla(AST, tabla, stack_TS, tabla_params)
     typeCheck(AST, stack)
+    mostrarTabla(stack,imprime_short_format, imprime_long_format)
 
+def mostrarTabla(stack,imprime_short_format, imprime_long_format):
     if imprime_long_format:
         print("name       dataType  scope       Type                params            Valor      lineno")
         for ts in stack:
