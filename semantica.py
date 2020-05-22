@@ -56,16 +56,13 @@ def typeCheckArithmetic(op, valIzq, valDer, tabla_simbolos):
     except AttributeError:
         tipo_dato_call_izq = None
 
-    
-    if valDer.type == NodeType.CALL:
-        nombre_call_der = valDer.leaf
-        tupla_func_der = getTupla(NodeType.FUN_DECLARATION, nombre_call_der, tabla_simbolos)
-        if tupla_func_der == None:
-            msgError("Funcion no declarada A")
-            #exit()
-        else:
+    try:
+        if valDer.type == NodeType.CALL:
+            nombre_call_der = valDer.leaf
+            tupla_func_der = getTupla(NodeType.FUN_DECLARATION, nombre_call_der, tabla_simbolos)
             tipo_dato_call_der = tupla_func_der['tipo_dato']
-
+    except AttributeError:
+        tipo_dato_call_der = None
 
     if tipo_dato_call_izq != None:
         if tipo_dato_call_izq != 'int':

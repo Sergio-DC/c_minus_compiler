@@ -53,3 +53,4 @@ class NodeType(Enum):
     TYPE_SPECIFIER = 13
     IO = 14
     NUMBER = 15
+    TERM_1 = 16

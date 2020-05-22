@@ -467,7 +467,7 @@ def p_term_1(p):
      if masInfo:
           print("term_1: ", p[1], p[2].leaf, p[3])
      if p[1] != None:
-          p[0] = Node("term_1", [p[1], p[3]], p[2].leaf)
+          p[0] = Node(NodeType.TERM_1, [p[1], p[3]], p[2].leaf)
      else: # Hubo un error
           str_trace += " " + str(p[3].leaf) 
           
