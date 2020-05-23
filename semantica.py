@@ -91,12 +91,13 @@ scope = 'global'
 YaPase = False
 paramsIngresadosLocalmente = False
 seHaPregargado = False
+offset = 1
 def crearTabla(arbol, table, stack_TS, tabla_params):
-    global scope, YaPase, seHaPregargado, paramsIngresadosLocalmente
+    global scope, YaPase, seHaPregargado, paramsIngresadosLocalmente, offset
     if arbol.type == NodeType.VAR_DECLARATION_1:
-        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'offset' : offset}
         nombre_variable = arbol.children[0].leaf
-
+        offset += 1
         #Insertar Parametros de la función en el scope local, solo si 
         if tabla_params != [] and paramsIngresadosLocalmente == False:
             for tupla_param in tabla_params[::-1]:
@@ -115,8 +116,10 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
         else:
             msgError("Variable Repetida", arbol.lineno)
     elif arbol.type == NodeType.VAR_DECLARATION_2: # Declaracion de variable de tipo array []
-        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'offset' : offset}
         nombre_variable = arbol.children[0].leaf
+        offset += 1
+
         #Insertar Parametros de la función en el scope local
         if tabla_params != [] and paramsIngresadosLocalmente == False:
             for tupla_param in tabla_params[::-1]:
@@ -134,18 +137,19 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
         else:
             msgError("Variable Repetida", arbol.lineno)
     elif arbol.type == NodeType.FUN_DECLARATION:
+        offset = 1;
         #Precargamos TS con input() y output()
         if not seHaPregargado:
-            fila = {'nombre': 'input', 'tipo_dato': 'int', 'valor': '', 'type' : NodeType.FUN_DECLARATION, 'scope': 'global', 'params':[],'return': '', 'lineno' : ''}
+            fila = {'nombre': 'input', 'tipo_dato': 'int', 'valor': '', 'type' : NodeType.FUN_DECLARATION, 'scope': 'global', 'params':[],'return': '', 'lineno' : '', 'offset' : '--'}
             table.append(fila)
-            fila = {'nombre': 'output', 'tipo_dato': 'void', 'valor': '', 'type' : NodeType.FUN_DECLARATION, 'scope': 'global', 'params':['int'],'return': '', 'lineno' : ''}
+            fila = {'nombre': 'output', 'tipo_dato': 'void', 'valor': '', 'type' : NodeType.FUN_DECLARATION, 'scope': 'global', 'params':['int'],'return': '', 'lineno' : '', 'offset' : '--'}
             table.append(fila)
             seHaPregargado = True
         tabla_params.clear()
         paramsIngresadosLocalmente = False
 
         nombre_func = arbol.children[0].leaf
-        fila = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'return': '', 'lineno' : ''}
+        fila = {'nombre': '', 'tipo_dato': '', 'valor': '', 'type' : '', 'scope': '', 'params':[],'return': '', 'lineno' : '', 'offset' : '--'}
         tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, table)
 
         if tupla_func_decl == None:        
@@ -186,7 +190,7 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
                 elif tupla_param_2:
                     print("En construccion") 
     elif arbol.type == NodeType.RETURN_STMT_2:
-        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'offset' : '--'}
         nombre_variable = arbol.children[0].leaf
         #Insertar Parametros de la función en el scope local, solo si 
         if tabla_params != [] and paramsIngresadosLocalmente == False:
@@ -231,7 +235,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
             msgError("Falta void", arbol.lineno)
             #exit()
     elif arbol.type == NodeType.PARAM_1:
-        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : ''}
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'offset' : offset}
+        offset += 1
         tipo_dato = arbol.leaf
         nombre_variable = arbol.children[0].leaf
         if tipo_dato == 'void':
@@ -245,7 +250,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
             tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, scope, table_global)#Obtenemos la refencia a la funcion que contiene los PARAMS
             tupla_func_decl['params'].append(arbol.leaf)#Actualizamos el campo de PARAM de la declaracion de funcion
     elif arbol.type == NodeType.PARAM_2:
-        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params': '--', 'lineno' : ''}
+        fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params': '--', 'lineno' : '', 'offset': offset}
+        offset += 1
         nombre_variable = arbol.children[0].leaf
         tipo_dato = arbol.leaf
         if tipo_dato == 'void':
@@ -425,7 +431,6 @@ def formatearNodo(node, type, scope):
         val_scope = ''
         val_dimension = "1"
         val_lineno = 5
-
     return {'nombre':val_nombre, 'tipo_dato':val_tipo_dato, 'valor':val_valor, 'type': val_type , 'scope': val_scope, 'dimension': val_dimension, 'lineno' : val_lineno}
 
 def msgError(mensaje, lineno = "x"):
@@ -442,11 +447,11 @@ def semantica(AST, imprime_short_format = True, imprime_long_format = False):
 
 def mostrarTabla(stack,imprime_short_format, imprime_long_format):
     if imprime_long_format:
-        print("name       dataType  scope       Type                params            Valor      lineno")
+        print("name       dataType  scope       Type                params            Valor      lineno      offset")
         for ts in stack:
             for i in range(len(ts)):
                 lista_params = '{}'.format(ts[i]['params']) # List of Params
-                print(f"{ts[i]['nombre']:11}{ts[i]['tipo_dato']:10}{ts[i]['scope']:12}{ts[i]['type'].name:20}{lista_params:17}{ts[i]['valor']:3}{ts[i]['lineno']:10}")
+                print(f"{ts[i]['nombre']:11}{ts[i]['tipo_dato']:10}{ts[i]['scope']:12}{ts[i]['type'].name:20}{lista_params:20}{ts[i]['valor']:8}{ts[i]['lineno']:5}      {ts[i]['offset']:3}")
     elif imprime_short_format:
         print("name       dataType  scope   Lineno")
         for ts in stack:
