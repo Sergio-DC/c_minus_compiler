@@ -1,5 +1,6 @@
 from globalTypes import *
-from calculadora import *
+#from calculadora import *
+from calculadora_mips import *
 from semantica import *
 
 index = 0
@@ -30,12 +31,12 @@ def calculoAritmetico(arbol, stack_TS, index):
     tabla_simbolos = stack_TS[index]
     #Se ignora declaracion de constantes e.g x = 18(Para no colocarla en el codigo ensamblador), ya que se pasara a la calculadora en tiempo de compilacion
     if arbol.type == NodeType.EXPRESSION_1 and not isinstance(arbol.children[1].leaf, int):
-        res = calculadora(arbol.children[1], stack_TS, index) # Recibe una expresion aritmentica en AST sin literales, calcula el resultado
-        name_var = arbol.children[0].leaf
-        updateTupla(NodeType.VAR_DECLARATION_1, name_var, 'valor', res, tabla_simbolos)
-        print("li $a0 {}".format(int(res)))
-        print("$sw $a0 0($sp)")
-        print("addiu $sp $sp -4")
+        calculadora(arbol.children[1], stack_TS, index) # Recibe una expresion aritmentica en AST sin literales, calcula el resultado
+        # name_var = arbol.children[0].leaf
+        # updateTupla(NodeType.VAR_DECLARATION_1, name_var, 'valor', res, tabla_simbolos)
+        # print("li $a0 {}".format(int(res)))
+        # print("$sw $a0 0($sp)")
+        # print("addiu $sp $sp -4")
 
 
 
