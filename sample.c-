@@ -1,25 +1,16 @@
-int sum(void) {
-    int c;
-    return c;
-}
-void yoommy(void) {
-
-}
-
-void resta(void) {
-
-}
-
-int car(void) {
-    int  j;
-    return j;
+void suma(int p, int q) {
+    return q + p;
 }
 
 void main(void) {
     int x;
+    int y;
+    
+    x = 2;
+    y = 65;
 
-    int z;
-   
-    x =  resta() + z + sum();
+    /*foo(x);*/
+    x = suma(x, y);
+    output(x);
     
 }
