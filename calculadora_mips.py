@@ -1,7 +1,6 @@
 from semantica import *
 
-# Recibe un ast de expresiones aritmeticas y devuelve el resultado del calculo
-#La TS la ocupamos cuando la expresion esta compuesta por literales, en este caso recurrimos a la TS para localizar el valor
+# Recibe un AST de expresiones aritmeticas y genera codigo ensamblador
 def calculadora(arbol, stack_TS, index):
     resultado = 0;    
     resultado = preOrder(arbol, resultado, stack_TS, index)
