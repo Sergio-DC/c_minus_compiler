@@ -12,13 +12,58 @@
 #   output(x);
 # }
 .data 
-    var_x: .word 6
-    var_y: .word 4
+    var_x: .word 12
+    var_y: .word 3
 
 # Making Room for a function
 .text
 
 .globl main
+
+#Calle Part
+suma:
+    move $fp $sp #move the pointer of the $fp to point to $sp
+    sw $ra 0($sp) #save the return address in the activation record
+    addiu $sp $sp -4
+    # Calculate the sum of the 2 arguments
+    # Val Left
+    # Search in ST the offset of valIzq
+    li $t7 2 ## Num 2 represent the logical_offset of 'y' variable
+    # Calculate physical offset
+    li $t6 4
+    mult $t7 $t6  # Num 4 is the byte_alignment
+    mflo $t6 # <- It has the physical offset
+    # Load the param value from stack to $t0
+    addu $t6 $fp $t6
+    lw $t0 ($t6) #This line takes advantage of $fp as pivot to search for 'y' param 
+    # 
+    # Val Right
+    # Search in ST the offset of valDer
+    li $t7 1 ## Num 2 represent the logical_offset of 'x' variable
+    # Calculate physical offset
+    li $t6 4
+    mult $t7 $t6  # Num 4 is the byte_alignment
+    mflo $t6 # <- It has the physical offset
+    # Load the param value from stack to $t1
+    addu $t6 $fp $t6
+    lw $t1 ($t6) #This line takes advantage of $fp as pivot to search for 'x' param
+    #Calculate the sum
+    add $a0 $t0 $t1
+
+    # Load return address to register $ra
+    lw $ra 4($sp)
+    # The stack-pointer will do a deep pop to restore to the pevious activation-frame top 
+    #Get from the ST the count of parameters
+    li $t0 2 # Num 2 represents the number of total params obtained from ST
+    #deep offset = z
+    li $t6 4
+    mult $t0 $t6 #  4 * N
+    mflo $t0 
+    addi $t0 $t0 8 # z = 4*n + 8
+    addu $sp $sp $t0
+    lw $fp 0($sp) # Restore the $fp to the old Frame pointer  
+
+    jr $ra
 
 main:
     #1 Set %fp to the bottom
@@ -94,7 +139,7 @@ main:
         # 4.3 Jump to the 'suma' prodecure and save the return address
         jal suma
         
-    #5 Save the returned value in the corresponding variable, in this case 'x', Remember that the returned value is in $v0
+    #5 Save the returned value in the corresponding variable, in this case 'x', Remember that the returned value is in $a0
         #On the pyhton side: search in ST logical_offset of variable x 
         li $t7 1 #Num 1 represent logical offset of variable 'x' obtained from ST
         #Calculate the physical offset
@@ -120,52 +165,3 @@ main:
     #Finish Program
     li $v0 10
     syscall
-
-
-    #Calle Part
-    suma:
-        move $fp $sp #move the pointer of the $fp to point to $sp
-        sw $ra 0($sp) #save the return address in the activation record
-        addiu $sp $sp -4
-        # Calculate the sum of the 2 arguments
-            # Val Left
-            # Search in ST the offset of valIzq
-            li $t7 2 ## Num 2 represent the logical_offset of 'y' variable
-            # Calculate physical offset
-            li $t6 4
-            mult $t7 $t6  # Num 4 is the byte_alignment
-            mflo $t6 # <- It has the physical offset
-            # Load the param value from stack to $t0
-            addu $t6 $fp $t6
-            lw $t0 ($t6) #This line takes advantage of $fp as pivot to search for 'y' param 
-            # 
-            # Val Right
-            # Search in ST the offset of valDer
-            li $t7 1 ## Num 2 represent the logical_offset of 'x' variable
-            # Calculate physical offset
-            li $t6 4
-            mult $t7 $t6  # Num 4 is the byte_alignment
-            mflo $t6 # <- It has the physical offset
-            # Load the param value from stack to $t1
-            addu $t6 $fp $t6
-            lw $t1 ($t6) #This line takes advantage of $fp as pivot to search for 'x' param
-            #Calculate the sum
-            add $a0 $t0 $t1
-
-            # Return the value
-            move $v0 $a0
-
-            # Load return address to register $ra
-            lw $ra 4($sp)
-            # The stack-pointer will do a deep pop to restore to the pevious activation-frame top 
-            #Get from the ST the count of parameters
-            li $t0 2 # Num 2 represents the number of total params obtained from ST
-            #deep offset = z
-            li $t6 4
-            mult $t0 $t6 #  4 * N
-            mflo $t0 
-            addi $t0 $t0 8 # z = 4*n + 8
-            addu $sp $sp $t0
-            lw $fp 0($sp) # Restore the $fp to the old Frame pointer  
-
-            jr $ra
