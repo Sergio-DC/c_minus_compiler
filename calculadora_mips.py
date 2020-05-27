@@ -102,13 +102,8 @@ def operacion(op, valIzq, valDer, stack_TS, index):
             print("sub $a0 $t1 $a0")
             print("sw $a0 4($sp)")
         else:
-            print("li $a0 {}".format(valIzq))
-            print("sw $a0 0($sp)")
-            print("addiu $sp $sp -4")
-            print("li $a0 {}".format(valDer))
-            print("lw $t1 4($sp)")
-            print("sub $a0 $t1 $a0")
-            print("sw $a0 4($sp)")
+            print("#Calculate the SUB")
+            print("sub $a0 $t0 $t1")
     if op == '*':
         if valDer == 0:
             print("li $a0 {}".format(valIzq))
@@ -123,14 +118,9 @@ def operacion(op, valIzq, valDer, stack_TS, index):
             print("mflo $a0")
             print("sw $a0 4($sp)")
         else:
-            print("li $a0 {}".format(valIzq)) 
-            print("sw $a0 0($sp)")
-            print("addiu $sp $sp -4")
-            print("li $a0 {}".format(valDer))
-            print("lw $t1 4($sp)")
-            print("mult $a0 $t1")
+            print("#Calculate the MULT")
+            print("mult $t0 $t1")
             print("mflo $a0")
-            print("sw $a0 4($sp)")
     if op == '/':
         if valDer == 0:
             print("li $a0 {}".format(valIzq))
@@ -145,14 +135,9 @@ def operacion(op, valIzq, valDer, stack_TS, index):
             print("mflo $a0")
             print("sw $a0 4($sp)")
         else:
-            print("li $a0 {}".format(valIzq)) 
-            print("sw $a0 0($sp)")
-            print("addiu $sp $sp -4")
-            print("li $a0 {}".format(valDer))
-            print("lw $t1 4($sp)")
-            print("div $t1 $a0")
+            print("#Calculate the DIV")
+            print("div $t0 $t1")
             print("mflo $a0")
-            print("sw $a0 4($sp)")
 
 def caller(arbol, stack_TS, index):
     tabla_simbolos = stack_TS[index]

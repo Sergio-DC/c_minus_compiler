@@ -7,7 +7,7 @@ index = 0
 index_aux = 0
 def codeGen(arbol, file_name):
     global index
-
+    print(".data")
     print(".text")
     print(".globl main")
     result = traverseTree(arbol, file_name, stack_TS, index) #El stack_TS viene del analizador semantico
@@ -27,7 +27,7 @@ def traverseTree(arbol, file_name, stack_TS, index):
         # calle(arbol, stack_TS, index)
         input(arbol, stack_TS, index)
 
-        if arbol.type == NodeType.ADDITIVE_EXPRESSION_1:
+        if arbol.type == NodeType.ADDITIVE_EXPRESSION_1 or arbol.type == NodeType.TERM_1:
             print("\n")
             calculadora(arbol, stack_TS, index)
 
@@ -83,22 +83,8 @@ def calculoAritmetico(arbol, stack_TS, index):
         print("subu $t6 $fp $t6")
         print("sw $a0 ($t6)")# the follwing line is taking advantage of $fp to search the 'X' variable
     elif arbol.type == NodeType.CALL and not nombre_funcion == arbol.leaf:
-        #¿Se podra ver lo que hay en un nivel superior? La respuesta es si, pero no es posible acceder directamente a esa referencia
         if arbol.leaf == "output":
-            print("\n#Print the value")
-            # Search the variable in ST that is gonna printed 
-            #Get the logical offset of the variable
-            nombre_variable = arbol.children[0].leaf
-            tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)
-            logical_offset = tupla['offset']
-            print("li $t7 {}  # {} represent the logical offset of variable {}".format(logical_offset, logical_offset, nombre_variable)) 
-            print("li $t6 4") # 4 byte-alignment
-            print("mult $t7 $t6") #calculate physical offset
-            print("mflo $t6")
-            print("subu $t6 $fp $t6")
-            print("lw $a0 ($t6)")
-            print("li $v0 1")
-            print("syscall")
+            output(arbol, stack_TS, index)
 
 # Recordatorio: Renombrar funcion
 def main(arbol, stack_TS, index):
@@ -147,6 +133,26 @@ def input(arbol, stack_TS, index):
                 print("move $a0 $v0")
                 #getTupla(NodeType.VAR_DECLARATION_1, )
                 print("sw $a0 0($sp)")
+def output(arbol, stack_TS, index):
+    tabla_simbolos = stack_TS[index]
+    print("\n#Print the value")
+    # Search the variable in ST that is gonna printed 
+    #Get the logical offset of the variable
+    nombre_variable = arbol.children[0].leaf
+    tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)
+    logical_offset = tupla['offset']
+    print("li $t7 {}  # {} represent the logical offset of variable {}".format(logical_offset, logical_offset, nombre_variable)) 
+    print("li $t6 4") # 4 byte-alignment
+    print("mult $t7 $t6") #calculate physical offset
+    print("mflo $t6")
+    print("subu $t6 $fp $t6")
+    print("lw $a0 ($t6)")
+    print("li $v0 1")
+    print("syscall")
+    #Print a new Line
+    print("addi $a0, $0, 0xA #ascii code for LF, if you have any trouble try 0xD for CR.")
+    print("addi $v0, $0, 0xB #syscall 11 prints the lower 8 bits of $a0 as an ascii character.")
+    print("syscall")
 
 
 
