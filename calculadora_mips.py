@@ -10,8 +10,8 @@ def preOrder(arbol, resultado, stack_TS, index):
     if arbol != None:
         if str(arbol.leaf) not in '+-*/':
             if arbol.type == NodeType.NUMBER:
-                print("li $a0 {}".format(arbol.leaf))
-                return None
+                #print("li $a0 {}".format(arbol.leaf))
+                return arbol.leaf
             elif arbol.type == NodeType.CALL:
                 caller(arbol, stack_TS, index)
                 nombre_funcion = arbol.leaf
@@ -41,6 +41,8 @@ def operacion(op, valIzq, valDer, stack_TS, index):
         print("# Load the param value from stack to $t0")
         print("addu $t6 $fp $t6")
         print("lw $t0 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valIzq))
+    else:
+        print("li $t0 {}".format(valIzq))
     if not isinstance(valDer, int):
         registro = getTupla(NodeType.VAR_DECLARATION_1, valDer, tabla_simbolos)
         registro = getTupla(NodeType.PARAM_1, valDer, tabla_simbolos) #Si la variable declarada no se encuentra en VAR_DECLARATION_1 se busca en PARAM_1
@@ -54,85 +56,52 @@ def operacion(op, valIzq, valDer, stack_TS, index):
         print("# Load the param value from stack to $t0")
         print("addu $t6 $fp $t6")
         print("lw $t1 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valDer))
+    else:
+        print("li $t1 {}".format(valDer))
 
     if op == '+':
         if valDer == 0:
-            # Val Right
-            # # Search in ST the offset of valDer
-            # li $t7 ñ ## Num ñ represent the logical_offset of 'x' variable
-            # # Calculate physical offset
-            # mult $t7 4  # Num 4 is the byte_alignment
-            # mflo $t6 # <- It has the physical offset
-            # # Load the param value from stack to $t1
-            # lw $t1 $t6($fp) #This line takes advantage of $fp as pivot to search for 'x' param
-            # add $a0 $a0 $t1
-            print("li $a0 {}".format(valIzq))
-            print("lw $t1 4($sp)")         
-            print("add $a0 $a0 $t1")
-            print("sw $a0 4($sp)")
+            print("#Calculate accrued sum")
+            print("add $a0 $a0 $t0")
         elif valIzq == 0:
-            # Val Left
-            # # Search in ST the offset of valIzq
-            # li $t7 2 ## Num 2 represent the logical_offset of 'y' variable
-            # # Calculate physical offset
-            # mult $t7 4  # Num 4 is the byte_alignment
-            # mflo $t6 # <- It has the physical offset
-            # # Load the param value from stack to $t0
-            # lw $t0 $t6($fp) #This line takes advantage of $fp as pivot to search for 'y' param 
-            # # Calculate the Sum
-            # add $a0 $a0 $t0
-            print("li $a0 {}".format(valDer))
-            print("lw $t1 4($sp)")         
+            print("#Calculate accrued sum")
             print("add $a0 $a0 $t1")
-            print("sw $a0 4($sp)")
         else:
             print("#Calculate the sum")
             print("add $a0 $t0 $t1")
             
     if op == '-':
         if valDer == 0:
-            print("li $a0 {}".format(valIzq))
-            print("lw $t1 4($sp)")         
+            print("#Calculate accrued SUB")        
+            print("sub $a0 $t0 $a0")
+        elif valIzq == 0:   
+            print("#Calculate accrued SUB")           
             print("sub $a0 $t1 $a0")
-            print("sw $a0 4($sp)")
-        elif valIzq == 0:
-            print("li $a0 {}".format(valDer))
-            print("lw $t1 4($sp)")         
-            print("sub $a0 $t1 $a0")
-            print("sw $a0 4($sp)")
         else:
             print("#Calculate the SUB")
             print("sub $a0 $t0 $t1")
     if op == '*':
-        if valDer == 0:
-            print("li $a0 {}".format(valIzq))
-            print("lw $t1 4($sp)")         
+        if valDer == 0: 
+            print("#Calculate accrued MULT")             
+            print("mult $a0 $t0")
+            print("mflo $a0")
+        elif valIzq == 0:    
+            print("#Calculate accrued MULT")     
             print("mult $a0 $t1")
             print("mflo $a0")
-            print("sw $a0 4($sp)")
-        elif valIzq == 0:
-            print("li $a0 {}".format(valDer))
-            print("lw $t1 4($sp)")         
-            print("mult $a0 $t1")
-            print("mflo $a0")
-            print("sw $a0 4($sp)")
         else:
-            print("#Calculate the MULT")
+            print("#Calculate MULT")
             print("mult $t0 $t1")
             print("mflo $a0")
     if op == '/':
         if valDer == 0:
-            print("li $a0 {}".format(valIzq))
-            print("lw $t1 4($sp)")         
+            print("#Calculate accrued DIV")             
+            print("div $t0 $a0")
+            print("mflo $a0")
+        elif valIzq == 0:  
+            print("#Calculate accrued DIV")     
             print("div $t1 $a0")
             print("mflo $a0")
-            print("sw $a0 4($sp)")
-        elif valIzq == 0:
-            print("li $a0 {}".format(valDer))
-            print("lw $t1 4($sp)")         
-            print("div $t1 $a0")
-            print("mflo $a0")
-            print("sw $a0 4($sp)")
         else:
             print("#Calculate the DIV")
             print("div $t0 $t1")

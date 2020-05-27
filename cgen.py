@@ -29,11 +29,13 @@ def traverseTree(arbol, file_name, stack_TS, index):
                 genCode_calle(nombre_funcion)
         if arbol.type == NodeType.EXPRESSION_1 :
             NAME_FUNCTION = arbol.children[1].leaf
+            variable = arbol.children[0].leaf
             if arbol.children[1].type == NodeType.CALL and NAME_FUNCTION == 'input': #Funcion Input
                 genCode_input(arbol, stack_TS, index)
+                genCode_updateVariable(arbol, stack_TS, index)
             else:
                 NAME_FUNCTION = calculadora(arbol.children[1], stack_TS, index) # Recibe una expresion aritmentica en AST y genera codigo para el calculo
-                genCode_UpdateVariable(arbol, stack_TS, index)
+                genCode_updateVariable(arbol, stack_TS, index)
         elif arbol.type == NodeType.CALL and not NAME_FUNCTION == arbol.leaf:
             if arbol.leaf == "output":
                 genCode_output(arbol, stack_TS, index)
@@ -57,7 +59,7 @@ def traverseTree(arbol, file_name, stack_TS, index):
                     traverseTree(arbol.children[child], file_name, stack_TS, index)
 
 #Recoradtorio: renombrar la funcion por uno mas apropiado al contexto
-def genCode_UpdateVariable(arbol, stack_TS, index):
+def genCode_updateVariable(arbol, stack_TS, index):
     tabla_simbolos = stack_TS[index]
     nombre_variable = arbol.children[0].leaf
     tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)
@@ -98,10 +100,10 @@ def genCode_mainFunc(arbol, stack_TS, index):
 
 def genCode_input(arbol, stack_TS, index):
     if arbol.children[0].type == NodeType.VAR_1:
+        print("#Input")
         print("li $v0, 5")
         print("syscall")
         print("move $a0 $v0")
-        print("sw $a0 0($sp)")
 def genCode_output(arbol, stack_TS, index):
     tabla_simbolos = stack_TS[index]
     print("\n#Print the value")
