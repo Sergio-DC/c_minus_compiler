@@ -23,8 +23,6 @@ def traverseTree(arbol, file_name, stack_TS, index):
     if arbol != None:
         main(arbol, stack_TS, index)
         calculoAritmetico(arbol, stack_TS, index)
-        # caller(arbol, stack_TS, index)
-        # calle(arbol, stack_TS, index)
         input(arbol, stack_TS, index)
 
         if arbol.type == NodeType.ADDITIVE_EXPRESSION_1 or arbol.type == NodeType.TERM_1:
@@ -114,12 +112,7 @@ def main(arbol, stack_TS, index):
             print("mflo $t6") # physical offset that is going to use to reserve space in stack for local variables
             print("sub $sp $sp $t6")
         else: # There is a function different to main, CALLE PART
-            print("\n #Calle Part")
-            print("{}:".format(nombre_funcion))#The label
-            print("move $fp $sp #move the pointer of the $fp to point to $sp")
-            print("sw $ra 0($sp) #save the return address in the activation record")
-            print("addiu $sp $sp -4")
-
+            calle(nombre_funcion)
 
 
 
@@ -153,6 +146,14 @@ def output(arbol, stack_TS, index):
     print("addi $a0, $0, 0xA #ascii code for LF, if you have any trouble try 0xD for CR.")
     print("addi $v0, $0, 0xB #syscall 11 prints the lower 8 bits of $a0 as an ascii character.")
     print("syscall")
+
+def calle(nombre_funcion):
+    print("\n #Calle Part")
+    print("{}:".format(nombre_funcion))#The label
+    print("move $fp $sp #move the pointer of the $fp to point to $sp")
+    print("sw $ra 0($sp) #save the return address in the activation record")
+    print("addiu $sp $sp -4")
+
 
 
 
