@@ -66,10 +66,7 @@ def genCode_updateVariable(arbol, stack_TS, index):
     # Update the variable
     logical_offset = tupla['offset']
     print("#Update variable {}".format(nombre_variable))
-    print("li $t7 {} # Number {} represent the logical offset of variable '{}', that number is obtained by ST".format(logical_offset, logical_offset, nombre_variable))
-    print("li $t6 4") # 4 is the byte_alignment
-    print("mult $t7 $t6")#Calculate physical offset
-    print("mflo $t6  # <- it has the physical offset") # $t6 has the physical offset
+    genCode_calculatePhysicalOffset(logical_offset)
     # Search the variable 'x' using the physical offset and store the value in the stack
     print("# Search the variable '{}' using the physical offset and load the value from memory to register $a0".format(nombre_variable))
     print("subu $t6 $fp $t6")
@@ -86,16 +83,11 @@ def genCode_mainFunc(arbol, stack_TS, index):
     nueva_tabla_simbolos = stack_TS[index_scope] #Esa tabla contiene las variables locales declaradas dentro de main
     # Obtenemos el numero de variable declaradas en la funcion main
     N = getMatches(NodeType.VAR_DECLARATION_1, nueva_tabla_simbolos)#Representa el numero de variables declaradas localmente en la funcion main
-    #print("Numero de variables declaradas: ", N)
     print("main:")
     print("move $fp $sp # Set FP to the bottom")# Set %fp to the bottom
     print("addiu $sp $sp -4  # Move stack_pointer to the next empty position")# Move stack_pointer to the next empty position
     # Store the matches of local variables in $t7
-    print("li $t7 {}  # Store the matches of local variables in $t7".format(N))
-    # Reserve Space for the local variables
-    print("li $t6 4")
-    print("mult $t7 $t6  # N * 4") # N * 4
-    print("mflo $t6") # physical offset that is going to use to reserve space in stack for local variables
+    genCode_calculatePhysicalOffset(N)
     print("sub $sp $sp $t6")
 
 def genCode_input(arbol, stack_TS, index):
@@ -112,10 +104,7 @@ def genCode_output(arbol, stack_TS, index):
     nombre_variable = arbol.children[0].leaf
     tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)
     logical_offset = tupla['offset']
-    print("li $t7 {}  # {} represent the logical offset of variable {}".format(logical_offset, logical_offset, nombre_variable)) 
-    print("li $t6 4") # 4 byte-alignment
-    print("mult $t7 $t6") #calculate physical offset
-    print("mflo $t6")
+    genCode_calculatePhysicalOffset(logical_offset)
     print("subu $t6 $fp $t6")
     print("lw $a0 ($t6)")
     print("li $v0 1")

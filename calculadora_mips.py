@@ -164,9 +164,5 @@ def getVariable(valor, tabla_simbolos):
         if registro == None:
             return None
 
-def genCode_calculatePhysicalOffset(logical_offset):
-    print("li $t7 {} # <- Logical offset".format(logical_offset))
-    print("li $t6 4 # Num 4 is the byte_alignment")
-    print("mult $t7 $t6 # Calculate physical offset")  # Calculate physical offset"
-    print("mflo $t6 # <- It has the physical offset") # <- It has the physical offset
+
 
