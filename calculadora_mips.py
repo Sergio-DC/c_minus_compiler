@@ -114,6 +114,7 @@ def caller(arbol, stack_TS, index):
     for arg in arbol.children: #append the args in a list
         list_args.append(arg.leaf)
     #Reverse the list
+    print("# Save the params in a reverse manner")
     for arg in arbol.children[::-1]:
         nombre_variable = arg.leaf
         tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)#Logical offset

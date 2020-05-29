@@ -39,6 +39,8 @@ def traverseTree(arbol, file_name, stack_TS, index):
         elif arbol.type == NodeType.CALL and not NAME_FUNCTION == arbol.leaf:
             if arbol.leaf == "output":
                 genCode_output(arbol, stack_TS, index)
+            # else: # Another Procedure
+            #     genCode_caller(arbol, stack_TS, index)
 
         if arbol.type == NodeType.RETURN_STMT_2:
             print("#Calculate the expression of RETURN_STMT")
@@ -50,14 +52,18 @@ def traverseTree(arbol, file_name, stack_TS, index):
             for i in range(len(arbol.children)):
                 for node in arbol.children[i]:
                     traverseTree(node, file_name, stack_TS, index)
-
-            if index < len(stack_TS) - 1: #Retorno de valor al terminar los pasos de una funcion
-                genCode_returnVal(arbol, stack_TS, index)
         elif arbol.children or arbol.type == NodeType.CALL:
             for child in range(len(arbol.children)):
                 if arbol.children[child] != []:
                     traverseTree(arbol.children[child], file_name, stack_TS, index)
-
+            if arbol.type == NodeType.FUN_DECLARATION:
+                nombre_funcion = arbol.children[0].leaf
+                tipo_retorno = arbol.leaf
+                if index < len(stack_TS) - 1 and nombre_funcion != 'main': #Retorno de valor al terminar los pasos de una funcion
+                    tabla_simbolos = stack_TS[index] # Segun yo esta tabla hace referencia a la del scope global
+                    tupla = getTupla(NodeType.FUN_DECLARATION, nombre_funcion, tabla_simbolos)
+                    index_scope = tupla['index_scope']
+                    genCode_returnVal(index_scope)
 #Recoradtorio: renombrar la funcion por uno mas apropiado al contexto
 def genCode_updateVariable(arbol, stack_TS, index):
     tabla_simbolos = stack_TS[index]
@@ -87,6 +93,7 @@ def genCode_mainFunc(arbol, stack_TS, index):
     print("move $fp $sp # Set FP to the bottom")# Set %fp to the bottom
     print("addiu $sp $sp -4  # Move stack_pointer to the next empty position")# Move stack_pointer to the next empty position
     # Store the matches of local variables in $t7
+    print("#Reserve space for local variables")
     genCode_calculatePhysicalOffset(N)
     print("sub $sp $sp $t6")
 
@@ -101,12 +108,16 @@ def genCode_output(arbol, stack_TS, index):
     print("\n#Print the value")
     # Search the variable in ST that is gonna printed 
     #Get the logical offset of the variable
-    nombre_variable = arbol.children[0].leaf
-    tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)
-    logical_offset = tupla['offset']
-    genCode_calculatePhysicalOffset(logical_offset)
-    print("subu $t6 $fp $t6")
-    print("lw $a0 ($t6)")
+    if arbol.children[0].type == NodeType.VAR_1:
+        nombre_variable = arbol.children[0].leaf
+        tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)
+        logical_offset = tupla['offset']
+        genCode_calculatePhysicalOffset(logical_offset)
+        print("subu $t6 $fp $t6")
+        print("lw $a0 ($t6)")
+    elif arbol.children[0].type == NodeType.CALL:
+        print("#CALL ME");
+        genCode_caller(arbol.children[0], stack_TS, index)
     print("li $v0 1")
     print("syscall")
     #Print a new Line
@@ -121,14 +132,15 @@ def genCode_calle(nombre_funcion):
     print("sw $ra 0($sp) #save the return address in the activation record")
     print("addiu $sp $sp -4")
 
-def genCode_returnVal(arbol, stack_TS, index):
+def genCode_returnVal(index_scope):
     print("\n\n# Return the value")
-    tabla_simbolos = stack_TS[index]
+    tabla_simbolos = stack_TS[index_scope]
     # Load return address to register $ra
     print("lw $ra 4($sp)")
     # The stack-pointer will do a deep pop to restore to the pevious activation-frame top 
     #Get from the ST the count of parameters
     num_of_params = getMatches(NodeType.PARAM_1, tabla_simbolos)
+
     print("li $t0 {}  # {} represents the number of total params obtained from ST".format(num_of_params, num_of_params))
     print("#deep offset = z")
     print("li $t6 4")
@@ -139,7 +151,32 @@ def genCode_returnVal(arbol, stack_TS, index):
     print("lw $fp 0($sp) #Restore the $fp to the old Frame pointer") # Restore the $fp to the old Frame pointer 
     print("jr $ra #Return control to caller function")
 
+def genCode_caller(arbol, stack_TS, index):
+    tabla_simbolos = stack_TS[index]
+    print("#Caller part CGEN")
+    print("#Creating a new Activation Record")
+    print("sw $fp 0($sp)")#Store the Old FramePointer, at this point a new Activation Record is created
+    print("addiu $sp $sp -4")
+    # Save the params in a reverse manner
+    list_args = []
+    for arg in arbol.children: #append the args in a list
+        list_args.append(arg.leaf)
+    #Reverse the list
+    for arg in arbol.children[::-1]:
+        if arg.type == NodeType.CALL: # If the param passed to a functio is a caller break
+            break
+        else:
+            nombre_variable = arg.leaf
+            tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)#Logical offset
+            logical_offset = tupla['offset']
+            genCode_calculatePhysicalOffset(logical_offset)
+            genCode_loadVariableValueTo("$a0")
+            print("sw $a0 0($sp) # #Store param in the param section of the new Activation Record") #Store param in the param section of the new Activation Record
+            print("addiu $sp $sp -4")
 
+    #Jump to the function
+    nombre_funcion = arbol.leaf
+    print("jal ", nombre_funcion)
 
 
 
