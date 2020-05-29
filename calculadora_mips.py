@@ -2,8 +2,11 @@ from semantica import *
 
 # Recibe un AST de expresiones aritmeticas y genera codigo ensamblador
 def calculadora(arbol, stack_TS, index):
-    resultado = 0;    
-    resultado = preOrder(arbol, resultado, stack_TS, index)
+    resultado = 0;
+    if arbol.type == NodeType.NUMBER:
+        print("li $a0 {}".format(arbol.leaf))
+    else:
+        resultado = preOrder(arbol, resultado, stack_TS, index)
     return resultado
 
 def preOrder(arbol, resultado, stack_TS, index):
@@ -29,8 +32,16 @@ def operacion(op, valIzq, valDer, stack_TS, index):
     tabla_simbolos = stack_TS[index]
 
     if not isinstance(valIzq, int):
-        registro = getTupla(NodeType.VAR_DECLARATION_1, valIzq, tabla_simbolos)
-        registro = getTupla(NodeType.PARAM_1, valIzq, tabla_simbolos) #Si la variable declarada no se encuentra en VAR_DECLARATION_1 se busca en PARAM_1
+        while(True):
+            registro = getTupla(NodeType.VAR_DECLARATION_1, valIzq, tabla_simbolos)
+            if registro != None:
+                break
+            registro = getTupla(NodeType.PARAM_1, valIzq, tabla_simbolos) #Si la variable declarada no se encuentra en VAR_DECLARATION_1 se busca en PARAM_1
+            if registro != None:
+                break
+            if registro == None:
+                print("No se encontro lo que buscabas en la TS")
+                break
         logical_offset = registro['offset']
         print("#Val Left")
         print("li $t7 {} # <- Logical offset".format(logical_offset))
@@ -38,14 +49,30 @@ def operacion(op, valIzq, valDer, stack_TS, index):
         print("mult $t7 $t6 # Calculate physical offset")  # Calculate physical offset"
         print("mflo $t6 # <- It has the physical offset") # <- It has the physical offset
 
-        print("# Load the param value from stack to $t0")
-        print("addu $t6 $fp $t6")
-        print("lw $t0 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valIzq))
+        # index_scope = getIndexScope(registro) #The index_scope will be used as an index of stack_TS
+        # stack_TS[index_scope] 
+
+        if registro['type'] == NodeType.VAR_DECLARATION_1:
+            print("subu $t6 $fp $t6")
+            print("# Load the param value from stack to $t0")
+            print("lw $t0 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valIzq))
+        elif registro['type'] == NodeType.PARAM_1:
+            print("addu $t6 $fp $t6")
+            print("# Load the param value from stack to $t0")
+            print("lw $t0 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valIzq))
     else:
         print("li $t0 {}".format(valIzq))
     if not isinstance(valDer, int):
-        registro = getTupla(NodeType.VAR_DECLARATION_1, valDer, tabla_simbolos)
-        registro = getTupla(NodeType.PARAM_1, valDer, tabla_simbolos) #Si la variable declarada no se encuentra en VAR_DECLARATION_1 se busca en PARAM_1
+        while(True):
+            registro = getTupla(NodeType.VAR_DECLARATION_1, valDer, tabla_simbolos)
+            if registro != None:
+                break
+            registro = getTupla(NodeType.PARAM_1, valDer, tabla_simbolos) #Si la variable declarada no se encuentra en VAR_DECLARATION_1 se busca en PARAM_1
+            if registro != None:
+                break
+            if registro == None:
+                print("No se encontro lo que buscabas en la TS")
+                break
         logical_offset = registro['offset']
         print("# Val Right")
         print("li $t7 {} # <- Logical offset".format(logical_offset))
@@ -53,9 +80,14 @@ def operacion(op, valIzq, valDer, stack_TS, index):
         print("mult $t7 $t6 # Calculate physical offset")  # Calculate physical offset"
         print("mflo $t6 # <- It has the physical offset") # <- It has the physical offset
 
-        print("# Load the param value from stack to $t0")
-        print("addu $t6 $fp $t6")
-        print("lw $t1 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valDer))
+        if registro['type'] == NodeType.VAR_DECLARATION_1:
+            print("subu $t6 $fp $t6")
+            print("# Load the param value from stack to $t0")
+            print("lw $t1 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valIzq))
+        elif registro['type'] == NodeType.PARAM_1:
+            print("addu $t6 $fp $t6")
+            print("# Load the param value from stack to $t1")
+            print("lw $t1 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valDer))
     else:
         print("li $t1 {}".format(valDer))
 
@@ -134,5 +166,16 @@ def caller(arbol, stack_TS, index):
     #Jump to the function
     nombre_funcion = arbol.leaf
     print("jal ", nombre_funcion)
+
+
+#This function returns a number that is the scope where a symbol is located
+# The number could be used close to stack_TS as an index
+def getIndexScope(registro):
+    scope_variable = registro['scope']
+    tabla_ambito_global = stack_TS[0]
+    tupla = getTupla(NodeType.FUN_DECLARATION, scope_variable, tabla_ambito_global)
+    index_scope = tupla['index_scope']
+
+    return index_scope
 
     
