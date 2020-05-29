@@ -14,7 +14,7 @@ globales(programa, posicion, progLong)
 AST = parser(True)
 
 semantica(AST, False, True)#Revisar modos de impresion antes de enviar
-codeGen(AST, "salida.txt")
+codeGen(AST, "salida.asm")
 
 print("\n\n")
 #mostrarTabla(stack_TS, False, True)

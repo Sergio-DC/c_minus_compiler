@@ -54,9 +54,3 @@ class NodeType(Enum):
     IO = 14
     NUMBER = 15
     TERM_1 = 16
-
-def genCode_calculatePhysicalOffset(logical_offset):
-    print("li $t7 {} # <- Logical offset".format(logical_offset))
-    print("li $t6 4 # Num 4 is the byte_alignment")
-    print("mult $t7 $t6 # Calculate physical offset")  # Calculate physical offset"
-    print("mflo $t6 # <- It has the physical offset") # <- It has the physical offset

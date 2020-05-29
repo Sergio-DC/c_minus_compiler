@@ -20,3 +20,6 @@ Documentacion.docx
 Documentacion.pdf
 lexer.py~
 boot.py
+pruebas/
+assembler/
+.vscode/
