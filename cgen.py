@@ -40,9 +40,9 @@ def traverseTree(arbol, file_name, stack_TS, index):
             if arbol.leaf == "output":
                 genCode_output(arbol, stack_TS, index)
 
-        if arbol.type == NodeType.ADDITIVE_EXPRESSION_1 or arbol.type == NodeType.TERM_1:
-            calculadora(arbol, stack_TS, index)
-
+        if arbol.type == NodeType.RETURN_STMT_2:
+            print("#Calculate the expression of RETURN_STMT")
+            calculadora(arbol.children[0], stack_TS, index)            
         if arbol.type == "compound_stmt":
             tabla_simbolos = stack_TS[index]
             index_aux = index_aux + 1

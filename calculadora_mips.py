@@ -92,11 +92,11 @@ def operacion(op, valIzq, valDer, stack_TS, index):
     if op == '/':
         if valDer == 0:
             print("#Calculate accrued DIV")             
-            print("div $t0 $a0")
+            print("div $a0 $t0")
             print("mflo $a0")
         elif valIzq == 0:  
             print("#Calculate accrued DIV")     
-            print("div $t1 $a0")
+            print("div $a0 $t1")
             print("mflo $a0")
         else:
             print("#Calculate the DIV")
@@ -150,7 +150,7 @@ def genCode_loadVariableValueTo(mips_register):
 def genCode_loadParamValueTo(mips_register):
     print("# Load the param value from stack to {}".format(mips_register))
     print("addu $t6 $fp $t6")   
-    print("lw $t0 ($t6)".format(mips_register))
+    print("lw {} ($t6)".format(mips_register))
 # This function returns a variable in a tuple format, no matters if the variable searched is a a param
 # Because the function look over all the possible types of variables
 def getVariable(valor, tabla_simbolos):
