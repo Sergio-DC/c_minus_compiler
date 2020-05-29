@@ -32,62 +32,26 @@ def operacion(op, valIzq, valDer, stack_TS, index):
     tabla_simbolos = stack_TS[index]
 
     if not isinstance(valIzq, int):
-        while(True):
-            registro = getTupla(NodeType.VAR_DECLARATION_1, valIzq, tabla_simbolos)
-            if registro != None:
-                break
-            registro = getTupla(NodeType.PARAM_1, valIzq, tabla_simbolos) #Si la variable declarada no se encuentra en VAR_DECLARATION_1 se busca en PARAM_1
-            if registro != None:
-                break
-            if registro == None:
-                print("No se encontro lo que buscabas en la TS")
-                break
-        logical_offset = registro['offset']
+        tupla = getVariable(valIzq, tabla_simbolos)
+        logical_offset = tupla['offset']
         print("#Val Left")
-        print("li $t7 {} # <- Logical offset".format(logical_offset))
-        print("li $t6 4 # Num 4 is the byte_alignment")
-        print("mult $t7 $t6 # Calculate physical offset")  # Calculate physical offset"
-        print("mflo $t6 # <- It has the physical offset") # <- It has the physical offset
-
-        # index_scope = getIndexScope(registro) #The index_scope will be used as an index of stack_TS
-        # stack_TS[index_scope] 
-
-        if registro['type'] == NodeType.VAR_DECLARATION_1:
-            print("subu $t6 $fp $t6")
-            print("# Load the param value from stack to $t0")
-            print("lw $t0 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valIzq))
-        elif registro['type'] == NodeType.PARAM_1:
-            print("addu $t6 $fp $t6")
-            print("# Load the param value from stack to $t0")
-            print("lw $t0 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valIzq))
+        genCode_calculatePhysicalOffset(logical_offset)
+        if tupla['type'] == NodeType.VAR_DECLARATION_1:
+            genCode_loadVariableValueTo("$t0") #Gen code to load a value from stack to a register
+        elif tupla['type'] == NodeType.PARAM_1:
+            genCode_loadParamValueTo("$t0")#Gen code to load a value from stack to a register
     else:
         print("li $t0 {}".format(valIzq))
-    if not isinstance(valDer, int):
-        while(True):
-            registro = getTupla(NodeType.VAR_DECLARATION_1, valDer, tabla_simbolos)
-            if registro != None:
-                break
-            registro = getTupla(NodeType.PARAM_1, valDer, tabla_simbolos) #Si la variable declarada no se encuentra en VAR_DECLARATION_1 se busca en PARAM_1
-            if registro != None:
-                break
-            if registro == None:
-                print("No se encontro lo que buscabas en la TS")
-                break
-        logical_offset = registro['offset']
-        print("# Val Right")
-        print("li $t7 {} # <- Logical offset".format(logical_offset))
-        print("li $t6 4 # Num 4 is the byte_alignment")
-        print("mult $t7 $t6 # Calculate physical offset")  # Calculate physical offset"
-        print("mflo $t6 # <- It has the physical offset") # <- It has the physical offset
 
-        if registro['type'] == NodeType.VAR_DECLARATION_1:
-            print("subu $t6 $fp $t6")
-            print("# Load the param value from stack to $t0")
-            print("lw $t1 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valIzq))
-        elif registro['type'] == NodeType.PARAM_1:
-            print("addu $t6 $fp $t6")
-            print("# Load the param value from stack to $t1")
-            print("lw $t1 ($t6) #This line takes advantage of $fp as pivot to search for '{}' param".format(valDer))
+    if not isinstance(valDer, int):
+        tupla = getVariable(valDer, tabla_simbolos)
+        logical_offset = tupla['offset']
+        print("# Val Right")
+        genCode_calculatePhysicalOffset(logical_offset)
+        if tupla['type'] == NodeType.VAR_DECLARATION_1:
+            genCode_loadVariableValueTo("$t1")
+        elif tupla['type'] == NodeType.PARAM_1:
+            genCode_loadParamValueTo("$t1")
     else:
         print("li $t1 {}".format(valDer))
 
@@ -154,12 +118,8 @@ def caller(arbol, stack_TS, index):
         nombre_variable = arg.leaf
         tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)#Logical offset
         logical_offset = tupla['offset']
-        print("li $t7 {} # Number {} represent the logical offset of variable '{}', that number is obtained by ST".format(logical_offset, logical_offset, nombre_variable))
-        print("li $t6 4") #Num 4 is the byte-alignment
-        print("mult $t7 $t6") # Calculate the physical offset
-        print("mflo $t6") # <- it has the physical offset
-        print("subu $t6 $fp $t6")
-        print("lw $a0 ($t6) # # the following line is taking advantage of $fp to search the 'Y' variable") # the following line is taking advantage of $fp to search the 'Y' variable
+        genCode_calculatePhysicalOffset(logical_offset)
+        genCode_loadVariableValueTo("$a0")
         print("sw $a0 0($sp) # #Store param in the param section of the new Activation Record") #Store param in the param section of the new Activation Record
         print("addiu $sp $sp -4")
 
@@ -178,4 +138,35 @@ def getIndexScope(registro):
 
     return index_scope
 
-    
+# The following function generates mips-code that loads a value from the stack to the register passed as param in the function
+# Note: the section of memory that the assembler code generated is trying to enter is property of local variables
+def genCode_loadVariableValueTo(mips_register):
+    print("# Load the value of the variable declarated from stack to {}".format(mips_register))
+    print("subu $t6 $fp $t6")
+    print("lw {} ($t6)".format(mips_register))
+
+# The following function generates mips-code that loads a value from the stack to the register passed as param in the function
+# Note: the section of memory that the assembler code generated is trying to enter is property of params    
+def genCode_loadParamValueTo(mips_register):
+    print("# Load the param value from stack to {}".format(mips_register))
+    print("addu $t6 $fp $t6")   
+    print("lw $t0 ($t6)".format(mips_register))
+# This function returns a variable in a tuple format, no matters if the variable searched is a a param
+# Because the function look over all the possible types of variables
+def getVariable(valor, tabla_simbolos):
+    while(True):
+        registro = getTupla(NodeType.VAR_DECLARATION_1, valor, tabla_simbolos)
+        if registro != None:
+            return registro
+        registro = getTupla(NodeType.PARAM_1, valor, tabla_simbolos) #Si la variable declarada no se encuentra en VAR_DECLARATION_1 se busca en PARAM_1
+        if registro != None:
+            return registro
+        if registro == None:
+            return None
+
+def genCode_calculatePhysicalOffset(logical_offset):
+    print("li $t7 {} # <- Logical offset".format(logical_offset))
+    print("li $t6 4 # Num 4 is the byte_alignment")
+    print("mult $t7 $t6 # Calculate physical offset")  # Calculate physical offset"
+    print("mflo $t6 # <- It has the physical offset") # <- It has the physical offset
+
