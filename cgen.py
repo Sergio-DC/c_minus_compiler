@@ -160,7 +160,9 @@ def genCode_output(arbol, stack_TS, index):
     elif arbol.children[0].type == NodeType.CALL:
         strMipsCode += "#CALL ME\n"
         log("#CALL ME\n", debugMode)
-        genCode_caller(arbol.children[0], stack_TS, index)
+        caller(arbol.children[0], stack_TS, index)
+    elif arbol.children[0].type == NodeType.ADDITIVE_EXPRESSION_1 or arbol.children[0].type == NodeType.TERM_1:
+        calculadora(arbol.children[0], stack_TS, index)
     strMipsCode += "li $v0 1\n"
     log("li $v0 1\n", debugMode)
     strMipsCode += "syscall\n"
@@ -217,40 +219,6 @@ def genCode_returnVal(index_scope):
     strMipsCode += "jr $ra #Return control to caller function\n"
     log("jr $ra #Return control to caller function\n", debugMode)
 
-def genCode_caller(arbol, stack_TS, index):
-    global strMipsCode
-    tabla_simbolos = stack_TS[index]
-    strMipsCode += "#Caller part CGEN\n"
-    log("#Caller part CGEN\n", debugMode)
-    strMipsCode += "#Creating a new Activation Record\n"
-    log("#Creating a new Activation Record\n", debugMode)
-    strMipsCode += "sw $fp 0($sp)\n"#Store the Old FramePointer, at this point a new Activation Record is created
-    log("sw $fp 0($sp)\n", debugMode)
-    strMipsCode += "addiu $sp $sp -4\n"
-    log("addiu $sp $sp -4\n", debugMode)
-    # Save the params in a reverse manner
-    list_args = []
-    for arg in arbol.children: #append the args in a lists
-        list_args.append(arg.leaf)
-    #Reverse the list
-    for arg in arbol.children[::-1]:
-        if arg.type == NodeType.CALL: # If the param passed to a functio is a caller break
-            break
-        else:
-            nombre_variable = arg.leaf
-            tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)#Logical offset
-            logical_offset = tupla['offset']
-            genCode_calculatePhysicalOffset(logical_offset)
-            genCode_loadVariableValueTo("$a0")
-            strMipsCode += "sw $a0 0($sp) # #Store param in the param section of the new Activation Record\n" #Store param in the param section of the new Activation Record
-            log("sw $a0 0($sp) # #Store param in the param section of the new Activation Record\n", debugMode)
-            strMipsCode += "addiu $sp $sp -4\n"
-            log("addiu $sp $sp -4\n", debugMode)
-
-    #Jump to the function
-    nombre_funcion = arbol.leaf
-    strMipsCode += "jal {}\n".format(nombre_funcion)
-
 def genCode_calculatePhysicalOffset(logical_offset, comment):
     global strMipsCode
     strMipsCode += comment + "\n"
@@ -265,6 +233,7 @@ def genCode_calculatePhysicalOffset(logical_offset, comment):
     log("mflo $t6 # <- It has the physical offset\n", debugMode)
 
 # Recibe un AST de expresiones aritmeticas y genera codigo ensamblador
+# El resultado del calculo se guarda en el registro $a0
 def calculadora(arbol, stack_TS, index):
     global strMipsCode
     resultado = 0;
@@ -416,19 +385,24 @@ def caller(arbol, stack_TS, index):
     log("sw $fp 0($sp)\n", debugMode)
     strMipsCode += "addiu $sp $sp -4\n"
     log("addiu $sp $sp -4\n", debugMode)
-    # Save the params in a reverse manner
-    list_args = []
-    for arg in arbol.children: #append the args in a list
-        list_args.append(arg.leaf)
     #Reverse the list
     strMipsCode += "# Save the params in a reverse manner\n"
     log("# Save the params in a reverse manner\n", debugMode)
     for arg in arbol.children[::-1]:
-        nombre_variable = arg.leaf
-        tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)#Logical offset
-        logical_offset = tupla['offset']
-        genCode_calculatePhysicalOffset(logical_offset, "########")
-        genCode_loadVariableValueTo("$a0")
+        if arg.type == NodeType.ADDITIVE_EXPRESSION_1 or arg.type == NodeType.TERM_1:
+            calculadora(arg, stack_TS, index) # The result is in register $a0
+        elif arg.type == NodeType.NUMBER:
+            strMipsCode+= "li $a0 {} #Save the param number in $a0\n".format(arg.leaf)
+            log("li $a0 {} #Save the param number in $a0", debugMode)
+        elif arg.type == NodeType.CALL: # If the param passed to a functio is a caller break
+            break
+        else: #Is a Number
+            nombre_variable = arg.leaf
+            tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)#Logical offset
+            logical_offset = tupla['offset']
+            genCode_calculatePhysicalOffset(logical_offset, "########")
+            genCode_loadVariableValueTo("$a0")
+        #Save the param value into stack
         strMipsCode += "sw $a0 0($sp) # #Store param in the param section of the new Activation Record\n" #Store param in the param section of the new Activation Record
         log("sw $a0 0($sp) # #Store param in the param section of the new Activation Record\n", debugMode)
         strMipsCode += "addiu $sp $sp -4\n"
