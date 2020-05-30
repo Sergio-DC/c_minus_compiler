@@ -1,14 +1,18 @@
+#Refactorizar funciones: genCodeCaller() y caller()
 from globalTypes import *
 from semantica import *
 
 index = 0
 index_aux = 0
 strMipsCode = ''
+debugMode = True
 def codeGen(arbol, file_name):
     global index, strMipsCode
     strMipsCode = ".data\n.text\n.globl main\n"
+    log(".data\n.text\n.globl main\n", debugMode)
     result = traverseTree(arbol, file_name, stack_TS, index) #El stack_TS viene del analizador semantico
     strMipsCode += "\n#Finish Program\nli $v0 10\nsyscall"
+    log("\n#Finish Program\nli $v0 10\nsyscall", debugMode)
     f = open(file_name, "w")
     f.write(strMipsCode)
     print("FILE WRITTEN")
@@ -39,9 +43,32 @@ def traverseTree(arbol, file_name, stack_TS, index):
                 genCode_output(arbol, stack_TS, index)
             # else: # Another Procedure
             #     genCode_caller(arbol, stack_TS, index)
-
+        elif arbol.type == NodeType.SELECTION_STMT_1:
+            relop = arbol.children[0]
+            if relop.leaf == '>':
+                calculadora(relop, stack_TS, index)
+            #     leftOperand = relop.children[0].leaf
+            #     rightOperand = relop.children[0].leaf
+            #     tabla_simbolos = stack_TS[index]
+            #     tupla = getLocalVariable(leftOperand, tabla_simbolos)
+            #     logical_offset = tupla['offset']
+            #     genCode_calculatePhysicalOffset(logical_offset, "#load the value of the left operand 'relop'")
+            #     genCode_loadVariableValueTo("$t0")
+            #     strMipsCode = "li $t1 {}".format(rightOperand)
+            #     strMipsCode = "bgt $t0 $t1 branch_true"
+            # elif relop.leaf == '<':
+            #     print("Menor que")
+            # elif relop.leaf == '==':
+            #     print("Igual Que")
+            # elif relop.leaf == '>=':
+            #     print("Mayor o Igual que")
+            # elif relop.leaf == '<=':
+            #     print("Menor O Igual que")
+            # elif relop.leaf == '!=':
+            #     print("Diferente de")
         if arbol.type == NodeType.RETURN_STMT_2:
             strMipsCode += "#Calculate the expression of RETURN_STMT\n"
+            log("#Calculate the expression of RETURN_STMT\n", debugMode)
             calculadora(arbol.children[0], stack_TS, index)            
         if arbol.type == "compound_stmt":
             tabla_simbolos = stack_TS[index]
@@ -74,9 +101,11 @@ def genCode_updateVariable(arbol, stack_TS, index):
     genCode_calculatePhysicalOffset(logical_offset, comment)
     # Search the variable 'x' using the physical offset and store the value in the stack
     strMipsCode += "# Search the variable '{}' using the physical offset and load the value from memory to register $a0\n".format(nombre_variable)
+    log("# Search the variable '{}' using the physical offset and load the value from memory to register $a0\n".format(nombre_variable), debugMode)
     strMipsCode += "subu $t6 $fp $t6\n"
+    log("subu $t6 $fp $t6\n", debugMode)
     strMipsCode += "sw $a0 ($t6)\n"# the follwing line is taking advantage of $fp to search the 'X' variable
-        
+    log("sw $a0 ($t6)\n", debugMode)
 
 def genCode_mainFunc(arbol, stack_TS, index):
     global strMipsCode
@@ -90,24 +119,33 @@ def genCode_mainFunc(arbol, stack_TS, index):
     # Obtenemos el numero de variable declaradas en la funcion main
     N = getMatches(NodeType.VAR_DECLARATION_1, nueva_tabla_simbolos)#Representa el numero de variables declaradas localmente en la funcion main
     strMipsCode += "main:\n"
+    log("main:\n", debugMode)
     strMipsCode += "move $fp $sp # Set FP to the bottom\n"# Set %fp to the bottom
+    log("move $fp $sp # Set FP to the bottom\n", debugMode)
     strMipsCode += "addiu $sp $sp -4  # Move stack_pointer to the next empty position\n"# Move stack_pointer to the next empty position
+    log("addiu $sp $sp -4  # Move stack_pointer to the next empty position\n", debugMode)
     # Store the matches of local variables in $t7
     comment = "#Reserve space for local variables"
     genCode_calculatePhysicalOffset(N, comment)
     strMipsCode += "sub $sp $sp $t6\n"
+    log("sub $sp $sp $t6\n", debugMode)
 
 def genCode_input(arbol, stack_TS, index):
     global strMipsCode
     if arbol.children[0].type == NodeType.VAR_1:
         strMipsCode += "#Input\n"
+        log("#Input\n", debugMode)
         strMipsCode += "li $v0, 5\n"
+        log("li $v0, 5\n", debugMode)
         strMipsCode += "syscall\n"
+        log("syscall\n", debugMode)
         strMipsCode += "move $a0 $v0\n"
+        log("move $a0 $v0\n", debugMode)
 def genCode_output(arbol, stack_TS, index):
     global strMipsCode
     tabla_simbolos = stack_TS[index]
     strMipsCode += "\n#Print the value\n"
+    log("\n#Print the value\n", debugMode)
     # Search the variable in ST that is gonna printed 
     #Get the logical offset of the variable
     if arbol.children[0].type == NodeType.VAR_1:
@@ -116,57 +154,83 @@ def genCode_output(arbol, stack_TS, index):
         logical_offset = tupla['offset']
         genCode_calculatePhysicalOffset(logical_offset, "#Dummy")
         strMipsCode += "subu $t6 $fp $t6\n"
+        log("subu $t6 $fp $t6\n", debugMode)
         strMipsCode += "lw $a0 ($t6)\n"
+        log("lw $a0 ($t6)\n", debugMode)
     elif arbol.children[0].type == NodeType.CALL:
         strMipsCode += "#CALL ME\n"
+        log("#CALL ME\n", debugMode)
         genCode_caller(arbol.children[0], stack_TS, index)
     strMipsCode += "li $v0 1\n"
+    log("li $v0 1\n", debugMode)
     strMipsCode += "syscall\n"
+    log("syscall\n", debugMode)
     #Print a new Line
     strMipsCode += "addi $a0, $0, 0xA #ascii code for LF, if you have any trouble try 0xD for CR.\n"
+    log("addi $a0, $0, 0xA #ascii code for LF, if you have any trouble try 0xD for CR.\n", debugMode)
     strMipsCode += "addi $v0, $0, 0xB #syscall 11 prints the lower 8 bits of $a0 as an ascii character.\n"
+    log("addi $v0, $0, 0xB #syscall 11 prints the lower 8 bits of $a0 as an ascii character.\n", debugMode)
     strMipsCode += "syscall\n"
+    log("syscall\n", debugMode)
 
 def genCode_calle(nombre_funcion):
     global strMipsCode
     strMipsCode += "\n #Calle Part\n"
+    log("\n #Calle Part\n", debugMode)
     strMipsCode += "{}:\n".format(nombre_funcion)# The label
+    log("{}:\n".format(nombre_funcion), debugMode)
     strMipsCode += "move $fp $sp #move the pointer of the $fp to point to $sp\n"
+    log("move $fp $sp #move the pointer of the $fp to point to $sp\n", debugMode)
     strMipsCode += "sw $ra 0($sp) #save the return address in the activation record\n"
+    log("sw $ra 0($sp) #save the return address in the activation record\n", debugMode)
     strMipsCode += "addiu $sp $sp -4\n"
+    log("addiu $sp $sp -4\n", debugMode)
 
 def genCode_returnVal(index_scope):
     global strMipsCode
     strMipsCode += "\n# Return the value\n"
+    log("\n# Return the value\n", debugMode)
     tabla_simbolos = stack_TS[index_scope]
     # Load return address to register $ra
     strMipsCode += "lw $ra 4($sp) #Load return address to register $ra\n"
+    log("lw $ra 4($sp) #Load return address to register $ra\n", debugMode)
     # The stack-pointer will do a deep pop to restore to the pevious activation-frame top 
     #Get from the ST the count of parameters
     num_of_params = getMatches(NodeType.PARAM_1, tabla_simbolos)
 
     strMipsCode += "li $t0 {}  # {} represents the number of total params obtained from ST\n".format(num_of_params, num_of_params)
+    log("li $t0 {}  # {} represents the number of total params obtained from ST\n".format(num_of_params, num_of_params), debugMode)
     strMipsCode += "#deep offset = z\n"
+    log("#deep offset = z\n", debugMode)
     strMipsCode += "li $t6 4\n"
+    log("li $t6 4\n", debugMode)
     strMipsCode += "mult $t0 $t6  #  4 * N\n" #  4 * N
+    log("mult $t0 $t6  #  4 * N\n", debugMode)
     strMipsCode += "mflo $t0\n" 
+    log("mflo $t0\n", debugMode )
     strMipsCode += "addi $t0 $t0 8  # z = 4*n + 8\n" # z = 4*n + 8
+    log("addi $t0 $t0 8  # z = 4*n + 8\n", debugMode)
     strMipsCode += "addu $sp $sp $t0\n"
+    log("addu $sp $sp $t0\n", debugMode)
     strMipsCode += "lw $fp 0($sp) #Restore the $fp to the old Frame pointer\n" # Restore the $fp to the old Frame pointer 
+    log("lw $fp 0($sp) #Restore the $fp to the old Frame pointer\n", debugMode)
     strMipsCode += "jr $ra #Return control to caller function\n"
-
-
+    log("jr $ra #Return control to caller function\n", debugMode)
 
 def genCode_caller(arbol, stack_TS, index):
     global strMipsCode
     tabla_simbolos = stack_TS[index]
     strMipsCode += "#Caller part CGEN\n"
+    log("#Caller part CGEN\n", debugMode)
     strMipsCode += "#Creating a new Activation Record\n"
+    log("#Creating a new Activation Record\n", debugMode)
     strMipsCode += "sw $fp 0($sp)\n"#Store the Old FramePointer, at this point a new Activation Record is created
+    log("sw $fp 0($sp)\n", debugMode)
     strMipsCode += "addiu $sp $sp -4\n"
+    log("addiu $sp $sp -4\n", debugMode)
     # Save the params in a reverse manner
     list_args = []
-    for arg in arbol.children: #append the args in a list
+    for arg in arbol.children: #append the args in a lists
         list_args.append(arg.leaf)
     #Reverse the list
     for arg in arbol.children[::-1]:
@@ -179,7 +243,9 @@ def genCode_caller(arbol, stack_TS, index):
             genCode_calculatePhysicalOffset(logical_offset)
             genCode_loadVariableValueTo("$a0")
             strMipsCode += "sw $a0 0($sp) # #Store param in the param section of the new Activation Record\n" #Store param in the param section of the new Activation Record
+            log("sw $a0 0($sp) # #Store param in the param section of the new Activation Record\n", debugMode)
             strMipsCode += "addiu $sp $sp -4\n"
+            log("addiu $sp $sp -4\n", debugMode)
 
     #Jump to the function
     nombre_funcion = arbol.leaf
@@ -188,10 +254,15 @@ def genCode_caller(arbol, stack_TS, index):
 def genCode_calculatePhysicalOffset(logical_offset, comment):
     global strMipsCode
     strMipsCode += comment + "\n"
+    log(comment + "\n", debugMode)
     strMipsCode += "li $t7 {} # <- Logical offset\n".format(logical_offset)
+    log("li $t7 {} # <- Logical offset\n".format(logical_offset), debugMode)
     strMipsCode += "li $t6 4 # Num 4 is the byte_alignment\n"
+    log("li $t6 4 # Num 4 is the byte_alignment\n", debugMode)
     strMipsCode += "mult $t7 $t6 # Calculate physical offset\n"
+    log("mult $t7 $t6 # Calculate physical offset\n", debugMode)
     strMipsCode += "mflo $t6 # <- It has the physical offset\n"
+    log("mflo $t6 # <- It has the physical offset\n", debugMode)
 
 # Recibe un AST de expresiones aritmeticas y genera codigo ensamblador
 def calculadora(arbol, stack_TS, index):
@@ -199,13 +270,14 @@ def calculadora(arbol, stack_TS, index):
     resultado = 0;
     if arbol.type == NodeType.NUMBER:
         strMipsCode += "li $a0 {}\n".format(arbol.leaf)
+        log("li $a0 {}\n".format(arbol.leaf), debugMode)
     else:
         resultado = preOrder(arbol, resultado, stack_TS, index)
     return resultado
 
 def preOrder(arbol, resultado, stack_TS, index):
     if arbol != None:
-        if str(arbol.leaf) not in '+-*/':
+        if str(arbol.leaf) not in '+-*/>':
             if arbol.type == NodeType.NUMBER:
                 #print("li $a0 {}".format(arbol.leaf))
                 return arbol.leaf
@@ -227,7 +299,7 @@ def operacion(op, valIzq, valDer, stack_TS, index):
     tabla_simbolos = stack_TS[index]
 
     if not isinstance(valIzq, int):
-        tupla = getVariable(valIzq, tabla_simbolos)
+        tupla = getLocalVariable(valIzq, tabla_simbolos)
         logical_offset = tupla['offset']
         comment = "#Val Left"
         genCode_calculatePhysicalOffset(logical_offset, comment)
@@ -237,9 +309,10 @@ def operacion(op, valIzq, valDer, stack_TS, index):
             genCode_loadParamValueTo("$t0")#Gen code to load a value from stack to a register
     else:
         strMipsCode += "li $t0 {}\n".format(valIzq)
+        log("li $t0 {}\n".format(valIzq), debugMode)
 
     if not isinstance(valDer, int):
-        tupla = getVariable(valDer, tabla_simbolos)
+        tupla = getLocalVariable(valDer, tabla_simbolos)
         logical_offset = tupla['offset']
         comment = "# Val Right\n"
         genCode_calculatePhysicalOffset(logical_offset, comment)
@@ -249,68 +322,107 @@ def operacion(op, valIzq, valDer, stack_TS, index):
             genCode_loadParamValueTo("$t1")
     else:
         strMipsCode += "li $t1 {}\n".format(valDer)
+        log("li $t1 {}\n".format(valDer), debugMode)
 
     if op == '+':
         if valDer == 0:
             strMipsCode += "#Calculate accrued sum\n"
+            log("#Calculate accrued sum\n", debugMode)
             strMipsCode += "add $a0 $a0 $t0\n"
+            log("add $a0 $a0 $t0\n", debugMode)
         elif valIzq == 0:
             strMipsCode += "#Calculate accrued sum\n"
+            log("#Calculate accrued sum\n", debugMode)
             strMipsCode += "add $a0 $a0 $t1\n"
+            log("add $a0 $a0 $t1\n", debugMode)
         else:
             strMipsCode += "#Calculate the sum\n"
+            log("#Calculate the sum\n", debugMode)
             strMipsCode += "add $a0 $t0 $t1\n"
+            log("add $a0 $t0 $t1\n", debugMode)
             
     if op == '-':
         if valDer == 0:
-            strMipsCode += "#Calculate accrued SUB\n"    
+            strMipsCode += "#Calculate accrued SUB\n"
+            log("#Calculate accrued SUB\n", debugMode)    
             strMipsCode += "sub $a0 $t0 $a0\n"
+            log("sub $a0 $t0 $a0\n", debugMode)    
         elif valIzq == 0:   
-            strMipsCode += "#Calculate accrued SUB\n"          
+            strMipsCode += "#Calculate accrued SUB\n"
+            log("#Calculate accrued SUB\n", debugMode)              
             strMipsCode += "sub $a0 $t1 $a0\n"
+            log("sub $a0 $t1 $a0\n", debugMode)    
         else:
             strMipsCode += "#Calculate the SUB\n"
+            log("#Calculate the SUB\n", debugMode)    
             strMipsCode += "sub $a0 $t0 $t1\n"
+            log("sub $a0 $t0 $t1\n", debugMode)    
     if op == '*':
         if valDer == 0: 
-            strMipsCode += "#Calculate accrued MULT\n"         
+            strMipsCode += "#Calculate accrued MULT\n"
+            log("#Calculate accrued MULT\n", debugMode)             
             strMipsCode += "mult $a0 $t0\n"
+            log("mult $a0 $t0\n", debugMode)    
             strMipsCode += "mflo $a0\n"
+            log("mflo $a0\n", debugMode)    
         elif valIzq == 0:    
-            strMipsCode += "#Calculate accrued MULT\n"  
+            strMipsCode += "#Calculate accrued MULT\n"
+            log("#Calculate accrued MULT\n", debugMode)      
             strMipsCode += "mult $a0 $t1\n"
+            log("mult $a0 $t1\n", debugMode)
             strMipsCode += "mflo $a0\n"
+            log("mflo $a0\n", debugMode)    
         else:
             strMipsCode += "#Calculate MULT\n"
+            log("#Calculate MULT\n", debugMode)    
             strMipsCode += "mult $t0 $t1\n"
+            log("mult $t0 $t1\n", debugMode)    
             strMipsCode += "mflo $a0\n"
+            log("mflo $a0\n", debugMode)    
     if op == '/':
         if valDer == 0:
-            strMipsCode += "#Calculate accrued DIV\n"            
+            strMipsCode += "#Calculate accrued DIV\n"
+            log("#Calculate accrued DIV\n", debugMode)                
             strMipsCode += "div $a0 $t0\n"
+            log("div $a0 $t0\n", debugMode)    
             strMipsCode += "mflo $a0\n"
+            log("mflo $a0\n", debugMode)    
         elif valIzq == 0:  
-            strMipsCode += "#Calculate accrued DIV\n"    
+            strMipsCode += "#Calculate accrued DIV\n"
+            log("#Calculate accrued DIV\n", debugMode)        
             strMipsCode += "div $a0 $t1\n"
+            log("div $a0 $t1\n", debugMode)    
             strMipsCode += "mflo $a0\n"
+            log("mflo $a0\n", debugMode)    
         else:
             strMipsCode += "#Calculate the DIV\n"
+            log("#Calculate the DIV\n", debugMode)    
             strMipsCode += "div $t0 $t1\n"
+            log("div $t0 $t1\n", debugMode)    
             strMipsCode += "mflo $a0\n"
+            log("mflo $a0\n", debugMode)    
+    if op == '>':
+        strMipsCode += "bgt $t0 $t1 branch_true"
+        log("bgt $t0 $t1 branch_true", debugMode)    
 
 def caller(arbol, stack_TS, index):
     global strMipsCode
     tabla_simbolos = stack_TS[index]
     strMipsCode += "#Caller part\n"
+    log("#Caller part\n", debugMode)
     strMipsCode += "#Creating a new Activation Record\n"
+    log("#Creating a new Activation Record\n", debugMode)
     strMipsCode += "sw $fp 0($sp)\n"#Store the Old FramePointer, at this point a new Activation Record is created
+    log("sw $fp 0($sp)\n", debugMode)
     strMipsCode += "addiu $sp $sp -4\n"
+    log("addiu $sp $sp -4\n", debugMode)
     # Save the params in a reverse manner
     list_args = []
     for arg in arbol.children: #append the args in a list
         list_args.append(arg.leaf)
     #Reverse the list
     strMipsCode += "# Save the params in a reverse manner\n"
+    log("# Save the params in a reverse manner\n", debugMode)
     for arg in arbol.children[::-1]:
         nombre_variable = arg.leaf
         tupla = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, tabla_simbolos)#Logical offset
@@ -318,11 +430,14 @@ def caller(arbol, stack_TS, index):
         genCode_calculatePhysicalOffset(logical_offset, "########")
         genCode_loadVariableValueTo("$a0")
         strMipsCode += "sw $a0 0($sp) # #Store param in the param section of the new Activation Record\n" #Store param in the param section of the new Activation Record
+        log("sw $a0 0($sp) # #Store param in the param section of the new Activation Record\n", debugMode)
         strMipsCode += "addiu $sp $sp -4\n"
+        log("addiu $sp $sp -4\n", debugMode)
 
     #Jump to the function
     nombre_funcion = arbol.leaf
     strMipsCode += "jal {}\n".format(nombre_funcion)
+    log("jal {}\n".format(nombre_funcion), debugMode)
 
 
 #This function returns a number that is the scope where a symbol is located
@@ -348,11 +463,14 @@ def genCode_loadVariableValueTo(mips_register):
 def genCode_loadParamValueTo(mips_register):
     global strMipsCode
     strMipsCode += "# Load the param value from stack to {}\n".format(mips_register)
-    strMipsCode += "addu $t6 $fp $t6\n"  
+    log("# Load the param value from stack to {}\n".format(mips_register), debugMode)
+    strMipsCode += "addu $t6 $fp $t6\n"
+    log("addu $t6 $fp $t6\n", debugMode)  
     strMipsCode += "lw {} ($t6)\n".format(mips_register)
+    log("lw {} ($t6)\n".format(mips_register), debugMode)
 # This function returns a variable in a tuple format, no matters if the variable searched is a a param
 # Because the function look over all the possible types of variables
-def getVariable(valor, tabla_simbolos):
+def getLocalVariable(valor, tabla_simbolos):
     while(True):
         registro = getTupla(NodeType.VAR_DECLARATION_1, valor, tabla_simbolos)
         if registro != None:
@@ -362,3 +480,7 @@ def getVariable(valor, tabla_simbolos):
             return registro
         if registro == None:
             return None
+
+def log(msg, debugMode = True):
+    if debugMode:
+        print(msg)

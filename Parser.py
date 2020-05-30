@@ -289,7 +289,7 @@ def p_selection_stmt_1(p):
      'selection_stmt : IF LPAREN expression RPAREN statement'
      if masInfo:
           print("selection_stmt_1: ", p[1], p[2], p[3], p[4], p[5])
-     p[0] = Node("selection_stmt_1",[p[3], p[5]] ,p[1])
+     p[0] = Node(NodeType.SELECTION_STMT_1,[p[3], p[5]] ,p[1])
 def p_selection_stmt_2(p):
      'selection_stmt : IF LPAREN expression RPAREN statement ELSE statement'
      if masInfo:
@@ -392,7 +392,7 @@ def p_simple_expression_1(p):
      'simple_expression : additive_expression relop additive_expression'
      if masInfo:
           print('simple_expression_1: ', p[1], p[2], p[3])
-     p[0] = Node("Nada", [p[1], p[3]], p[2].leaf)
+     p[0] = Node(NodeType.RELOP, [p[1], p[3]], p[2].leaf)
 
 def p_simple_expression_2(p):
         'simple_expression : additive_expression'

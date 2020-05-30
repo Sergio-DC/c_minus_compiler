@@ -54,3 +54,5 @@ class NodeType(Enum):
     IO = 14
     NUMBER = 15
     TERM_1 = 16
+    SELECTION_STMT_1 = 17
+    RELOP = 18
