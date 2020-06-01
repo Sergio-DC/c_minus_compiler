@@ -36,6 +36,10 @@ def traverseTree(arbol, file_name, stack_TS, index):
                 genCode_input(arbol, stack_TS, index)
                 genCode_updateVariable(arbol, stack_TS, index)
             else:
+                # if arbol.type == NodeType.ADDITIVE_EXPRESSION_1 or arbol.type == NodeType.TERM_1:
+                
+                # elif arbol.type == NodeType.CALL:
+                #     caller(arbol, stack_TS, index)
                 NAME_FUNCTION = calculadora(arbol.children[1], stack_TS, index) # Recibe una expresion aritmentica en AST y genera codigo para el calculo
                 genCode_updateVariable(arbol, stack_TS, index)
         elif arbol.type == NodeType.CALL and not NAME_FUNCTION == arbol.leaf:
@@ -47,25 +51,7 @@ def traverseTree(arbol, file_name, stack_TS, index):
             relop = arbol.children[0]
             if relop.leaf == '>':
                 calculadora(relop, stack_TS, index)
-            #     leftOperand = relop.children[0].leaf
-            #     rightOperand = relop.children[0].leaf
-            #     tabla_simbolos = stack_TS[index]
-            #     tupla = getLocalVariable(leftOperand, tabla_simbolos)
-            #     logical_offset = tupla['offset']
-            #     genCode_calculatePhysicalOffset(logical_offset, "#load the value of the left operand 'relop'")
-            #     genCode_loadVariableValueTo("$t0")
-            #     strMipsCode = "li $t1 {}".format(rightOperand)
-            #     strMipsCode = "bgt $t0 $t1 branch_true"
-            # elif relop.leaf == '<':
-            #     print("Menor que")
-            # elif relop.leaf == '==':
-            #     print("Igual Que")
-            # elif relop.leaf == '>=':
-            #     print("Mayor o Igual que")
-            # elif relop.leaf == '<=':
-            #     print("Menor O Igual que")
-            # elif relop.leaf == '!=':
-            #     print("Diferente de")
+                BRANCH_TRUE = True # When the flag is true the compiler will generate a branch code
         if arbol.type == NodeType.RETURN_STMT_2:
             strMipsCode += "#Calculate the expression of RETURN_STMT\n"
             log("#Calculate the expression of RETURN_STMT\n", debugMode)
@@ -118,7 +104,7 @@ def genCode_mainFunc(arbol, stack_TS, index):
     nueva_tabla_simbolos = stack_TS[index_scope] #Esa tabla contiene las variables locales declaradas dentro de main
     # Obtenemos el numero de variable declaradas en la funcion main
     N = getMatches(NodeType.VAR_DECLARATION_1, nueva_tabla_simbolos)#Representa el numero de variables declaradas localmente en la funcion main
-    strMipsCode += "main:\n"
+    strMipsCode += "\n\nmain:\n"
     log("main:\n", debugMode)
     strMipsCode += "move $fp $sp # Set FP to the bottom\n"# Set %fp to the bottom
     log("move $fp $sp # Set FP to the bottom\n", debugMode)
@@ -236,87 +222,125 @@ def genCode_calculatePhysicalOffset(logical_offset, comment):
 # El resultado del calculo se guarda en el registro $a0
 def calculadora(arbol, stack_TS, index):
     global strMipsCode
-    resultado = 0;
+    
     if arbol.type == NodeType.NUMBER:
         strMipsCode += "li $a0 {}\n".format(arbol.leaf)
         log("li $a0 {}\n".format(arbol.leaf), debugMode)
+    elif arbol.type == NodeType.CALL:
+        caller(arbol, stack_TS, index)
     else:
-        resultado = preOrder(arbol, resultado, stack_TS, index)
-    return resultado
+        resultado = preOrder(arbol, stack_TS, index)
+        # strMipsCode += "sw $a0 0($sp) # Save the result in stack\n"
+        # log("sw $a0 0($sp)\n", debugMode)
+        # strMipsCode += "addiu $sp $sp -4\n"
+        # log("addiu $sp $sp -4\n", debugMode)
+    # return resultado
 
-def preOrder(arbol, resultado, stack_TS, index):
+def preOrder(arbol, stack_TS, index):
     if arbol != None:
         if str(arbol.leaf) not in '+-*/>':
-            if arbol.type == NodeType.NUMBER:
-                #print("li $a0 {}".format(arbol.leaf))
-                return arbol.leaf
-            elif arbol.type == NodeType.CALL:
-                caller(arbol, stack_TS, index)
-                nombre_funcion = arbol.leaf
-            else:
-                nombre_funcion = arbol.leaf
-            return nombre_funcion
+            return arbol
+            # if arbol.type == NodeType.NUMBER:
+            #     #print("li $a0 {}".format(arbol.leaf))
+            #     return arbol.leaf
+            # elif arbol.type == NodeType.CALL:
+            #     caller(arbol, stack_TS, index)
+            #     nombre_funcion = arbol.leaf
+            # else:
+            #     nombre_funcion = arbol.leaf
+            # return nombre_funcion
         if arbol.children != []:
-            hijoLeft = preOrder(arbol.children[0], resultado, stack_TS, index)
+            hijoLeft = preOrder(arbol.children[0], stack_TS, index)
         if arbol.children != []:
-            hijoDer = preOrder(arbol.children[1], resultado, stack_TS, index)
+            hijoDer = preOrder(arbol.children[1], stack_TS, index)
         operacion(arbol.leaf, hijoLeft, hijoDer, stack_TS, index)
-    return resultado
 
 def operacion(op, valIzq, valDer, stack_TS, index):
     global strMipsCode
     tabla_simbolos = stack_TS[index]
+    if valIzq != None:
+        if valIzq.type == NodeType.VAR_1:
+            tupla = getLocalVariable(valIzq, tabla_simbolos)
+            logical_offset = tupla['offset']
+            comment = "#Val Left"
+            genCode_calculatePhysicalOffset(logical_offset, comment)
+            if tupla['type'] == NodeType.VAR_DECLARATION_1:
+                genCode_loadVariableValueTo("$t0") #Gen code to load a value from stack to a register
+            elif tupla['type'] == NodeType.PARAM_1:
+                genCode_loadParamValueTo("$t0")#Gen code to load a value from stack to a register
+        elif valIzq.type == NodeType.NUMBER:
+            strMipsCode += "li $t0 {}\n".format(valIzq.leaf)
+            log("li $t0 {}\n".format(valIzq.leaf), debugMode)
+        elif valIzq.type == NodeType.CALL:
+            caller(valIzq, stack_TS, index)
+            strMipsCode += "sw $a0 0($sp) #Save the result in stack\n"
+            strMipsCode += "addiu $sp $sp -4\n"        
 
-    if not isinstance(valIzq, int):
-        tupla = getLocalVariable(valIzq, tabla_simbolos)
-        logical_offset = tupla['offset']
-        comment = "#Val Left"
-        genCode_calculatePhysicalOffset(logical_offset, comment)
-        if tupla['type'] == NodeType.VAR_DECLARATION_1:
-            genCode_loadVariableValueTo("$t0") #Gen code to load a value from stack to a register
-        elif tupla['type'] == NodeType.PARAM_1:
-            genCode_loadParamValueTo("$t0")#Gen code to load a value from stack to a register
-    else:
-        strMipsCode += "li $t0 {}\n".format(valIzq)
-        log("li $t0 {}\n".format(valIzq), debugMode)
-
-    if not isinstance(valDer, int):
-        tupla = getLocalVariable(valDer, tabla_simbolos)
-        logical_offset = tupla['offset']
-        comment = "# Val Right\n"
-        genCode_calculatePhysicalOffset(logical_offset, comment)
-        if tupla['type'] == NodeType.VAR_DECLARATION_1:
-            genCode_loadVariableValueTo("$t1")
-        elif tupla['type'] == NodeType.PARAM_1:
-            genCode_loadParamValueTo("$t1")
-    else:
-        strMipsCode += "li $t1 {}\n".format(valDer)
-        log("li $t1 {}\n".format(valDer), debugMode)
+    if valDer != None:
+        if valDer.type == NodeType.VAR_1:
+            tupla = getLocalVariable(valDer, tabla_simbolos)
+            logical_offset = tupla['offset']
+            comment = "# Val Right\n"
+            genCode_calculatePhysicalOffset(logical_offset, comment)
+            if tupla['type'] == NodeType.VAR_DECLARATION_1:
+                genCode_loadVariableValueTo("$t1")
+            elif tupla['type'] == NodeType.PARAM_1:
+                genCode_loadParamValueTo("$t1")
+        elif valDer.type == NodeType.NUMBER:
+            strMipsCode += "li $t1 {}\n".format(valDer.leaf)
+            log("li $t1 {}\n".format(valDer.leaf), debugMode)
+        elif valDer.type == NodeType.CALL:
+            caller(valDer, stack_TS, index)
+            strMipsCode += "sw $a0 0($sp) #Save the result in stack\n"
+            strMipsCode += "addiu $sp $sp -4\n"
 
     if op == '+':
-        if valDer == 0:
+        if valDer == None:
             strMipsCode += "#Calculate accrued sum\n"
             log("#Calculate accrued sum\n", debugMode)
+            if valIzq.type == NodeType.CALL:
+                strMipsCode += "addiu $sp $sp 4\n"
+                strMipsCode += "lw $t0 0($sp)\n"
             strMipsCode += "add $a0 $a0 $t0\n"
             log("add $a0 $a0 $t0\n", debugMode)
-        elif valIzq == 0:
+        elif valIzq == None:
             strMipsCode += "#Calculate accrued sum\n"
             log("#Calculate accrued sum\n", debugMode)
+            if valDer.type == NodeType.CALL:
+                strMipsCode += "addiu $sp $sp 4\n"
+                strMipsCode += "lw $a0 0($sp)\n"
+                strMipsCode += "addiu $sp $sp 4\n"
+                strMipsCode += "lw $t1 0($sp)\n"
             strMipsCode += "add $a0 $a0 $t1\n"
             log("add $a0 $a0 $t1\n", debugMode)
         else:
             strMipsCode += "#Calculate the sum\n"
             log("#Calculate the sum\n", debugMode)
-            strMipsCode += "add $a0 $t0 $t1\n"
+            if valIzq.type == NodeType.CALL and valDer.type == NodeType.CALL:  
+                strMipsCode += "addiu $sp $sp 4\n"
+                strMipsCode += "lw $t0 0($sp)\n"
+                strMipsCode += "addiu $sp $sp 4\n"
+                strMipsCode += "lw $t1 0($sp)\n"
+                strMipsCode += "add $a0 $t0 $t1\n"
+                strMipsCode += "sw $a0 0($sp) #Save the result in stack\n"
+                strMipsCode += "addiu $sp $sp -4\n"
+            elif valIzq.type == NodeType.CALL and (valDer.type == NodeType.NUMBER or valDer.type == NodeType.VAR_1):
+                strMipsCode += "addiu $sp $sp 4\n"
+                strMipsCode += "lw $t0 0($sp)\n"
+            elif (valIzq.type == NodeType.NUMBER or valIzq.type == NodeType.VAR_1) and valDer.type == NodeType.CALL:
+                strMipsCode += "addiu $sp $sp 4\n"
+                strMipsCode += "lw $t1 0($sp)\n"
+            elif valIzq.type == NodeType.NUMBER and valDer.type == NodeType.NUMBER:        
+                strMipsCode += "add $a0 $t0 $t1\n"
             log("add $a0 $t0 $t1\n", debugMode)
             
     if op == '-':
-        if valDer == 0:
+        if valDer == None:
             strMipsCode += "#Calculate accrued SUB\n"
             log("#Calculate accrued SUB\n", debugMode)    
             strMipsCode += "sub $a0 $t0 $a0\n"
             log("sub $a0 $t0 $a0\n", debugMode)    
-        elif valIzq == 0:   
+        elif valIzq == None:   
             strMipsCode += "#Calculate accrued SUB\n"
             log("#Calculate accrued SUB\n", debugMode)              
             strMipsCode += "sub $a0 $t1 $a0\n"
@@ -327,14 +351,14 @@ def operacion(op, valIzq, valDer, stack_TS, index):
             strMipsCode += "sub $a0 $t0 $t1\n"
             log("sub $a0 $t0 $t1\n", debugMode)    
     if op == '*':
-        if valDer == 0: 
+        if valDer == None: 
             strMipsCode += "#Calculate accrued MULT\n"
             log("#Calculate accrued MULT\n", debugMode)             
             strMipsCode += "mult $a0 $t0\n"
             log("mult $a0 $t0\n", debugMode)    
             strMipsCode += "mflo $a0\n"
             log("mflo $a0\n", debugMode)    
-        elif valIzq == 0:    
+        elif valIzq == None:    
             strMipsCode += "#Calculate accrued MULT\n"
             log("#Calculate accrued MULT\n", debugMode)      
             strMipsCode += "mult $a0 $t1\n"
@@ -349,14 +373,14 @@ def operacion(op, valIzq, valDer, stack_TS, index):
             strMipsCode += "mflo $a0\n"
             log("mflo $a0\n", debugMode)    
     if op == '/':
-        if valDer == 0:
+        if valDer == None:
             strMipsCode += "#Calculate accrued DIV\n"
             log("#Calculate accrued DIV\n", debugMode)                
             strMipsCode += "div $a0 $t0\n"
             log("div $a0 $t0\n", debugMode)    
             strMipsCode += "mflo $a0\n"
             log("mflo $a0\n", debugMode)    
-        elif valIzq == 0:  
+        elif valIzq == None:  
             strMipsCode += "#Calculate accrued DIV\n"
             log("#Calculate accrued DIV\n", debugMode)        
             strMipsCode += "div $a0 $t1\n"
