@@ -8,6 +8,7 @@ from globalTypes import *
 
 stack_TS = [] # Stack de tabla de simbolos
 tabla_global_1 = []
+showTableEnabled = False
 
 #Cuenta el numero de coincidencias de algun NodeType (Fue creada con el proposito de contar las variables declaradas en una funcion) 
 def getMatches(type,tabla_simbolos):
@@ -453,7 +454,8 @@ def semantica(AST, imprime_short_format = True, imprime_long_format = False):
  
     stack = crearTabla(AST, tabla, stack_TS, tabla_params)
     typeCheck(AST, stack)
-    mostrarTabla(stack,imprime_short_format, imprime_long_format)
+    if showTableEnabled:
+        mostrarTabla(stack,imprime_short_format, imprime_long_format)
 
 def mostrarTabla(stack,imprime_short_format, imprime_long_format):
     if imprime_long_format:
@@ -467,3 +469,7 @@ def mostrarTabla(stack,imprime_short_format, imprime_long_format):
         for ts in stack:
             for i in range(len(ts)):
                 print(f"{ts[i]['nombre']:11}{ts[i]['tipo_dato']:10}{ts[i]['scope']:6}{ts[i]['lineno']:5}")
+
+def setShowTable(flag):
+    global showTableEnabled
+    showTableEnabled  = flag

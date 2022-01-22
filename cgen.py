@@ -5,7 +5,12 @@ from semantica import *
 index = 0
 index_aux = 0
 strMipsCode = ''
-debugMode = True
+debugMode = False
+
+def setCgenDebugMode(debugFlag):
+    global debugMode 
+    debugMode = debugFlag
+
 def codeGen(arbol, file_name):
     global index, strMipsCode
     strMipsCode = ".data\n.text\n.globl main\n"

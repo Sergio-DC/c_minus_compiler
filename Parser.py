@@ -15,6 +15,7 @@ prompt_pos = ''
 token_error = ''
 line_error = ''
 mensaje = ''
+imprime = False
 
 class Node:
      def __init__(self,type,children=None,leaf=None, lineno = None):
@@ -596,7 +597,7 @@ def globales(prog, pos, progL):
      posicion = pos
      progLong = progL
 
-def parser(imprime = True):
+def parser():
      global programa
      global parser
      programa = programa.translate({ord('$'): None})
@@ -606,4 +607,8 @@ def parser(imprime = True):
      if imprime:
           imprimeAST(arbol)
      return arbol
+
+def setParserDebugMode(flag):
+     global imprime
+     imprime = flag
      
