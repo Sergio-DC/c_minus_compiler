@@ -1,17 +1,5 @@
-void suma(){
+void main(void) {
     int x;
     int y;
     int z;
-
-    x = 23;
-    y = 12;
-
-    x = x - y + w - q * k / 7;
-    y = x + 6;
-    z = 32;
-    z = 1 + y;
-}
-
-void main(void) {
-    
 }

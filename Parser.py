@@ -84,7 +84,7 @@ def p_var_declaration_1(p):
      'var_declaration : type_specifier ID SEMICOLON'
      p[2] = Node("identifier", None, p[2])
      if parserDebugMode:
-          print("var_declaration_1: ", p[1], p[2], p[3])
+          print("var_declaration_1: ", p[1], p[2].leaf, p[3])
      global var_decl
      var_decl = Node(NodeType.VAR_DECLARATION_1, [p[2]], p[1], p.lineno(2))
      p[0] = var_decl
@@ -154,6 +154,8 @@ def p_params_1(p):
      
 def p_params_2(p):
      'params : VOID'
+     if parserDebugMode:
+          print("params_2: ", p[1])
      new_list_param = []
      node = Node(NodeType.PARAMS_2, None, p[1])
      new_list_param.append(node)
@@ -194,7 +196,7 @@ def p_param_2(p):
 def p_compound_stmt(p):
      'compound_stmt : LBLOCK local_declarations statement_list RBLOCK'
      if parserDebugMode:
-          print("compund_stmt: ", p[1], p[2], p[3])
+          print("compund_stmt: ", p[1], p[2], p[3], p[4])
      new_list_local_declarations = []
      new_statement_list = []
      for item in list_local_declarations:
@@ -212,7 +214,7 @@ def p_compound_stmt(p):
 def p_local_declarations_1(p):
      'local_declarations : local_declarations var_declaration'
      if parserDebugMode:
-          print("local_declarations_1: ", p[1], p[2].leaf, p[2].children)
+          print("local_declarations_1: ", p[1], p[2])
      global list_local_declarations
      list_local_declarations.append(p[1])
      list_local_declarations.append(p[2])
@@ -378,10 +380,10 @@ def p_expression_2(p):
      p[0]= p[1]
 
 def p_var_1(p):
-        'var : ID'
-        if parserDebugMode:
-             print("var_1: ", p[1])
-        p[0]= Node(NodeType.VAR_1,None , p[1])
+     'var : ID'
+     if parserDebugMode:
+          print("var_1: ", p[1])
+     p[0]= Node(NodeType.VAR_1,None , p[1])
 def p_var_2(p):
      'var : ID LBRACKET expression RBRACKET'
      if parserDebugMode:
