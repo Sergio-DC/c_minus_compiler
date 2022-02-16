@@ -1,3 +1,4 @@
+# coding=utf-8
 import ply.yacc as yacc
 from lexer import tokens
 import sys
@@ -15,7 +16,7 @@ prompt_pos = ''
 token_error = ''
 line_error = ''
 mensaje = ''
-imprime = False
+parserDebugMode = False
 
 class Node:
      def __init__(self,type,children=None,leaf=None, lineno = None):
@@ -32,7 +33,6 @@ class MessageError:
           self.line_error_content = line_error_content
           self.prompt_pos
 VERBOSE = 1
-masInfo = False
 
 def inOrder(arbol, linear_tree):
      if arbol != None:
@@ -46,7 +46,7 @@ def inOrder(arbol, linear_tree):
 def p_program(p):
      'program : declaration_list'
      new_declaration_list = []
-     if masInfo:
+     if parserDebugMode:
           print("program: ", p[1])
      for declaration in list_declaration_list:
           if declaration != None:
@@ -61,7 +61,7 @@ def p_program(p):
 
 def p_declaration_list_1(p):
      'declaration_list : declaration_list declaration'
-     if masInfo:
+     if parserDebugMode:
           print("declaration_list_1: ", p[1], p[2])
      global list_declaration_list
      list_declaration_list.append(p[1])
@@ -69,21 +69,21 @@ def p_declaration_list_1(p):
 
 def p_declaration_list_2(p):
      'declaration_list : declaration'
-     if masInfo:
+     if parserDebugMode:
           print("declaration_list_2: ", p[1])
      p[0] = p[1]
 
 def p_declaration(p):
      '''declaration : var_declaration 
      | fun_declaration'''
-     if masInfo:
+     if parserDebugMode:
           print("declaration: ", p[1])
      p[0] = p[1]
 
 def p_var_declaration_1(p):
      'var_declaration : type_specifier ID SEMICOLON'
      p[2] = Node("identifier", None, p[2])
-     if masInfo:
+     if parserDebugMode:
           print("var_declaration_1: ", p[1], p[2], p[3])
      global var_decl
      var_decl = Node(NodeType.VAR_DECLARATION_1, [p[2]], p[1], p.lineno(2))
@@ -105,7 +105,7 @@ def p_var_declaration_2(p):
      'var_declaration : type_specifier ID LBRACKET NUMBER RBRACKET SEMICOLON'
      p[2] = Node("var_1", None, p[2])
      p[4] = Node("num", None, p[4])
-     if masInfo:
+     if parserDebugMode:
           print("var_declaration_2: ", p[1], p[2], p[3], p[4], p[5], p[6])
      p[0] = Node(NodeType.VAR_DECLARATION_2, [p[2], p[4]], p[1], p.lineno(2))
 
@@ -122,19 +122,19 @@ def p_var_declaration_2_error(p):
 
 def p_type_specifier_1(p):
      'type_specifier : INT'
-     if masInfo:
+     if parserDebugMode:
           print("type_specifier_1: ", p[1])
      p[0] =  p[1]
 
 def p_type_specifier_2(p):
      'type_specifier : VOID'
-     if masInfo:
+     if parserDebugMode:
           print("type_specifier_2", p[1])
      p[0] = p[1]
 
 def p_fun_declaration(p):
      'fun_declaration : type_specifier ID LPAREN params RPAREN compound_stmt'
-     if masInfo:
+     if parserDebugMode:
           print("fun_declaration: ", p[1], p[2], p[3], p[4], p[5], p[6])
      p[2] = Node(NodeType.PARAMS_1, p[4], p[2], p.lineno(3))
      p[0] = Node(NodeType.FUN_DECLARATION, [p[2], p[6]], p[1], p.lineno(2))
@@ -142,7 +142,7 @@ def p_fun_declaration(p):
 
 def p_params_1(p):
      'params : param_list'
-     if masInfo:
+     if parserDebugMode:
           print("params_1: ", p[1])
      new_list_param = []
      for param in list_param_list:
@@ -161,7 +161,7 @@ def p_params_2(p):
 
 def p_param_list_1(p):
      'param_list : param_list COMMA param'
-     if masInfo:
+     if parserDebugMode:
           print("param_list_1: ", p[1], p[2], p[3].leaf)
      global list_param_list
      list_param_list.append(p[1])
@@ -169,7 +169,7 @@ def p_param_list_1(p):
 
 def p_param_list_2(p):
      'param_list : param'
-     if masInfo:
+     if parserDebugMode:
           print("param_list_2: ", p[1].leaf)
      list_param_list.append(p[1])
 
@@ -179,21 +179,21 @@ def p_param_list_3(p):
 
 def p_param_1(p):
      'param : type_specifier ID'
-     if masInfo:
+     if parserDebugMode:
           print("param_1: ", p[1], p[2])    
      p[2] = Node("var_1", None, p[2])
      p[0] = Node(NodeType.PARAM_1,[p[2]], p[1], p.lineno(2))
 
 def p_param_2(p):
      'param : type_specifier ID LBRACKET RBRACKET'
-     if masInfo:
+     if parserDebugMode:
           print("param_2: ", p[1], p[2], p[3], p[4])
      p[2] = Node("nulle", None, p[2])
      p[0] = Node(NodeType.PARAM_2, [p[2]] ,p[1], p.lineno(2))
 
 def p_compound_stmt(p):
      'compound_stmt : LBLOCK local_declarations statement_list RBLOCK'
-     if masInfo:
+     if parserDebugMode:
           print("compund_stmt: ", p[1], p[2], p[3])
      new_list_local_declarations = []
      new_statement_list = []
@@ -211,7 +211,7 @@ def p_compound_stmt(p):
 
 def p_local_declarations_1(p):
      'local_declarations : local_declarations var_declaration'
-     if masInfo:
+     if parserDebugMode:
           print("local_declarations_1: ", p[1], p[2].leaf, p[2].children)
      global list_local_declarations
      list_local_declarations.append(p[1])
@@ -222,7 +222,7 @@ def p_local_declarations_2(p):
 
 def p_statement_list_1(p):
      'statement_list : statement_list statement'
-     if masInfo:
+     if parserDebugMode:
           if p[2] != None:
                print("statement_list: ", p[1], p[2].leaf)
      global list_statement_list
@@ -239,7 +239,7 @@ def p_statement(p):
      | selection_stmt
      | iteration_stmt
      | return_stmt'''	
-     if masInfo:
+     if parserDebugMode:
           print("statement: ", p[1])
      global parser
      p[0] = p[1]
@@ -247,7 +247,7 @@ def p_statement(p):
 def p_expression_stmt_1(p):
      'expression_stmt : expression SEMICOLON'
      global parser, str_trace, prompt_pos, token_error, mensaje
-     if masInfo:
+     if parserDebugMode:
           print("expression_stmt_1: ", p[1], p[2])
      if p[1] != None:
           p[0] = p[1]
@@ -282,30 +282,30 @@ def p_expression_stmt_1_error(p):
 
 def p_expression_stmt_2(p):
      'expression_stmt : SEMICOLON'
-     if masInfo:
+     if parserDebugMode:
           print("expression_stmt_2: ", p[1])
      p[0] = Node("expression_stmt_2",None,p[1])
 
 def p_selection_stmt_1(p):
      'selection_stmt : IF LPAREN expression RPAREN statement'
-     if masInfo:
+     if parserDebugMode:
           print("selection_stmt_1: ", p[1], p[2], p[3], p[4], p[5])
      p[0] = Node(NodeType.SELECTION_STMT_1,[p[3], p[5]] ,p[1])
 def p_selection_stmt_2(p):
      'selection_stmt : IF LPAREN expression RPAREN statement ELSE statement'
-     if masInfo:
+     if parserDebugMode:
           print("selection_stmt_2: ", p[1], p[2], p[3], p[4], p[5], p[6], p[7])
      p[0] = Node("selection_stmt_2",[p[3], p[5], p[7]] ,p[1])
      
 def p_iteration_stmt(p):
      'iteration_stmt : WHILE LPAREN expression RPAREN statement'
-     if masInfo:
+     if parserDebugMode:
           print("iterarion_stmt: ", p[1], p[2], p[3], p[4], p[5].leaf)
      p[0] = Node("iteration_stmt", [p[3], p[5]], p[1])
 
 def p_return_stmt_1(p):
      'return_stmt : RETURN SEMICOLON'
-     if masInfo:
+     if parserDebugMode:
           print("return_stmt_1: ", p[1], p[2])
      p[0] = Node("return_stmt_1",None ,p[1])
 
@@ -323,7 +323,7 @@ def p_return_stmt_1_error(p):
 
 def p_return_stmt_2(p):
      'return_stmt : RETURN expression SEMICOLON'
-     if masInfo:
+     if parserDebugMode:
           print("return_stmt_2: ", p[1],[p[2]], p[3])
      p[0] = Node(NodeType.RETURN_STMT_2,[p[2]],p[1], lineno=p.lineno(1))
 
@@ -346,7 +346,7 @@ def p_return_stmt_2_error(p):
 def p_expression_1(p):
      'expression : var EQUAL expression'
      global parser, str_trace, prompt_pos
-     if masInfo:
+     if parserDebugMode:
           print("expression_1: ", p[1], p[2], p[3])
      if p[3] != None:
           p[0]= Node(NodeType.EXPRESSION_1, [p[1],p[3]], p[2], p.lineno(2))
@@ -373,31 +373,31 @@ def p_expression_1_error(p):
 def p_expression_2(p):
      'expression : simple_expression'
      global parser, str_trace, prompt_pos, token_error
-     if masInfo:
+     if parserDebugMode:
           print("expression_2: ", p[1])
      p[0]= p[1]
 
 def p_var_1(p):
         'var : ID'
-        if masInfo:
+        if parserDebugMode:
              print("var_1: ", p[1])
         p[0]= Node(NodeType.VAR_1,None , p[1])
 def p_var_2(p):
      'var : ID LBRACKET expression RBRACKET'
-     if masInfo:
+     if parserDebugMode:
           print("var_2: ", p[1], p[2], p[3], p[4])
      p[1]= Node("var_1",None , p[1])
      p[0]= Node("var_2", [p[1],p[3]], "var_2")
 
 def p_simple_expression_1(p):
      'simple_expression : additive_expression relop additive_expression'
-     if masInfo:
+     if parserDebugMode:
           print('simple_expression_1: ', p[1], p[2], p[3])
      p[0] = Node(NodeType.RELOP, [p[1], p[3]], p[2].leaf)
 
 def p_simple_expression_2(p):
         'simple_expression : additive_expression'
-        if masInfo:
+        if parserDebugMode:
              print(NodeType.EXPRESSION_2, p[1])
         p[0] = p[1]
 
@@ -409,13 +409,13 @@ def p_relop(p):
      | DEQUAL
      | DISTINT
         '''
-     if masInfo:
+     if parserDebugMode:
           print('relop: ', p[1])
      p[0] = Node("relop", None, p[1])
 
 def p_additive_expression_1(p):
      'additive_expression : additive_expression addop term'
-     if masInfo:
+     if parserDebugMode:
           print('additive_expression_1: ', p[1], p[2].leaf, p[3])
 
      global parser, str_trace, prompt_pos, token_error
@@ -449,7 +449,7 @@ def p_additive_expression_1_error(p):
 
 def p_additive_expression_2(p):
         'additive_expression : term'
-        if masInfo:
+        if parserDebugMode:
              print('additive_expression_2: ', p[1])
         p[0] = p[1]
 
@@ -457,7 +457,7 @@ def p_addop(p):
         '''addop : PLUS 
                        | MINUS
         '''
-        if masInfo:
+        if parserDebugMode:
              print("addop: ", p[1])
              
         p[0] = Node("addop", None, p[1])
@@ -465,7 +465,7 @@ def p_addop(p):
 def p_term_1(p):
      'term : term mulop factor'
      global parser, str_trace, prompt_pos, token_error
-     if masInfo:
+     if parserDebugMode:
           print("term_1: ", p[1], p[2].leaf, p[3])
      if p[1] != None:
           p[0] = Node(NodeType.TERM_1, [p[1], p[3]], p[2].leaf)
@@ -489,7 +489,7 @@ def p_term_1_error(p):
         
 def p_term_2(p):
      'term : factor'
-     if masInfo:
+     if parserDebugMode:
           print("term_2: ", p[1])
      if p[1] != None:
           p[0] = p[1]
@@ -500,36 +500,36 @@ def p_mulop(p):
      '''mulop : TIMES
      | DIVIDE
      '''
-     if masInfo:
+     if parserDebugMode:
           print("mulop: ", p[1])
      p[0] = Node("TIMES", None, p[1])
 
 def p_factor_1(p):
         'factor : LPAREN expression RPAREN'
-        if masInfo:
+        if parserDebugMode:
              print("factor_1: ",  p[1], p[2], p[3])
         p[0] = p[2]
 
 def p_factor_2(p):
         'factor : var'
-        if masInfo:
+        if parserDebugMode:
              print("factor_2: ",  p[1].leaf)
         p[0] = p[1]
 
 def p_factor_3(p):
         'factor : call'
-        if masInfo:
+        if parserDebugMode:
              print("factor_3: ",  p[1])
         p[0] = p[1]
 def p_factor_4(p):
      'factor : NUMBER'
-     if masInfo:
+     if parserDebugMode:
           print("factor_4: ",  p[1])
      p[0] = Node(NodeType.NUMBER, None, p[1])
 
 def p_call(p):
      'call : ID LPAREN args RPAREN'
-     if masInfo:
+     if parserDebugMode:
           print("call: ",  p[1], p[2], p[3], p[4])
      p[0] = Node(NodeType.CALL, p[3], p[1], p.lineno(1))
 
@@ -547,7 +547,7 @@ def p_args(p):
    
 def p_args_list_1(p):
      'args_list : args_list COMMA expression'
-     if masInfo:
+     if parserDebugMode:
              print("args_list_1: ", p[1], p[2], p[3].leaf)
      global list_args
      #Pasan directamente a p_args
@@ -556,7 +556,7 @@ def p_args_list_1(p):
      
 def p_args_list_2(p):
      'args_list : expression'
-     if masInfo:
+     if parserDebugMode:
           print("args_list_2: ",  p[1].leaf)
 
      list_args.append(p[1])
@@ -565,50 +565,46 @@ def p_empty(p):
         'empty :'
         pass
 
-def imprimeAST(arbol):
-     global endentacion
-     endentacion += 2
+def printAST(arbol):
+     global indentation
+     indentation += 2
      if arbol != None:
-          imprimeEspacios()
+          printIndentation()
           print(arbol.leaf, arbol.type)
 
           if arbol.type == "compound_stmt":
                for i in range(len(arbol.children)):
                     for node in arbol.children[i]:
-                         imprimeAST(node)
+                         printAST(node)
           elif arbol.children:
                for child in range(len(arbol.children)):
                     if arbol.children[child] != []:
-                         imprimeAST(arbol.children[child])                        
-          endentacion -= 2
-def imprimeEspacios():
-    print(" "*endentacion, end="")
+                         printAST(arbol.children[child])                        
+          indentation -= 2
+def printIndentation():
+    print(" "*indentation, end="")
 
 parser = None
-endentacion = 0
+indentation = 0
 
-programa = ''
-posicion = 0
-progLong = 0
+sourceCode = ''
 
-def globales(prog, pos, progL):
-     global programa, posicion, progLong
-     programa = prog
-     posicion = pos
-     progLong = progL
+def setSourceCode(srcCode):
+     global sourceCode
+     sourceCode = srcCode
 
 def parser():
-     global programa
+     global sourceCode
      global parser
-     programa = programa.translate({ord('$'): None})
      
      parser = yacc.yacc()
-     arbol = parser.parse(programa)
-     if imprime:
-          imprimeAST(arbol)
-     return arbol
+     tree = parser.parse(sourceCode)
+     if parserDebugMode:
+          print("\n\n########  AST ##########")
+          printAST(tree)
+     return tree
 
 def setParserDebugMode(flag):
-     global imprime
-     imprime = flag
+     global parserDebugMode
+     parserDebugMode = flag
      
