@@ -4,6 +4,7 @@
 # {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : ''}
 #
 
+from Parser import Node
 from globalTypes import *
 
 stack_TS = [] # Stack de tabla de simbolos
@@ -202,48 +203,56 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
                     print("En construccion") 
     elif arbol.type == NodeType.RETURN_STMT_2:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'offset' : '--', 'index_scope' : '--'}
-        nombre_variable = arbol.children[0].leaf
+        valueToReturn = arbol.children[0].leaf
         #Insertar Parametros de la función en el scope local, solo si 
         if tabla_params != [] and paramsIngresadosLocalmente == False:
             for tupla_param in tabla_params[::-1]:
                 table.insert(0,tupla_param)
             paramsIngresadosLocalmente = True
-
-        #Buscar en TS si la variable fue declarada
-        tupla_var_decl_1 = getTupla(NodeType.VAR_DECLARATION_1, nombre_variable, table)# Buscar en TS si existe declaracion de varible tipo 1
-        tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, nombre_variable, table)# Buscar en TS si existe declaracion de varible tipo 2
-        tupla_param_1 = getTupla(NodeType.PARAM_1, nombre_variable, table)# Buscar en TS si existe declaracion de parametros tipo 1
-        tupla_param_2 = getTupla(NodeType.PARAM_2, nombre_variable, table)# Buscar en TS si existe declaracion de parametros tipo 2
         
-        tabla_simbolos_global = stack_TS[0]
-        if tupla_var_decl_1 == None and tupla_param_1 == None and tupla_var_decl_2 == None and tupla_param_2 == None:
-            msgError("Variable no declarada 2", arbol.lineno) #Arrojamos Error
-        elif tupla_var_decl_1 != None: #Se guarda el tipo de retorno en la declaracion de la funcion para variable tipo 1           
-            nombre_func = tupla_var_decl_1['scope']
-            tipo_dato_var = tupla_var_decl_1['tipo_dato']
-            tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
-            tupla_func_decl['return'] = tipo_dato_var
-        elif tupla_var_decl_2 != None: #Se guarda el tipo de retorno en la declaracion de la funcion para variable tipo 2
-            nombre_func = tupla_var_decl_2['scope']
-            tipo_dato_var = tupla_var_decl_2['tipo_dato']
-            tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
-            tupla_func_decl['return'] = tipo_dato_var
-        elif tupla_param_1 != None: #Se guarda el tipo de retorno en la declaracion de la funcion para parametro tipo 1
-            nombre_func = tupla_param_1['scope']
-            tipo_dato_var = tupla_param_1['tipo_dato']
-            tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
-            tupla_func_decl['return'] = tipo_dato_var
-        elif tupla_param_2 != None: #Se guarda el tipo de retorno en la declaracion de la funcion para parametro tipo 2
-            nombre_func = tupla_param_2['scope']
-            tipo_dato_var = tupla_param_2['tipo_dato']
-            tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
-            tupla_func_decl['return'] = tipo_dato_var
+        if isinstance(valueToReturn, int):
+            numberNode = Node(NodeType.NUMBER, None, valueToReturn, arbol.lineno)
+            #REMINDER to know the reason the last param is stack_TS[0], place a breakpoint here and debug
+            insertarRegistro(fila, numberNode, scope, NodeType.NUMBER, stack_TS[0])#TODO figure out whats the table you have to use
+            func_decl = getTupla(NodeType.FUN_DECLARATION, scope, tabla_simbolos=stack_TS[0])
+            func_decl['return'] = 'int'
+        else:
+            #Buscar en TS si la variable fue declarada
+            #FIXME change the last param 'table' to 'stack_TS' because it doesn't have any value
+            tupla_var_decl_1 = getTupla(NodeType.VAR_DECLARATION_1, valueToReturn, table)# Buscar en TS si existe declaracion de varible tipo 1
+            tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, valueToReturn, table)# Buscar en TS si existe declaracion de varible tipo 2
+            tupla_param_1 = getTupla(NodeType.PARAM_1, valueToReturn, table)# Buscar en TS si existe declaracion de parametros tipo 1
+            tupla_param_2 = getTupla(NodeType.PARAM_2, valueToReturn, table)# Buscar en TS si existe declaracion de parametros tipo 2
+            
+            tabla_simbolos_global = stack_TS[0]
+            if tupla_var_decl_1 == None and tupla_param_1 == None and tupla_var_decl_2 == None and tupla_param_2 == None:
+                msgError("Variable no declarada 2", arbol.lineno) #Arrojamos Error
+            elif tupla_var_decl_1 != None: #Se guarda el tipo de retorno en la declaracion de la funcion para variable tipo 1           
+                nombre_func = tupla_var_decl_1['scope']
+                tipo_dato_var = tupla_var_decl_1['tipo_dato']
+                tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
+                tupla_func_decl['return'] = tipo_dato_var
+            elif tupla_var_decl_2 != None: #Se guarda el tipo de retorno en la declaracion de la funcion para variable tipo 2
+                nombre_func = tupla_var_decl_2['scope']
+                tipo_dato_var = tupla_var_decl_2['tipo_dato']
+                tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
+                tupla_func_decl['return'] = tipo_dato_var
+            elif tupla_param_1 != None: #Se guarda el tipo de retorno en la declaracion de la funcion para parametro tipo 1
+                nombre_func = tupla_param_1['scope']
+                tipo_dato_var = tupla_param_1['tipo_dato']
+                tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
+                tupla_func_decl['return'] = tipo_dato_var
+            elif tupla_param_2 != None: #Se guarda el tipo de retorno en la declaracion de la funcion para parametro tipo 2
+                nombre_func = tupla_param_2['scope']
+                tipo_dato_var = tupla_param_2['tipo_dato']
+                tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
+                tupla_func_decl['return'] = tipo_dato_var
     elif arbol.type == NodeType.PARAMS_1:
         try:
             lista_params = arbol.children[0]
             #print("lista_params: ", lista_params)
         except IndexError:
-            msgError("Falta void", arbol.lineno)
+            msgError("falta void en los parametros", arbol.lineno)
             #exit()
     elif arbol.type == NodeType.PARAM_1:
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'offset' : offset, 'index_scope' : '--'}
@@ -414,7 +423,7 @@ def formatearNodo(node, type, scope):
         val_scope = ''
         val_dimension = "1"
         val_lineno = node.lineno
-    elif type == NodeType.PARAM_1 or NodeType.PARAM_2:
+    elif type == NodeType.PARAM_1 or type == NodeType.PARAM_2:
         try:
             val_nombre = node.children[0].leaf # Si el param tiene esta forma foo(int x)
         except IndexError:
@@ -442,6 +451,14 @@ def formatearNodo(node, type, scope):
         val_scope = ''
         val_dimension = "1"
         val_lineno = 5
+    elif type == NodeType.NUMBER:
+        val_nombre = 'number'
+        val_tipo_dato = 'int'
+        val_valor = '0'
+        val_type = NodeType.NUMBER
+        val_scope = scope
+        val_dimension = "1"
+        val_lineno = node.lineno 
     return {'nombre':val_nombre, 'tipo_dato':val_tipo_dato, 'valor':val_valor, 'type': val_type , 'scope': val_scope, 'dimension': val_dimension, 'lineno' : val_lineno}
 
 def msgError(mensaje, lineno = "x"):
