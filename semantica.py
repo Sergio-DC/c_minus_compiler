@@ -10,6 +10,7 @@ from globalTypes import *
 stack_TS = [] # Stack de tabla de simbolos
 tabla_global_1 = []
 showTableEnabled = False
+test_output = []
 
 #Cuenta el numero de coincidencias de algun NodeType (Fue creada con el proposito de contar las variables declaradas en una funcion) 
 def getMatches(type,tabla_simbolos):
@@ -226,7 +227,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
             
             tabla_simbolos_global = stack_TS[0]
             if tupla_var_decl_1 == None and tupla_param_1 == None and tupla_var_decl_2 == None and tupla_param_2 == None:
-                msgError("Variable no declarada 2", arbol.lineno) #Arrojamos Error
+                test_output.append("Error variable no declarada 2")
+                msgError("variable no declarada 2", arbol.lineno) #Arrojamos Error
             elif tupla_var_decl_1 != None: #Se guarda el tipo de retorno en la declaracion de la funcion para variable tipo 1           
                 nombre_func = tupla_var_decl_1['scope']
                 tipo_dato_var = tupla_var_decl_1['tipo_dato']
@@ -334,7 +336,8 @@ def checkNode(t, stack_TS, index):
     if t.type == NodeType.VAR_DECLARATION_1 or t.type == NodeType.VAR_DECLARATION_2:# declaracion de variable
             tabla_simbolos = stack_TS[0] #TS Global, CUIDADO: implementar un mecanismo de getion de colas
             if (t.leaf != 'int'): # la declaracion de una varible debe ser INT
-                msgError("El tipo debe ser INT", t.lineno)        
+                test_output.append("Error el tipo debe ser INT")
+                msgError("el tipo debe ser INT", t.lineno)        
     elif t.type == NodeType.FUN_DECLARATION:
         tabla_simbolos_global = stack_TS[0]#TS local
         tabla_simbolos_local = stack_TS[index]
@@ -349,6 +352,7 @@ def checkNode(t, stack_TS, index):
         if tipo_dato_func == 'void' and tipo_dato_return == 'int':
             msgError("Tipos Incompatibles, valor de retorno inesperado", t.lineno)
         elif tipo_dato_func != 'void' and tipo_dato_func != tipo_dato_return:
+            test_output.append("Error missing return statement")
             msgError("missing return statement", t.lineno)
     elif t.type == NodeType.ADDITIVE_EXPRESSION_1:
         tabla_simbolos_global = stack_TS[0]#TS local
@@ -490,3 +494,7 @@ def mostrarTabla(stack,imprime_short_format, imprime_long_format):
 def setShowTable(flag):
     global showTableEnabled
     showTableEnabled  = flag
+
+def getTestOutput():
+    global test_output
+    return test_output

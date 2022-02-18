@@ -1,7 +1,6 @@
 int sumar(void) {
     void x; 
     return 8;
-    
 }
 void main(void) {
 

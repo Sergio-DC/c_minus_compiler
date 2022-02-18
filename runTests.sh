@@ -1,0 +1,1 @@
+python3 -m unittest -v test.test_lexer.TestSemantics.test_code_with_errors_2
