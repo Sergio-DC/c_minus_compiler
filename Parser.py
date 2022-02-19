@@ -197,18 +197,17 @@ def p_compound_stmt(p):
      'compound_stmt : LBLOCK local_declarations statement_list RBLOCK'
      if parserDebugMode:
           print("compund_stmt: ", p[1], p[2], p[3], p[4])
-     new_list_local_declarations = []
-     new_statement_list = []
-     for item in list_local_declarations:
-          if item != None:
-               new_list_local_declarations.append(item)
-     list_local_declarations.clear()
-     for item in list_statement_list:
-          if item != None:
-               new_statement_list.append(item)
-     list_statement_list.clear()
-     
-     p[0] = Node("compound_stmt", [new_list_local_declarations, new_statement_list],
+     if list_local_declarations == [] and list_statement_list == []:
+          p[0] = Node("compound_stmt", [None, None],
+                 "compound_Stmt")
+     elif list_local_declarations != [] and list_statement_list == []:
+          p[0] = Node("compound_stmt", [list_local_declarations.pop(0), None],
+                 "compound_Stmt")
+     elif list_local_declarations == [] and list_statement_list != []:
+          p[0] = Node("compound_stmt", [None, list_statement_list.pop(0)],
+                 "compound_Stmt")
+     else:
+          p[0] = Node("compound_stmt", [list_local_declarations.pop(0), list_statement_list.pop(0)],
                  "compound_Stmt")
 
 def p_local_declarations_1(p):
@@ -228,7 +227,7 @@ def p_statement_list_1(p):
           if p[2] != None:
                print("statement_list: ", p[1], p[2].leaf)
      global list_statement_list
-     list_statement_list.append(p[1])
+     #list_statement_list.append(p[1])
      list_statement_list.append(p[2])
      
 def p_statement_list_2(p):
@@ -579,8 +578,10 @@ def printAST(arbol):
 
           if arbol.type == "compound_stmt":
                for i in range(len(arbol.children)):
-                    for node in arbol.children[i]:
-                         printAST(node)
+                    if isinstance(arbol.children[i], list): 
+                         for node in arbol.children[i]:
+                              printAST(node)
+                    printAST(arbol.children[i])
           elif arbol.children:
                for child in range(len(arbol.children)):
                     if arbol.children[child] != []:
