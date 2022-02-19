@@ -264,16 +264,19 @@ def p_expression_stmt_1_error(p):
      global parser, str_trace, line_error
      if p[1] != None:
           linear_tree = []
-          linear_tree = inOrder(p[1], linear_tree)#Recorre el conjunto de instrucciones en el arbol y los devuelve de forma lineal
-          str_terms = len(linear_tree) * "{} "
-          str_trace = str_terms.format(*[term for term in linear_tree])# string de error e.g {*+ 7}
-          str_len = len(str_trace)# longitud del string de error
-          aux_list = list(str(linear_tree[len(linear_tree) - 1])) # string de error para el programador
-          last_element = aux_list[-1] # último caracter del string de error
-          prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
-          print("Linea {}: Error en la expresión falta un ;".format(p.lineno(2)))
-          print(str_trace)
-          print((prompt_pos) * " ","^")
+          if len(p[1].children) != 1:
+               linear_tree = inOrder(p[1], linear_tree)#Recorre el conjunto de instrucciones en el arbol y los devuelve de forma lineal
+               str_terms = len(linear_tree) * "{} "
+               str_trace = str_terms.format(*[term for term in linear_tree])# string de error e.g {*+ 7}
+               str_len = len(str_trace)# longitud del string de error
+               aux_list = list(str(linear_tree[len(linear_tree) - 1])) # string de error para el programador
+               last_element = aux_list[-1] # último caracter del string de error
+               prompt_pos = len(str_trace) - 1 - str_trace[::-1].index(last_element) # gorrito que apunta al último caracter, ya que es un error por falta de COMMA
+               print("Linea {}: Error en la expresión falta un ;".format(p.lineno(2) - 1))
+               print(str_trace)
+               print((prompt_pos) * " ","^")
+          else:
+               print("Linea {}: Error en la expresión falta un ;".format(p.lineno(2) - 1))
           
           parser.errok()
      else:
