@@ -16,10 +16,11 @@ setSourceCode(sourceCode)
 setParserDebugMode(True)
 AST = parser()
 
-setShowTable(True)
+#setShowTable(True)
+semanticsDebugMode(True)
 semantica(AST, False, True)#Revisar modos de impresion antes de enviar
 
-print("test_output: ", getTestOutput())
+#print("test_output: ", getTestOutput())
 
 #setCgenDebugMode(False)
 #codeGen(AST, "salida.asm")
