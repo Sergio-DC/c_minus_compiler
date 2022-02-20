@@ -4,13 +4,16 @@
 # {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'dimension' : ''}
 #
 
-from Parser import Node
+from enum import Flag
+from Parser import Node, setParserDebugMode
 from globalTypes import *
+semanticsDebugMode = False
 
 stack_TS = [] # Stack de tabla de simbolos
 tabla_global_1 = []
 showTableEnabled = False
 test_output = []
+errorMessagesFlag = False
 
 #Cuenta el numero de coincidencias de algun NodeType (Fue creada con el proposito de contar las variables declaradas en una funcion) 
 def getMatches(type,tabla_simbolos):
@@ -105,8 +108,10 @@ seHaPregargado = False
 offset = 1
 index_scope = 1 #Etiqueta las scopes de las declaraciones de funciones entradas, se incementa en 1 despues de haber asigando el scope_index a la funcion declarada
 def crearTabla(arbol, table, stack_TS, tabla_params):
-    global scope, YaPase, seHaPregargado, paramsIngresadosLocalmente, offset, index_scope
+    global scope, YaPase, seHaPregargado, paramsIngresadosLocalmente, offset, index_scope, semanticsDebugMode
     if arbol.type == NodeType.VAR_DECLARATION_1:
+        if semanticsDebugMode == True:
+            print("[log] init node:" + NodeType.VAR_DECLARATION_1.name)
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'offset' : offset, 'index_scope' : '--'}
         nombre_variable = arbol.children[0].leaf
         offset += 1
@@ -128,6 +133,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
         else:
             msgError("Variable Repetida", arbol.lineno)
     elif arbol.type == NodeType.VAR_DECLARATION_2: # Declaracion de variable de tipo array []
+        if semanticsDebugMode:
+            print("[log] init node:", NodeType.VAR_DECLARATION_2.name)
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'offset' : offset, 'index_scope' : '--'}
         nombre_variable = arbol.children[0].leaf
         offset += 1
@@ -149,7 +156,9 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
         else:
             msgError("Variable Repetida", arbol.lineno)
     elif arbol.type == NodeType.FUN_DECLARATION:
-        offset = 1;
+        if semanticsDebugMode == True:
+            print("[log] init node:", NodeType.FUN_DECLARATION.name, "stack_TS:", stack_TS)
+        offset = 1
         #Precargamos TS con input() y output()
         if not seHaPregargado:
             fila = {'nombre': 'input', 'tipo_dato': 'int', 'valor': '', 'type' : NodeType.FUN_DECLARATION, 'scope': 'global', 'params':[],'return': '', 'lineno' : '', 'offset' : '--', 'index_scope' : '--'}
@@ -166,6 +175,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
         tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, table)
 
         if tupla_func_decl == None:        
+            if semanticsDebugMode == True:
+                print("[log] node:", NodeType.FUN_DECLARATION.name, " method:insertarRegistro()")
             tupla_func_decl = insertarRegistro(fila, arbol, scope, NodeType.FUN_DECLARATION, table)
             scope = tupla_func_decl['nombre'] # Esta variable es critica para que las variables declaradas localmente tengan el scope correcto
         else:
@@ -175,6 +186,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
             stack_TS.append(table)
         YaPase = True
     elif arbol.type == NodeType.EXPRESSION_1:
+        if semanticsDebugMode == True:
+            print("[log] init node:", NodeType.EXPRESSION_1.name)
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'index_scope' : '--'}
         nombre_variable = arbol.children[0].leaf#Variable a la que se le asigna el valor
         node_valor = arbol.children[1]# Nodo que tiene Valor que sera asignado/Expresion
@@ -203,6 +216,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
                 elif tupla_param_2:
                     print("En construccion") 
     elif arbol.type == NodeType.RETURN_STMT_2:
+        if semanticsDebugMode == True:
+            print("[log] init node:", NodeType.RETURN_STMT_2.name)
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'offset' : '--', 'index_scope' : '--'}
         valueToReturn = arbol.children[0].leaf
         #Insertar Parametros de la función en el scope local, solo si 
@@ -214,6 +229,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
         if isinstance(valueToReturn, int):
             numberNode = Node(NodeType.NUMBER, None, valueToReturn, arbol.lineno)
             #REMINDER to know the reason the last param is stack_TS[0], place a breakpoint here and debug
+            if semanticsDebugMode == True:  
+                print("[log] node:", NodeType.RETURN_STMT_2.name, " method:insertarRegistro()")
             insertarRegistro(fila, numberNode, scope, NodeType.NUMBER, stack_TS[0])#TODO figure out whats the table you have to use
             func_decl = getTupla(NodeType.FUN_DECLARATION, scope, tabla_simbolos=stack_TS[0])
             func_decl['return'] = 'int'
@@ -224,7 +241,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
             tupla_var_decl_2 = getTupla(NodeType.VAR_DECLARATION_2, valueToReturn, table)# Buscar en TS si existe declaracion de varible tipo 2
             tupla_param_1 = getTupla(NodeType.PARAM_1, valueToReturn, table)# Buscar en TS si existe declaracion de parametros tipo 1
             tupla_param_2 = getTupla(NodeType.PARAM_2, valueToReturn, table)# Buscar en TS si existe declaracion de parametros tipo 2
-            
+            if semanticsDebugMode == True: 
+                print("[log] node:", NodeType.RETURN_STMT_2.name, " method:alternativa")
             tabla_simbolos_global = stack_TS[0]
             if tupla_var_decl_1 == None and tupla_param_1 == None and tupla_var_decl_2 == None and tupla_param_2 == None:
                 test_output.append("Error variable no declarada 2")
@@ -250,6 +268,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
                 tupla_func_decl = getTupla(NodeType.FUN_DECLARATION, nombre_func, tabla_simbolos_global)
                 tupla_func_decl['return'] = tipo_dato_var
     elif arbol.type == NodeType.PARAMS_1:
+        if semanticsDebugMode == True:
+            print("[log] init node:", NodeType.PARAMS_1.name)
         try:
             lista_params = arbol.children[0]
             #print("lista_params: ", lista_params)
@@ -257,6 +277,8 @@ def crearTabla(arbol, table, stack_TS, tabla_params):
             msgError("falta void en los parametros", arbol.lineno)
             #exit()
     elif arbol.type == NodeType.PARAM_1:
+        if semanticsDebugMode == True:
+            print("[log] init node:", NodeType.PARAM_1.name)
         fila = {'nombre': '', 'tipo_dato': '', 'valor':'', 'type' : '', 'scope': '', 'params' : '--', 'lineno' : '', 'offset' : offset, 'index_scope' : '--'}
         offset += 1
         tipo_dato = arbol.leaf
@@ -308,7 +330,7 @@ def typeCheck(tree, stack):
     tabla_global = stack[0]
     tupla_aux_main = tabla_global[len(tabla_global_1) - 1] #Ultima declaracion debe ser MAIN
     nombre_funcion = tupla_aux_main['nombre']
-
+    #print("tabla_global: ", tabla_global)
     if nombre_funcion == "main":
         chequeoTipos(tree, checkNode, stack, index)
     else:
@@ -458,7 +480,7 @@ def formatearNodo(node, type, scope):
     elif type == NodeType.NUMBER:
         val_nombre = 'number'
         val_tipo_dato = 'int'
-        val_valor = '0'
+        val_valor = node.leaf
         val_type = NodeType.NUMBER
         val_scope = scope
         val_dimension = "1"
@@ -466,10 +488,11 @@ def formatearNodo(node, type, scope):
     return {'nombre':val_nombre, 'tipo_dato':val_tipo_dato, 'valor':val_valor, 'type': val_type , 'scope': val_scope, 'dimension': val_dimension, 'lineno' : val_lineno}
 
 def msgError(mensaje, lineno = "x"):
-    print("Linea {}: Error {}".format(lineno, mensaje))
+    if errorMessagesFlag == True:
+        print("Linea {}: Error {}".format(lineno, mensaje))
 
 def semantica(AST, imprime_short_format = True, imprime_long_format = False):
-    global stack_TS
+    global stack_TS, scope, YaPase, paramsIngresadosLocalmente, seHaPregargado, offset, index_scope
     tabla = []
     tabla_params = []
  
@@ -477,6 +500,15 @@ def semantica(AST, imprime_short_format = True, imprime_long_format = False):
     typeCheck(AST, stack)
     if showTableEnabled:
         mostrarTabla(stack,imprime_short_format, imprime_long_format)
+    stack_TS.clear()
+    tabla.clear()
+    tabla_params.clear()
+    scope = 'global'
+    YaPase = False
+    paramsIngresadosLocalmente = False
+    seHaPregargado = False
+    offset = 1
+    index_scope = 1
 
 def mostrarTabla(stack,imprime_short_format, imprime_long_format):
     if imprime_long_format:
@@ -498,3 +530,11 @@ def setShowTable(flag):
 def getTestOutput():
     global test_output
     return test_output
+
+def semanticsDebugMode(flag = False):
+    global semanticsDebugModeFlag
+    semanticsDebugModeFlag = flag
+
+def semanticsErrorMessages(flag):
+    global errorMessagesFlag
+    errorMessagesFlag = flag

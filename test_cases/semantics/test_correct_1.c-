@@ -1,4 +1,4 @@
-void sumar(void) {
+int sumar(void) {
     return 8;
 }
 void main(void) {
